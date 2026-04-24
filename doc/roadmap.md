@@ -38,6 +38,23 @@ aion becomes a real astrology app.
 - wire canvas cards to drishti via mcp
 - real chart calculation flowing into renderers
 - core renderers: south indian, north indian, western wheel, data table
+- **slot pipelines** — extend WorkspaceStore to support multi-step tool call
+  composition. a slot can be defined by a pipeline of chained calls where each
+  step's output feeds the next, executed in dart without inference overhead.
+  this establishes the composition pattern that the AI layer (phase 6) can later
+  generate programmatically. see david soria parra's "programmatic tool calling"
+  concept from the MCP future talk (april 2025).
+- **structured output contracts** — plugins declare output schemas on their tools
+  (MCP's structured content type). WorkspaceStore validates results against schema
+  and pipelines use type info to wire step outputs to inputs automatically.
+  **drishti change:** tool registrations need `outputSchema` added.
+- **skills field in PluginManifest** — add an optional `skills` field to the
+  manifest format. plugins can advertise domain knowledge documents alongside
+  tools (e.g. "natal chart reading procedure", "vimshottari dasha interpretation").
+  nothing consumes this yet — the AI panel (phase 6) will load these into context
+  instead of a monolithic system prompt. designing the field now means drishti can
+  start shipping skills incrementally.
+  **drishti change:** ship skill documents alongside tools when ready.
 
 **depends on:** phase 1 (mcp host), drishti development
 
@@ -46,7 +63,6 @@ aion becomes a real astrology app.
 timezone resolution is required before chart input works for end users.
 
 - geonames integration (geo lookup, bundled sqlite)
-- meridian codex integration (historic timezones)
 - iana tz database as fallback
 - location search ui (autocomplete, reverse geocode)
 - atlas as mcp server
@@ -99,12 +115,25 @@ the chat panel and llm wiring.
 - llm as mcp client: calls drishti, chart-db, atlas, any plugin
 - context management: how much chart data to include automatically
 - provider settings ui (choose local vs cloud, model selection)
+- **progressive discovery** — do not dump all plugin tools into the LLM context.
+  provide a `search_tools` meta-tool; load plugin tools on demand when the model
+  needs them. PluginHost already holds tool lists per plugin — build a search
+  index over them. this is the single biggest context-reduction technique
+  (demonstrated in claude code by anthropic).
+- **skills consumption** — load plugin-shipped skills (from the manifest field
+  added in phase 2) into the LLM context as domain knowledge. skills travel with
+  the plugin, so drishti can update its jyotish knowledge independently of aion
+  releases. the model gets "here's how to read a natal chart" from the server
+  rather than a hardcoded system prompt.
 
 **research needed:**
 - ollama integration from dart/flutter
 - anthropic/openai api from dart
-- prompt engineering for astrological context
-- context window management strategies
+- prompt engineering for astrological context — partially addressed by skills-over-MCP;
+  plugin-shipped skills reduce the prompt engineering burden on aion itself
+- context window management strategies — progressive discovery is the primary
+  technique; also consider programmatic tool calling (model writes scripts in
+  the slot pipeline REPL rather than orchestrating one call at a time)
 
 ## phase 7 — reports + export
 
@@ -131,6 +160,14 @@ professional output.
 - scheduling integration
 - financial astrology module
 - plugin ui contribution conventions
+- **mcp applications for chart rendering** — MCP's experimental "applications"
+  feature lets servers ship their own rendered UI (HTML/canvas). this could solve
+  chart renderer portability: drishti ships a south indian grid renderer that
+  works in any MCP host, not just aion. for now we stay with native flutter
+  renderers (performance, tight canvas interaction). but supporting both is
+  attractive long-term: flutter-native cards for the main canvas, with a webview
+  fallback for plugin-provided rich views. worth revisiting once MCP applications
+  stabilize in the spec.
 
 ---
 
