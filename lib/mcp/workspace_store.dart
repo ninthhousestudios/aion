@@ -30,6 +30,15 @@ class WorkspaceStore {
     subject.add(SlotLoading(args));
     try {
       final result = await _host.callTool(server, tool, args);
+      if (result.isError) {
+        final message = result.content
+                .whereType<TextContent>()
+                .firstOrNull
+                ?.text ??
+            'Unknown tool error';
+        subject.add(SlotError(message, args));
+        return;
+      }
       final textContent = result.content.whereType<TextContent>().firstOrNull;
       if (textContent == null) {
         subject.add(SlotError('No TextContent in tool result', args));

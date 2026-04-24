@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,8 +19,12 @@ class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(pluginHostProvider).startAll([BundledManifests.drishti]);
+    Future.microtask(() async {
+      try {
+        await ref.read(pluginHostProvider).startAll(BundledManifests.all);
+      } catch (e, st) {
+        debugPrint('Failed to start plugins: $e\n$st');
+      }
     });
   }
 
@@ -28,7 +33,7 @@ class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Aion — Plugins')),
       body: ListView(
-        children: [BundledManifests.drishti].map(_buildPluginTile).toList(),
+        children: BundledManifests.all.map(_buildPluginTile).toList(),
       ),
     );
   }

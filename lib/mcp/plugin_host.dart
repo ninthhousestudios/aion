@@ -34,9 +34,8 @@ class PluginState {
         error = null,
         tools = List.unmodifiable(tools);
 
-  PluginState.error(Object error)
+  PluginState.error(this.error)
       : status = PluginStatus.error,
-        error = error,
         tools = const [];
 }
 
@@ -49,8 +48,11 @@ class PluginNotConnected implements Exception {
 }
 
 class PluginHost {
+  static const _connectTimeout = Duration(seconds: 30);
+
   final _clients = <String, McpClient>{};
   final _states = <String, BehaviorSubject<PluginState>>{};
+  bool _disposed = false;
 
   BehaviorSubject<PluginState> _stateOf(String name) {
     return _states.putIfAbsent(
@@ -65,18 +67,30 @@ class PluginHost {
 
   Future<void> startPlugin(PluginManifest manifest) async {
     _stateOf(manifest.name).add(const PluginState.starting());
+    McpClient? client;
     try {
       final transport = _buildTransport(manifest);
-      final client = McpClient(
+      client = McpClient(
         const Implementation(name: 'aion', version: '0.1.0'),
       );
-      await client.connect(transport);
+      await client.connect(transport).timeout(_connectTimeout);
       final result = await client.listTools();
       _clients[manifest.name] = client;
+      client.onclose = () => _onUnexpectedClose(manifest.name);
       _stateOf(manifest.name).add(PluginState.connected(result.tools));
     } catch (e) {
+      await client?.close();
+      _clients.remove(manifest.name);
       _stateOf(manifest.name).add(PluginState.error(e));
     }
+  }
+
+  void _onUnexpectedClose(String name) {
+    if (_disposed || !_clients.containsKey(name)) return;
+    _clients.remove(name);
+    _stateOf(name).add(
+      PluginState.error('Plugin process exited unexpectedly'),
+    );
   }
 
   Transport _buildTransport(PluginManifest manifest) {
@@ -110,7 +124,9 @@ class PluginHost {
   Future<void> stopPlugin(String name) async {
     final client = _clients.remove(name);
     await client?.close();
-    _stateOf(name).add(const PluginState.stopped());
+    final subject = _states.remove(name);
+    subject?.add(const PluginState.stopped());
+    subject?.close();
   }
 
   Future<void> startAll(List<PluginManifest> manifests) async {
@@ -120,14 +136,25 @@ class PluginHost {
           .map((m) async {
             try {
               await startPlugin(m);
-            } catch (_) {}
+            } catch (e) {
+              // startPlugin already sets error state on the stream;
+              // log here so failures aren't completely invisible.
+              Zone.current.handleUncaughtError(e, StackTrace.current);
+            }
           }),
     );
   }
 
   Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
     final names = List<String>.from(_clients.keys);
     await Future.wait(names.map(stopPlugin));
+    for (final subject in _states.values) {
+      subject.close();
+    }
+    _states.clear();
+    _clients.clear();
   }
 
   List<String> get connectedPlugins => _states.entries

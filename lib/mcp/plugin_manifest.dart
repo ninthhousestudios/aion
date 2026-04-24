@@ -32,7 +32,11 @@ class PluginManifest {
 
   factory PluginManifest.fromJson(Map<String, dynamic> json) {
     final transportStr = json['transport'] as String;
-    final transport = transportStr == 'http' ? PluginTransport.http : PluginTransport.stdio;
+    final transport = switch (transportStr) {
+      'stdio' => PluginTransport.stdio,
+      'http' => PluginTransport.http,
+      _ => throw FormatException('Unknown transport: $transportStr'),
+    };
 
     List<String>? args;
     if (json['args'] != null) {
@@ -99,11 +103,17 @@ class PluginConfig {
     if (!await file.exists()) {
       return [];
     }
-    final contents = await file.readAsString();
-    final jsonList = jsonDecode(contents) as List;
-    return jsonList
-        .map((e) => PluginManifest.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final contents = await file.readAsString();
+      final jsonList = jsonDecode(contents) as List;
+      return jsonList
+          .map((e) => PluginManifest.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on FormatException {
+      return [];
+    } on TypeError {
+      return [];
+    }
   }
 
   static Future<void> saveUserPlugins(List<PluginManifest> plugins) async {
@@ -115,6 +125,8 @@ class PluginConfig {
 }
 
 class BundledManifests {
+  static final all = <PluginManifest>[drishti];
+
   static final drishti = PluginManifest(
     name: 'drishti',
     displayName: 'Drishti',
