@@ -1,0 +1,26 @@
+name: aion
+description: Professional astrology desktop application
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mcp_dart:
+    git:
+      url: https://github.com/ninthhousestudios/mcp_dart.git
+      ref: 0cfec14747590c36128004aa4686c5ac7cd2f1f2
+  rxdart: ^0.28.0
+  flutter_riverpod: ^2.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  test: ^1.25.0
+
+flutter:
+  uses-material-design: true
