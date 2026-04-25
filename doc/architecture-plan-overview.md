@@ -36,7 +36,7 @@ everything else. each plugin is an mcp server (separate process, any language).
 |---|---|---|
 | drishti | arjuna/arrow calculations via mcp | rust |
 | chart-db | chart storage, indexing, search, embeddings | tbd |
-| atlas | geographic lookup (geonames) + historic timezone resolution (meridian codex + iana) | tbd |
+| mundus | geographic lookup (geonames) + historic timezone resolution (meridian codex + iana) | tbd |
 | core renderers | south indian, north indian, western wheel, data table, dasha timeline | dart (in-process?) |
 
 **third-party plugin examples:**
@@ -72,7 +72,7 @@ transport strategy:
 |---|---|---|
 | drishti (local arrow) | stdio | child process, single client |
 | chart-db | stdio | local, single client |
-| atlas | stdio | local, single client |
+| mundus | stdio | local, single client |
 | local plugins | stdio | default for all local servers |
 | quiver (remote) | streamable http | different machine, network transport |
 | future remote services | streamable http | as needed |
@@ -150,7 +150,7 @@ text embeddings handle fuzzy natural language queries.
 - **import** — jhora (.jhd) is highest priority. parashara's light second.
 - **export** — json/toml (data), pdf (reports/charts)
 
-## atlas
+## mundus
 
 two distinct problems:
 
@@ -180,7 +180,7 @@ llm provider (user's choice)
 +-------------------------------+
 | drishti (calculations)        |
 | chart-db (search, embeddings) |
-| atlas (location/timezone)     |
+| mundus (location/timezone)     |
 | any installed plugin          |
 +-------------------------------+
     | results
@@ -257,7 +257,7 @@ card palette for drag-to-canvas. context menus for card operations.
 - chart database with search, tagging, collections
 - multiple chart styles (south indian, north indian, western wheel minimum)
 - data tables (planets, nakshatras, dashas, dignities)
-- atlas with historic timezone support
+- mundus with historic timezone support
 - report generation / pdf export
 - import from jhora format
 - transit animation / time stepping

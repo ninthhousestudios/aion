@@ -58,14 +58,14 @@ aion becomes a real astrology app.
 
 **depends on:** phase 1 (mcp host), drishti development
 
-## phase 3 — atlas
+## phase 3 — mundus
 
 timezone resolution is required before chart input works for end users.
 
 - geonames integration (geo lookup, bundled sqlite)
 - iana tz database as fallback
 - location search ui (autocomplete, reverse geocode)
-- atlas as mcp server
+- mundus as mcp server
 
 **research needed:**
 - geonames: best format for bundled sqlite export? update cadence?
@@ -112,7 +112,7 @@ the chat panel and llm wiring.
 
 - chat panel ui in aion
 - llm provider abstraction (local ollama, cloud anthropic/openai)
-- llm as mcp client: calls drishti, chart-db, atlas, any plugin
+- llm as mcp client: calls drishti, chart-db, mundus, any plugin
 - context management: how much chart data to include automatically
 - provider settings ui (choose local vs cloud, model selection)
 - **progressive discovery** — do not dump all plugin tools into the LLM context.
