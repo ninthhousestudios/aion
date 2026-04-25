@@ -125,7 +125,20 @@ class PluginConfig {
 }
 
 class BundledManifests {
-  static final all = <PluginManifest>[drishti];
+  static final all = <PluginManifest>[drishti, mundus];
+
+  static final mundus = PluginManifest(
+    name: 'mundus',
+    displayName: 'Mundus',
+    description: 'Location and timezone resolution',
+    transport: PluginTransport.stdio,
+    command: 'dart',
+    args: ['run', '--verbosity=error', 'mundus:mundus'],
+    workingDirectory:
+        Platform.environment['MUNDUS_PATH'] ?? '../mundus',
+    bundled: true,
+    autoStart: true,
+  );
 
   static final drishti = PluginManifest(
     name: 'drishti',
