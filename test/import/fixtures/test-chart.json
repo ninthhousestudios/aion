@@ -1,0 +1,16 @@
+{
+  "name": "Jane Doe",
+  "date": "1990-06-15",
+  "time": "14:30:00",
+  "utc_offset": 1.0,
+  "dst_offset": 1.0,
+  "location": {
+    "city": "London",
+    "country": "UK",
+    "latitude": 51.5074,
+    "longitude": -0.1278
+  },
+  "gender": "female",
+  "notes": "Test chart",
+  "rodden_rating": "AA"
+}

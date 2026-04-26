@@ -1,0 +1,14 @@
+name = "Test Person"
+gender = "male"
+country = "USA"
+
+[timeJD]
+jd = 2451545.0
+utcoffset = -5.0
+
+[location]
+lat = 40.7128
+long = -74.006
+alt = 10.0
+placename = "New York, NY"
+timezone = "-5.0"
