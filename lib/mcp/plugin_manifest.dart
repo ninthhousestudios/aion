@@ -125,7 +125,7 @@ class PluginConfig {
 }
 
 class BundledManifests {
-  static final all = <PluginManifest>[drishti, mundus];
+  static final all = <PluginManifest>[drishti, mundus, chartDb];
 
   static final mundus = PluginManifest(
     name: 'mundus',
@@ -136,6 +136,22 @@ class BundledManifests {
     args: ['run', '--verbosity=error', 'mundus:mundus'],
     workingDirectory:
         Platform.environment['MUNDUS_PATH'] ?? '../mundus',
+    bundled: true,
+    autoStart: true,
+  );
+
+  static final chartDb = PluginManifest(
+    name: 'chart-db',
+    displayName: 'Chart DB',
+    description: 'Chart storage and similarity search',
+    transport: PluginTransport.stdio,
+    command: 'dart',
+    args: ['run', '--verbosity=error', 'chart_db:chart_db'],
+    workingDirectory: 'packages/chart_db',
+    env: {
+      if (Platform.environment.containsKey('CHART_DB_PATH'))
+        'CHART_DB_PATH': Platform.environment['CHART_DB_PATH']!,
+    },
     bundled: true,
     autoStart: true,
   );
