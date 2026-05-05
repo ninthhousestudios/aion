@@ -35,8 +35,10 @@ everything else. each plugin is an mcp server (separate process, any language).
 | plugin | role | language |
 |---|---|---|
 | drishti | arjuna/arrow calculations via mcp | rust |
-| chart-db | chart storage, indexing, search, embeddings | tbd |
+| chart-db | chart storage, indexing, structured chart vectors, similarity search | tbd |
 | mundus | geographic lookup (geonames) + historic timezone resolution (meridian codex + iana) | tbd |
+| chitta | research notes, voice transcripts, client session memory, semantic search | rust (shared with manas; see "shared subsystems") |
+| smriti | astrologer's library: pdfs, books, papers — content perception + semantic citation | rust (shared with manas) |
 | core renderers | south indian, north indian, western wheel, data table, dasha timeline | dart (in-process?) |
 
 **third-party plugin examples:**
@@ -150,6 +152,87 @@ text embeddings handle fuzzy natural language queries.
 - **import** — jhora (.jhd) is highest priority. parashara's light second.
 - **export** — json/toml (data), pdf (reports/charts)
 
+## chitta — memory subsystem
+
+aion is not just chart mechanics. it is an astrologer's operating system.
+chitta is the memory subsystem: research notes, voice-dictated observations,
+client session transcripts, ideas-while-reading-a-book.
+
+verbatim storage, bi-temporal (event_time / record_time), profile-isolated,
+semantic search via local embeddings.
+
+### what chitta stores in aion
+
+- **research notes** — short or long, typed or dictated
+- **client session transcripts** — verbatim, often from voice
+- **observations linked to charts** — "this confirms my hunch about combust mars"
+- **citations from books/papers** (anchor lives in chitta, source content in smriti)
+
+### linkage to charts and books
+
+memories carry tags + metadata. aion establishes tag conventions; chitta core
+stays domain-agnostic.
+
+| tag form | meaning |
+|---|---|
+| `chart:<uuid>` | memory references this chart |
+| `client:<id>` | memory belongs to this client scope |
+| `book:<id>` | memory cites a book in the smriti library |
+| `paper:<doi>` | memory cites a paper |
+| `role:example` / `role:counter` / `role:fits` | the relation a chart plays in a note |
+| `topic:<slug>` | freeform topical grouping |
+
+richer per-mention context (page number, audio offset, paragraph anchor) lives
+in `metadata`. reverse lookups ("which notes reference this chart?") are tag
+filtered searches.
+
+### shared subsystem with manas
+
+chitta is also the memory subsystem in manas (josh's developer cognition os).
+the codebase is shared; the deployments are separate.
+
+- **chitta-engine** — rust crate. storage, bi-temporal model, profiles,
+  embedder client, indexing, query api. no mcp, no i/o surface.
+- **chitta-server** — thin mcp wrapper binary over the engine. one
+  implementation, run by both consumers.
+- **deployments** — manas runs chitta-server pointed at `~/.manas/chitta.db`
+  for claude code; aion bundles chitta-server as a plugin pointed at
+  `$AION_DATA/chitta.db`. two separate processes, two separate databases.
+
+memory_type is free text, not an enum. each consumer establishes its own
+vocabulary (manas: `observation`/`decision`/`mental_model`/...; aion:
+`research_note`/`client_session`/`citation`/...).
+
+aion-specific concepts (chart-id linkage, audio offsets, pdf citation ux)
+live in aion's deployment layer or adjacent plugins, not in chitta core.
+
+## smriti — library perception
+
+smriti is the filesystem-and-content perception subsystem. in aion's
+deployment, smriti perceives the astrologer's reference library: pdfs,
+epubs, scanned papers, classical texts.
+
+### responsibilities
+
+- index a configured library directory
+- extract text per-page / per-section
+- compute embeddings (via the shared embedder service)
+- expose semantic search and citation tools over mcp
+- watch the directory for changes
+
+### relation to chitta
+
+smriti owns *the source*. chitta owns *the astrologer's relation to the source*.
+a research note in chitta cites a book passage by reference (`book:<id>`,
+metadata `{ page: 47 }`); the actual book content lives in smriti and is
+fetched on demand when the ui renders the citation.
+
+### shared subsystem with manas
+
+smriti is also a manas subsystem (filesystem perception of the dev's project).
+same engine/server split as chitta. aion's smriti points at the user's library
+folder; manas's smriti points at code/notes folders.
+
 ## mundus
 
 two distinct problems:
@@ -177,12 +260,14 @@ llm provider (user's choice)
     |-- cloud: anthropic api, etc.
     | mcp tool calls
     v
-+-------------------------------+
-| drishti (calculations)        |
-| chart-db (search, embeddings) |
-| mundus (location/timezone)     |
-| any installed plugin          |
-+-------------------------------+
++--------------------------------------+
+| drishti (calculations)               |
+| chart-db (charts, similarity)        |
+| chitta (notes, transcripts, recall)  |
+| smriti (library, citations)          |
+| mundus (location/timezone)           |
+| any installed plugin                 |
++--------------------------------------+
     | results
     v
 llm synthesizes response
@@ -215,8 +300,10 @@ user: "which clients should i reach out to about the upcoming saturn-mars conjun
 
 llm -> drishti: get conjunction date/degrees
 llm -> chart-db (vector): find charts with natal saturn/mars near transit degrees
-llm -> chart-db (text): refine by "relationship or career stress indicators"
-llm -> synthesize: "these 4 clients are most affected, here's why..."
+llm -> chitta: pull recent notes/sessions for those clients
+llm -> smriti: cite a relevant passage from a classical text on saturn-mars
+llm -> synthesize: "these 4 clients are most affected, here's why,
+                    and here's what you wrote about jane last month..."
 ```
 
 ## canvas & workspace (from gui-spike)
@@ -292,6 +379,10 @@ card palette for drag-to-canvas. context menus for card operations.
 | aion | desktop application (this project) |
 | gandiva | python prototype, experimentation platform |
 | aion-gui-spike | flutter canvas interaction prototype |
+| manas | parallel ecosystem: developer cognition os, source of shared subsystems |
+| chitta | memory subsystem (engine + mcp server), shared between manas and aion |
+| smriti | filesystem/library perception subsystem, shared between manas and aion |
+| embedder service | local bge-m3 embedder, single process serving chitta/smriti/chart-db |
 
 ## open questions
 
@@ -301,3 +392,11 @@ card palette for drag-to-canvas. context menus for card operations.
 - toml chart format: what extensions needed for metadata, tags, collections?
 - mcp server lifecycle: how does aion discover, install, and update plugins?
 - ai context: how much chart context to include in llm prompts automatically?
+- voice capture pipeline: which local stt model for verbatim transcription
+  into chitta? whisper.cpp variant? push-to-talk vs continuous?
+- chitta type vocabulary for astrology: research_note, client_session,
+  citation, transit_observation, dream — settle the initial set.
+- smriti library scope: pdfs only first, or epubs + scanned/ocr'd material
+  from day one? per-page granularity vs paragraph?
+- embedder service: extraction trigger and shared protocol between aion
+  and manas — unix socket, ipc, or in-process for single-app deployments?

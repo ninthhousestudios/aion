@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 doc/handoff.md
+.codex/
 
 # IntelliJ related
 *.iml

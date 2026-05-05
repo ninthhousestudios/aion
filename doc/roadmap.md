@@ -41,7 +41,7 @@ aion becomes a real astrology app.
 - **slot pipelines** — extend WorkspaceStore to support multi-step tool call
   composition. a slot can be defined by a pipeline of chained calls where each
   step's output feeds the next, executed in dart without inference overhead.
-  this establishes the composition pattern that the AI layer (phase 6) can later
+  this establishes the composition pattern that the AI layer (phase 7) can later
   generate programmatically. see david soria parra's "programmatic tool calling"
   concept from the MCP future talk (april 2025).
 - **structured output contracts** — plugins declare output schemas on their tools
@@ -51,7 +51,7 @@ aion becomes a real astrology app.
 - **skills field in PluginManifest** — add an optional `skills` field to the
   manifest format. plugins can advertise domain knowledge documents alongside
   tools (e.g. "natal chart reading procedure", "vimshottari dasha interpretation").
-  nothing consumes this yet — the AI panel (phase 6) will load these into context
+  nothing consumes this yet — the AI panel (phase 7) will load these into context
   instead of a monolithic system prompt. designing the field now means drishti can
   start shipping skills incrementally.
   **drishti change:** ship skill documents alongside tools when ready.
@@ -87,7 +87,41 @@ persistent storage and organization.
 - toml schema: what metadata fields needed beyond birth data?
 - sqlite from dart/flutter — ffi bindings, packages
 
-## phase 5 — embeddings + smart search
+## phase 5 — chitta + smriti (memory and library)
+
+aion is an astrologer's operating system, not just a chart calculator.
+this phase brings in the two memory/perception subsystems shared with manas.
+
+- bundle `chitta-server` as a plugin (rust binary, stdio transport,
+  `$AION_DATA/chitta.db`)
+- bundle `smriti-server` as a plugin pointed at the user's library directory
+- aion notebook ui: write notes, browse by tag/topic/client/chart
+- voice capture → verbatim transcript → chitta memory (single research note
+  or session). local stt (whisper.cpp candidate)
+- tag conventions: `chart:<uuid>`, `client:<id>`, `book:<id>`, `paper:<doi>`,
+  `role:example|counter|fits`, `topic:<slug>`
+- citation flow: smriti finds passage → user pins → chitta memory created
+  with `book:<id>` tag and `metadata.page`
+- chart-detail side panel: "research notes referencing this chart" via
+  tag-filtered chitta search
+- chitta type vocabulary defined for astrology (research_note,
+  client_session, citation, transit_observation, ...)
+
+**depends on:** chitta refactor into engine + server crates (work in
+`~/soft/chitta`, separate from aion); embedder service (or in-process
+bge-m3 for v1)
+
+**research needed:**
+- voice capture pipeline: which local stt model? push-to-talk vs continuous?
+  buffering, interruption handling, edit-after-the-fact ux
+- pdf/epub text extraction libraries with stable per-page anchors
+- smriti scoping: how does the user designate the library dir, exclude
+  patterns, multi-folder support
+- citation ux: how does the user pin a smriti search result into a chitta note
+- chitta multi-profile ux: scopes (per-client / per-research-line) without
+  exposing the word "profile"
+
+## phase 6 — embeddings + smart search
 
 vector search layered on top of the database.
 
@@ -106,7 +140,7 @@ vector search layered on top of the database.
 - sentence transformer selection: model size vs quality tradeoff for bundling.
   must run locally on modest hardware.
 
-## phase 6 — ai integration
+## phase 7 — ai integration
 
 the chat panel and llm wiring.
 
@@ -135,7 +169,7 @@ the chat panel and llm wiring.
   technique; also consider programmatic tool calling (model writes scripts in
   the slot pipeline REPL rather than orchestrating one call at a time)
 
-## phase 7 — reports + export
+## phase 8 — reports + export
 
 professional output.
 
@@ -144,7 +178,7 @@ professional output.
 - report templates (configurable, saveable)
 - print support
 
-## phase 8 — polish + release
+## phase 9 — polish + release
 
 - journaling / event tracking
 - transit animation / time stepping with snap-to-event
@@ -180,10 +214,10 @@ the research might take.
    stdio + streamable http both validated.
 2. **meridian codex** — phase 3. deep dive into coverage, api, integration path.
 3. **jhora .jhd format** — phase 4. need to understand the format for import.
-4. **chart vector schema** — phase 5. domain research + experimentation.
+4. **chart vector schema** — phase 6. domain research + experimentation.
    what makes two charts "similar"? this is as much an astrological question
    as a technical one. gandiva prototype could be useful for experimenting.
-5. **local llm from flutter** — phase 6. ollama bindings, model selection,
+5. **local llm from flutter** — phase 7. ollama bindings, model selection,
    resource requirements for end users.
-6. **sentence transformers for bundling** — phase 5/6. which models are
+6. **sentence transformers for bundling** — phase 5/7. which models are
    small enough to ship, good enough to be useful?
