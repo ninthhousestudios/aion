@@ -34,11 +34,11 @@ everything else. each plugin is an mcp server (separate process, any language).
 
 | plugin | role | language |
 |---|---|---|
-| drishti | arjuna/arrow calculations via mcp | rust |
+| drishti | arjuna/arrow calculations via mcp | dart |
 | chart-db | chart storage, indexing, structured chart vectors, similarity search | tbd |
-| mundus | geographic lookup (geonames) + historic timezone resolution (meridian codex + iana) | tbd |
+| mundus | geographic lookup (geonames) + historic timezone resolution (meridian codex + iana) | dart |
 | chitta | research notes, voice transcripts, client session memory, semantic search | rust (shared with manas; see "shared subsystems") |
-| smriti | astrologer's library: pdfs, books, papers — content perception + semantic citation | rust (shared with manas) |
+| kosha | astrologer's library: pdfs, books, papers — content perception + semantic citation | rust (shared with manas) |
 | core renderers | south indian, north indian, western wheel, data table, dasha timeline | dart (in-process?) |
 
 **third-party plugin examples:**
@@ -166,7 +166,7 @@ semantic search via local embeddings.
 - **research notes** — short or long, typed or dictated
 - **client session transcripts** — verbatim, often from voice
 - **observations linked to charts** — "this confirms my hunch about combust mars"
-- **citations from books/papers** (anchor lives in chitta, source content in smriti)
+- **citations from books/papers** (anchor lives in chitta, source content in kosha)
 
 ### linkage to charts and books
 
@@ -177,7 +177,7 @@ stays domain-agnostic.
 |---|---|
 | `chart:<uuid>` | memory references this chart |
 | `client:<id>` | memory belongs to this client scope |
-| `book:<id>` | memory cites a book in the smriti library |
+| `book:<id>` | memory cites a book in the kosha library |
 | `paper:<doi>` | memory cites a paper |
 | `role:example` / `role:counter` / `role:fits` | the relation a chart plays in a note |
 | `topic:<slug>` | freeform topical grouping |
@@ -206,10 +206,10 @@ vocabulary (manas: `observation`/`decision`/`mental_model`/...; aion:
 aion-specific concepts (chart-id linkage, audio offsets, pdf citation ux)
 live in aion's deployment layer or adjacent plugins, not in chitta core.
 
-## smriti — library perception
+## kosha — library perception
 
-smriti is the filesystem-and-content perception subsystem. in aion's
-deployment, smriti perceives the astrologer's reference library: pdfs,
+kosha is the filesystem-and-content perception subsystem. in aion's
+deployment, kosha perceives the astrologer's reference library: pdfs,
 epubs, scanned papers, classical texts.
 
 ### responsibilities
@@ -222,16 +222,16 @@ epubs, scanned papers, classical texts.
 
 ### relation to chitta
 
-smriti owns *the source*. chitta owns *the astrologer's relation to the source*.
+kosha owns *the source*. chitta owns *the astrologer's relation to the source*.
 a research note in chitta cites a book passage by reference (`book:<id>`,
-metadata `{ page: 47 }`); the actual book content lives in smriti and is
+metadata `{ page: 47 }`); the actual book content lives in kosha and is
 fetched on demand when the ui renders the citation.
 
 ### shared subsystem with manas
 
-smriti is also a manas subsystem (filesystem perception of the dev's project).
-same engine/server split as chitta. aion's smriti points at the user's library
-folder; manas's smriti points at code/notes folders.
+kosha is also a manas subsystem (filesystem perception of the dev's project).
+same engine/server split as chitta. aion's kosha points at the user's library
+folder; manas's kosha points at code/notes folders.
 
 ## mundus
 
@@ -264,7 +264,7 @@ llm provider (user's choice)
 | drishti (calculations)               |
 | chart-db (charts, similarity)        |
 | chitta (notes, transcripts, recall)  |
-| smriti (library, citations)          |
+| kosha (library, citations)          |
 | mundus (location/timezone)           |
 | any installed plugin                 |
 +--------------------------------------+
@@ -301,7 +301,7 @@ user: "which clients should i reach out to about the upcoming saturn-mars conjun
 llm -> drishti: get conjunction date/degrees
 llm -> chart-db (vector): find charts with natal saturn/mars near transit degrees
 llm -> chitta: pull recent notes/sessions for those clients
-llm -> smriti: cite a relevant passage from a classical text on saturn-mars
+llm -> kosha: cite a relevant passage from a classical text on saturn-mars
 llm -> synthesize: "these 4 clients are most affected, here's why,
                     and here's what you wrote about jane last month..."
 ```
@@ -381,8 +381,8 @@ card palette for drag-to-canvas. context menus for card operations.
 | aion-gui-spike | flutter canvas interaction prototype |
 | manas | parallel ecosystem: developer cognition os, source of shared subsystems |
 | chitta | memory subsystem (engine + mcp server), shared between manas and aion |
-| smriti | filesystem/library perception subsystem, shared between manas and aion |
-| embedder service | local bge-m3 embedder, single process serving chitta/smriti/chart-db |
+| kosha | filesystem/library perception subsystem, shared between manas and aion |
+| embedder service | local bge-m3 embedder, single process serving chitta/kosha/chart-db |
 
 ## open questions
 
@@ -396,7 +396,7 @@ card palette for drag-to-canvas. context menus for card operations.
   into chitta? whisper.cpp variant? push-to-talk vs continuous?
 - chitta type vocabulary for astrology: research_note, client_session,
   citation, transit_observation, dream — settle the initial set.
-- smriti library scope: pdfs only first, or epubs + scanned/ocr'd material
+- kosha library scope: pdfs only first, or epubs + scanned/ocr'd material
   from day one? per-page granularity vs paragraph?
 - embedder service: extraction trigger and shared protocol between aion
   and manas — unix socket, ipc, or in-process for single-app deployments?
