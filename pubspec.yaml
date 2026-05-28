@@ -15,6 +15,7 @@ dependencies:
       ref: 0cfec14747590c36128004aa4686c5ac7cd2f1f2
   rxdart: ^0.28.0
   flutter_riverpod: ^2.6.0
+  window_manager: ^0.4.3
   charts_dart:
     path: ../charts_dart
   chart_db_core:

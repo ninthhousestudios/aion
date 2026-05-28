@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/title_bar.dart';
 import 'card_model.dart';
 import 'canvas_card.dart';
 import 'snap_physics.dart';
@@ -194,8 +195,6 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                                 model: card,
                                 selected: card.id == workspaceState.selectedId,
                                 onSelect: () => workspace.selectCard(card.id),
-                                onDragUpdate: (_) {},
-                                onDragEnd: () {},
                                 onResizeUpdate: (delta, corner) =>
                                     workspace.resizeCard(
                                       card.id,
@@ -213,6 +212,12 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                   ),
                 ),
               ),
+            ),
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: TitleBar(),
             ),
             Positioned(
               left: 12,

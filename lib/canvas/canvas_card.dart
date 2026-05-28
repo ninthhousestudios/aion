@@ -9,8 +9,6 @@ class CanvasCard extends StatefulWidget {
     required this.model,
     required this.selected,
     required this.onSelect,
-    required this.onDragUpdate,
-    required this.onDragEnd,
     required this.onResizeUpdate,
     required this.onResizeEnd,
     required this.onContextMenu,
@@ -19,8 +17,6 @@ class CanvasCard extends StatefulWidget {
   final CardModel model;
   final bool selected;
   final VoidCallback onSelect;
-  final ValueChanged<Offset> onDragUpdate;
-  final VoidCallback onDragEnd;
   final void Function(Offset delta, ResizeCorner corner) onResizeUpdate;
   final VoidCallback onResizeEnd;
   final ValueChanged<Offset> onContextMenu;
@@ -31,11 +27,8 @@ class CanvasCard extends StatefulWidget {
 
 class _CanvasCardState extends State<CanvasCard> {
   bool _hovered = false;
-  ResizeCorner? _activeCorner;
 
   static const double _gripSize = 14;
-
-  bool get _resizing => _activeCorner != null;
 
   MouseCursor _cursorForCorner(ResizeCorner corner) => switch (corner) {
     ResizeCorner.topLeft => SystemMouseCursors.resizeUpLeft,
@@ -63,12 +56,8 @@ class _CanvasCardState extends State<CanvasCard> {
       left: left,
       right: right,
       child: GestureDetector(
-        onPanStart: (_) => _activeCorner = corner,
         onPanUpdate: (d) => widget.onResizeUpdate(d.delta, corner),
-        onPanEnd: (_) {
-          _activeCorner = null;
-          widget.onResizeEnd();
-        },
+        onPanEnd: (_) => widget.onResizeEnd(),
         child: MouseRegion(
           cursor: _cursorForCorner(corner),
           child: SizedBox(width: _gripSize, height: _gripSize),
@@ -89,12 +78,6 @@ class _CanvasCardState extends State<CanvasCard> {
     return GestureDetector(
       onTap: widget.onSelect,
       onSecondaryTapUp: (d) => widget.onContextMenu(d.globalPosition),
-      onPanUpdate: (d) {
-        if (!_resizing) widget.onDragUpdate(d.delta);
-      },
-      onPanEnd: (_) {
-        if (!_resizing) widget.onDragEnd();
-      },
       child: MouseRegion(
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
