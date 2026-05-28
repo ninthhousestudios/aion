@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'widgets/plugin_status.dart';
+import 'canvas/canvas_workspace.dart';
 
 void main() {
   runApp(const ProviderScope(child: AionApp()));
@@ -20,7 +20,7 @@ class AionApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      home: const PluginStatusPage(),
+      home: const CanvasWorkspace(),
     );
   }
 }
