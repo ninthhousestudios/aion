@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+import '../theme/aion_theme.dart';
 
 class TitleBar extends StatelessWidget {
   const TitleBar({super.key});
@@ -10,6 +11,7 @@ class TitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = Theme.of(context).extension<AionTheme>()!;
     return SizedBox(
       height: height,
       child: Row(
@@ -32,6 +34,8 @@ class TitleBar extends StatelessWidget {
             _WindowButton(
               icon: Icons.minimize,
               onPressed: windowManager.minimize,
+              defaultHoverColor: t.chromeButtonHover,
+              iconColor: t.chromeIconColor,
             ),
             _WindowButton(
               icon: Icons.crop_square,
@@ -42,11 +46,15 @@ class TitleBar extends StatelessWidget {
                   await windowManager.maximize();
                 }
               },
+              defaultHoverColor: t.chromeButtonHover,
+              iconColor: t.chromeIconColor,
             ),
             _WindowButton(
               icon: Icons.close,
               onPressed: windowManager.close,
-              hoverColor: Colors.red,
+              hoverColor: t.chromeCloseHover,
+              defaultHoverColor: t.chromeButtonHover,
+              iconColor: t.chromeIconColor,
             ),
           ],
         ],
@@ -59,11 +67,15 @@ class _WindowButton extends StatefulWidget {
   const _WindowButton({
     required this.icon,
     required this.onPressed,
+    required this.defaultHoverColor,
+    required this.iconColor,
     this.hoverColor,
   });
 
   final IconData icon;
   final VoidCallback onPressed;
+  final Color defaultHoverColor;
+  final Color iconColor;
   final Color? hoverColor;
 
   @override
@@ -84,12 +96,12 @@ class _WindowButtonState extends State<_WindowButton> {
           width: 46,
           height: TitleBar.height,
           color: _hovered
-              ? (widget.hoverColor ?? Colors.white12)
+              ? (widget.hoverColor ?? widget.defaultHoverColor)
               : Colors.transparent,
           child: Icon(
             widget.icon,
             size: 16,
-            color: Colors.white54,
+            color: widget.iconColor,
           ),
         ),
       ),

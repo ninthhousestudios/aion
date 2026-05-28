@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
 import 'card_model.dart';
 import 'canvas_card.dart';
@@ -30,6 +31,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
   }
 
   void _showContextMenu(Offset globalPos, CardModel? card) async {
+    final t = Theme.of(context).extension<AionTheme>()!;
     final result = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -38,7 +40,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         globalPos.dx,
         globalPos.dy,
       ),
-      color: const Color(0xFF1E1E2E),
+      color: t.surfaceOverlay,
       items: [
         if (card != null) ...[
           const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
@@ -148,6 +150,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Theme.of(context).extension<AionTheme>()!;
     final workspaceState = ref.watch(workspaceProvider);
     final workspace = ref.read(workspaceProvider.notifier);
     final sorted = workspaceState.sortedCards;
@@ -163,7 +166,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           children: [
             Container(
               key: _canvasKey,
-              color: const Color(0xFF0F0F1A),
+              color: t.canvasBackground,
               child: Listener(
                 behavior: HitTestBehavior.opaque,
                 onPointerDown: _handleWorkspacePointerDown,
@@ -174,6 +177,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                   painter: _GuidePainter(
                     workspaceState.guides,
                     viewportOffset: _viewportOffset,
+                    color: t.snapGuideColor,
                   ),
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -232,16 +236,16 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2E),
+                      color: t.surfaceOverlay,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.white12),
+                      border: Border.all(color: t.surfaceBorder),
                     ),
                     child: Text(
                       'Snap: ${workspaceState.snapEnabled ? "ON" : "OFF"}  [S]',
                       style: TextStyle(
                         color: workspaceState.snapEnabled
-                            ? const Color(0xFF6366F1)
-                            : Colors.white38,
+                            ? t.snapAccent
+                            : t.snapInactiveColor,
                         fontSize: 11,
                       ),
                     ),
@@ -257,14 +261,15 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 }
 
 class _GuidePainter extends CustomPainter {
-  _GuidePainter(this.guides, {required this.viewportOffset});
+  _GuidePainter(this.guides, {required this.viewportOffset, required this.color});
   final List<SnapGuide> guides;
   final Offset viewportOffset;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0x556366F1)
+      ..color = color
       ..strokeWidth = 1;
 
     for (final guide in guides) {

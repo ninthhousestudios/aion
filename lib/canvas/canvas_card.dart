@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/aion_theme.dart';
 import 'card_model.dart';
 
 enum ResizeCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -68,12 +69,13 @@ class _CanvasCardState extends State<CanvasCard> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Theme.of(context).extension<AionTheme>()!;
     final m = widget.model;
     final borderColor = widget.selected
-        ? Colors.white
+        ? t.cardBorderSelected
         : _hovered
-        ? Colors.white54
-        : Colors.white24;
+        ? t.cardBorderHovered
+        : t.cardBorderIdle;
 
     return GestureDetector(
       onTap: widget.onSelect,
@@ -95,7 +97,7 @@ class _CanvasCardState extends State<CanvasCard> {
             boxShadow: [
               if (widget.selected)
                 BoxShadow(
-                  color: Colors.white.withAlpha(30),
+                  color: t.cardShadow,
                   blurRadius: 16,
                   spreadRadius: 2,
                 ),
@@ -110,8 +112,8 @@ class _CanvasCardState extends State<CanvasCard> {
                   children: [
                     Text(
                       m.label,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: t.cardLabelColor,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -120,7 +122,7 @@ class _CanvasCardState extends State<CanvasCard> {
                     Text(
                       '${m.size.width.round()} x ${m.size.height.round()}',
                       style: TextStyle(
-                        color: Colors.white.withAlpha(120),
+                        color: t.cardDimColor,
                         fontSize: 11,
                       ),
                     ),

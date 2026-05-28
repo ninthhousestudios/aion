@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'canvas/canvas_workspace.dart';
+import 'theme/aion_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,7 @@ class AionApp extends StatelessWidget {
           seedColor: Colors.indigo,
           brightness: Brightness.dark,
         ),
+        extensions: const [AionTheme.dark],
       ),
       home: const CanvasWorkspace(),
     );

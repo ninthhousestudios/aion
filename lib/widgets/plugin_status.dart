@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/aion_theme.dart';
 
 import '../mcp/plugin_host.dart';
 import '../mcp/plugin_manifest.dart';
@@ -50,11 +50,12 @@ class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
   }
 
   Widget _tile(PluginManifest manifest, PluginState state, bool isExpanded) {
+    final t = Theme.of(context).extension<AionTheme>()!;
     final (color, label) = switch (state.status) {
-      PluginStatus.connected => (Colors.green, 'Connected'),
-      PluginStatus.starting => (Colors.amber, 'Starting'),
-      PluginStatus.error => (Colors.red, 'Error'),
-      PluginStatus.stopped => (Colors.grey, 'Stopped'),
+      PluginStatus.connected => (t.statusConnected, 'Connected'),
+      PluginStatus.starting => (t.statusStarting, 'Starting'),
+      PluginStatus.error => (t.statusError, 'Error'),
+      PluginStatus.stopped => (t.statusStopped, 'Stopped'),
     };
 
     final toolCount = state.tools.length;
