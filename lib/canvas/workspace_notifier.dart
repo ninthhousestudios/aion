@@ -1,4 +1,6 @@
 import 'package:flutter/services.dart';
+
+import '../mcp/expression_ref.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'canvas_card.dart';
@@ -52,8 +54,10 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     return initialState;
   }
 
-  void addCard(Offset position, Size size, String label, {String? slotId}) {
-    state = _addCardToState(state, position, size, label, slotId: slotId);
+  void addCard(Offset position, Size size, String label, {
+    List<ExpressionRef> expressions = const [],
+  }) {
+    state = _addCardToState(state, position, size, label, expressions: expressions);
   }
 
   void duplicateCard(String id) {
@@ -65,7 +69,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       card.position + const Offset(30, 30),
       card.size,
       '${card.label} (copy)',
-      slotId: card.slotId,
+      expressions: card.expressions,
     );
   }
 
@@ -218,7 +222,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     Offset position,
     Size size,
     String label, {
-    String? slotId,
+    List<ExpressionRef> expressions = const [],
   }) {
     final color = _palette[current.cardCounter % _palette.length];
     final card = CardModel(
@@ -227,7 +231,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       color: color,
       position: position,
       size: size,
-      slotId: slotId,
+      expressions: expressions,
       zOrder: current.nextZ,
     );
 

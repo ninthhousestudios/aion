@@ -3,31 +3,35 @@ import 'dart:convert';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'expression_ref.dart';
+import 'expression_state.dart';
 import 'plugin_host.dart';
-import 'slot_state.dart';
 
 class WorkspaceStore {
   final PluginHost _host;
-  final _slots = <String, BehaviorSubject<SlotState>>{};
+  final _expressions = <ExpressionRef, BehaviorSubject<ExpressionState>>{};
 
   WorkspaceStore(this._host);
 
-  BehaviorSubject<SlotState> _slotOf(String name) {
-    return _slots.putIfAbsent(name, () => BehaviorSubject.seeded(const SlotIdle()));
+  BehaviorSubject<ExpressionState> _expressionOf(ExpressionRef ref) {
+    return _expressions.putIfAbsent(
+      ref,
+      () => BehaviorSubject.seeded(const ExpressionIdle()),
+    );
   }
 
-  Stream<SlotState> watch(String name) => _slotOf(name).stream;
+  Stream<ExpressionState> watch(ExpressionRef ref) => _expressionOf(ref).stream;
 
-  SlotState current(String name) => _slotOf(name).value;
+  ExpressionState current(ExpressionRef ref) => _expressionOf(ref).value;
 
   Future<void> recalculate(
-    String slot,
+    ExpressionRef ref,
     String server,
     String tool,
     Map<String, dynamic> args,
   ) async {
-    final subject = _slotOf(slot);
-    subject.add(SlotLoading(args));
+    final subject = _expressionOf(ref);
+    subject.add(ExpressionLoading(args));
     try {
       final result = await _host.callTool(server, tool, args);
       if (result.isError) {
@@ -36,34 +40,37 @@ class WorkspaceStore {
                 .firstOrNull
                 ?.text ??
             'Unknown tool error';
-        subject.add(SlotError(message, args));
+        subject.add(ExpressionError(message, args));
         return;
       }
       final textContent = result.content.whereType<TextContent>().firstOrNull;
       if (textContent == null) {
-        subject.add(SlotError('No TextContent in tool result', args));
+        subject.add(ExpressionError('No TextContent in tool result', args));
         return;
       }
       final Map<String, dynamic> data;
       try {
         data = json.decode(textContent.text) as Map<String, dynamic>;
       } catch (_) {
-        subject.add(SlotError('Tool result is not valid JSON: ${textContent.text}', args));
+        subject.add(ExpressionError(
+          'Tool result is not valid JSON: ${textContent.text}',
+          args,
+        ));
         return;
       }
-      subject.add(SlotReady(data, args));
+      subject.add(ExpressionReady(data, args));
     } catch (error) {
-      subject.add(SlotError(error, args));
+      subject.add(ExpressionError(error, args));
     }
   }
 
-  List<String> get activeSlots => _slots.entries
-      .where((e) => e.value.value is! SlotIdle)
+  List<ExpressionRef> get activeExpressions => _expressions.entries
+      .where((e) => e.value.value is! ExpressionIdle)
       .map((e) => e.key)
       .toList();
 
   void dispose() {
-    for (final subject in _slots.values) {
+    for (final subject in _expressions.values) {
       subject.close();
     }
   }

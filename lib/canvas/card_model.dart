@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import '../mcp/expression_ref.dart';
+
 class CardModel {
   const CardModel({
     required this.id,
@@ -7,7 +9,7 @@ class CardModel {
     required this.color,
     required this.position,
     required this.size,
-    this.slotId,
+    this.expressions = const [],
     this.minSize = const Size(120, 80),
     this.zOrder = 0,
   });
@@ -17,13 +19,11 @@ class CardModel {
   final Color color;
   final Offset position;
   final Size size;
-  final String? slotId;
+  final List<ExpressionRef> expressions;
   final Size minSize;
   final int zOrder;
 
   Rect get rect => position & size;
-
-  static const Object _unset = Object();
 
   CardModel copyWith({
     String? id,
@@ -31,7 +31,7 @@ class CardModel {
     Color? color,
     Offset? position,
     Size? size,
-    Object? slotId = _unset,
+    List<ExpressionRef>? expressions,
     Size? minSize,
     int? zOrder,
   }) {
@@ -41,7 +41,7 @@ class CardModel {
       color: color ?? this.color,
       position: position ?? this.position,
       size: size ?? this.size,
-      slotId: identical(slotId, _unset) ? this.slotId : slotId as String?,
+      expressions: expressions ?? this.expressions,
       minSize: minSize ?? this.minSize,
       zOrder: zOrder ?? this.zOrder,
     );

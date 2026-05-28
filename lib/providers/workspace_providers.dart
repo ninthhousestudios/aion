@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../mcp/slot_state.dart';
+import '../mcp/expression_ref.dart';
+import '../mcp/expression_state.dart';
 import '../mcp/workspace_store.dart';
 import 'plugin_host_provider.dart';
 
@@ -10,6 +11,6 @@ final workspaceStoreProvider = Provider<WorkspaceStore>((ref) {
   return store;
 });
 
-final slotProvider = StreamProvider.family<SlotState, String>(
-  (ref, name) => ref.watch(workspaceStoreProvider).watch(name),
+final expressionProvider = StreamProvider.family<ExpressionState, ExpressionRef>(
+  (ref, exprRef) => ref.watch(workspaceStoreProvider).watch(exprRef),
 );
