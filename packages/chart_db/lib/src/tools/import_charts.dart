@@ -98,7 +98,7 @@ void _importFile(
 ) {
   try {
     final chartData = ChartIO.read(filePath);
-    final jd = _dateTimeToJd(chartData.utcDateTime);
+    final jd = dateTimeToJd(chartData.utcDateTime);
     final alt = (chartData.extra['altitude'] as num?)?.toDouble() ?? 0.0;
 
     final chart = Chart(
@@ -163,25 +163,6 @@ String _extension(String path) {
   final dot = path.lastIndexOf('.');
   if (dot < 0) return '';
   return path.substring(dot).toLowerCase();
-}
-
-/// Convert a UTC [DateTime] to Julian Day Number (Meeus algorithm).
-double _dateTimeToJd(DateTime dt) {
-  var y = dt.year;
-  var m = dt.month;
-  if (m <= 2) {
-    y -= 1;
-    m += 12;
-  }
-  final a = y ~/ 100;
-  final b = 2 - a + (a ~/ 4);
-  final dayFrac = (dt.hour + dt.minute / 60.0 + dt.second / 3600.0) / 24.0;
-  return (365.25 * (y + 4716)).floor() +
-      (30.6001 * (m + 1)).floor() +
-      dt.day +
-      dayFrac +
-      b -
-      1524.5;
 }
 
 CallToolResult _errorResult(String message) {

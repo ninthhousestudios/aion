@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chart_db_core/chart_db_core.dart' as cdc;
 import 'package:charts_dart/charts_dart.dart';
 
 /// Standalone data class holding all fields needed for the charts table.
@@ -91,7 +92,7 @@ class ChartImporter {
 
   /// Map [ChartData] to [ImportedChart].
   ImportedChart _mapToImported(ChartData cd, String filePath) {
-    final jd = dateTimeToJd(cd.utcDateTime);
+    final jd = cdc.dateTimeToJd(cd.utcDateTime);
     final alt = (cd.extra['altitude'] as num?)?.toDouble() ?? 0.0;
 
     return ImportedChart(
@@ -122,30 +123,9 @@ class ChartImporter {
     return path.substring(dot).toLowerCase();
   }
 
-  // ---------------------------------------------------------------------------
-  // Julian Day conversion (Meeus, Astronomical Algorithms ch. 7)
-  // ---------------------------------------------------------------------------
-
   /// Convert a UTC [DateTime] to Julian Day Number.
   ///
-  /// Visible for testing. Uses the Meeus algorithm accurate for dates
-  /// after the Gregorian reform (15 Oct 1582).
-  static double dateTimeToJd(DateTime dt) {
-    var y = dt.year;
-    var m = dt.month;
-    if (m <= 2) {
-      y -= 1;
-      m += 12;
-    }
-    final a = y ~/ 100;
-    final b = 2 - a + (a ~/ 4);
-    final dayFrac =
-        (dt.hour + dt.minute / 60.0 + dt.second / 3600.0) / 24.0;
-    return (365.25 * (y + 4716)).floor() +
-        (30.6001 * (m + 1)).floor() +
-        dt.day +
-        dayFrac +
-        b -
-        1524.5;
-  }
+  /// Visible for testing. Delegates to chart_db_core's canonical
+  /// [cdc.dateTimeToJd] — the single home for JD math in aion.
+  static double dateTimeToJd(DateTime dt) => cdc.dateTimeToJd(dt);
 }
