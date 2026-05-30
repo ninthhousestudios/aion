@@ -1,3 +1,4 @@
+export 'src/chart_doc.dart';
 export 'src/chart_repository.dart';
 export 'src/chart_service.dart';
 export 'src/collection_repository.dart';
@@ -5,6 +6,7 @@ export 'src/config_repository.dart';
 export 'src/database.dart';
 export 'src/julian_day.dart';
 export 'src/similarity_search.dart';
+export 'src/toml_chart.dart';
 export 'src/vec_store.dart';
 export 'src/vector_extractor.dart';
 export 'src/vector_schema.dart';
