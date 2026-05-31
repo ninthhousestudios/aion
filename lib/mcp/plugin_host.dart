@@ -60,6 +60,9 @@ class PluginHost {
   PluginState pluginState(String name) => _stateOf(name).value;
 
   Future<void> startPlugin(PluginManifest manifest) async {
+    final oldClient = _clients.remove(manifest.name);
+    await oldClient?.close();
+
     _stateOf(manifest.name).add(const PluginState.starting());
     McpClient? client;
     try {

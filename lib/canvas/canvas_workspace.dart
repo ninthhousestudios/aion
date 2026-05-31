@@ -189,9 +189,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     final cardId = _cardDragId;
     if (_cardDragPointer != event.pointer || cardId == null) return;
 
+    final box = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final canvasSize = box?.size ?? Size.zero;
     ref
         .read(workspaceProvider.notifier)
-        .moveCard(cardId, _viewportDeltaToWorkspace(event.delta), Size.zero);
+        .moveCard(cardId, _viewportDeltaToWorkspace(event.delta), canvasSize);
   }
 
   void _handleCardPointerEnd(PointerEvent event) {

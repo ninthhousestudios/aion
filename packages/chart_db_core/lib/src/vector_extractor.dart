@@ -123,12 +123,12 @@ Float64List extractVector(
 
   final result = Float64List.fromList(values);
 
-  // Verify length matches expected dims.
   final expectedDims = computeDims(schemaSpec);
-  assert(
-    result.length == expectedDims,
-    'Vector length ${result.length} does not match expected dims $expectedDims',
-  );
+  if (result.length != expectedDims) {
+    throw StateError(
+      'Vector length ${result.length} does not match expected dims $expectedDims',
+    );
+  }
 
   return result;
 }

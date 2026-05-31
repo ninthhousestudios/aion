@@ -58,7 +58,7 @@ void main() {
     expect(states.last, isA<ExpressionReady>());
     final ready = states.last as ExpressionReady;
     expect(ready.data, equals({'sun': 'aries'}));
-    expect(ready.options, equals({'date': '2000-01-01'}));
+    expect(ready.args, equals({'date': '2000-01-01'}));
   });
 
   test('expression error on exception', () async {
@@ -78,7 +78,7 @@ void main() {
     expect(states.first, isA<ExpressionIdle>());
     expect(states.last, isA<ExpressionError>());
     final error = states.last as ExpressionError;
-    expect(error.options, equals({'date': '2000-01-01'}));
+    expect(error.args, equals({'date': '2000-01-01'}));
   });
 
   test('expression error on invalid JSON', () async {
