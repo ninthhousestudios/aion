@@ -32,6 +32,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       const Offset(60, 60),
       const Size(300, 300),
       'Chart Wheel',
+      rendererType: 'south_indian',
     );
     initialState = _addCardToState(
       initialState,
@@ -223,6 +224,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     Size size,
     String label, {
     List<ExpressionRef> expressions = const [],
+    String? rendererType,
   }) {
     final color = _palette[current.cardCounter % _palette.length];
     final card = CardModel(
@@ -232,6 +234,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       position: position,
       size: size,
       expressions: expressions,
+      rendererType: rendererType,
       zOrder: current.nextZ,
     );
 

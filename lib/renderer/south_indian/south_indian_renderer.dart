@@ -124,43 +124,19 @@ class SouthIndianPainter extends ChartPainter {
     // Outer border
     canvas.drawRect(ui.Offset.zero & size, linePaint);
 
-    // Vertical grid lines
-    for (var i = 1; i < 4; i++) {
-      final x = _cellW * i;
-      canvas.drawLine(ui.Offset(x, 0), ui.Offset(x, size.height), linePaint);
-    }
+    // Vertical lines — columns 1 and 3 run full height; column 2 skips center
+    canvas.drawLine(ui.Offset(_cellW, 0), ui.Offset(_cellW, size.height), linePaint);
+    canvas.drawLine(ui.Offset(3 * _cellW, 0), ui.Offset(3 * _cellW, size.height), linePaint);
+    // Column 2: top row and bottom row only
+    canvas.drawLine(ui.Offset(2 * _cellW, 0), ui.Offset(2 * _cellW, _cellH), linePaint);
+    canvas.drawLine(ui.Offset(2 * _cellW, 3 * _cellH), ui.Offset(2 * _cellW, size.height), linePaint);
 
-    // Horizontal grid lines
-    for (var i = 1; i < 4; i++) {
-      final y = _cellH * i;
-      canvas.drawLine(ui.Offset(0, y), ui.Offset(size.width, y), linePaint);
-    }
-
-    // Corner diagonals
-    // Top-left: (0,0) to (cellW, cellH)
-    canvas.drawLine(
-      ui.Offset.zero,
-      ui.Offset(_cellW, _cellH),
-      linePaint,
-    );
-    // Top-right: (3*cellW, 0) to (4*cellW, cellH) → diagonal goes right-to-left
-    canvas.drawLine(
-      ui.Offset(3 * _cellW, 0),
-      ui.Offset(size.width, _cellH),
-      linePaint,
-    );
-    // Bottom-left
-    canvas.drawLine(
-      ui.Offset(0, 3 * _cellH),
-      ui.Offset(_cellW, size.height),
-      linePaint,
-    );
-    // Bottom-right
-    canvas.drawLine(
-      ui.Offset(3 * _cellW, 3 * _cellH),
-      ui.Offset(size.width, size.height),
-      linePaint,
-    );
+    // Horizontal lines — rows 1 and 3 run full width; row 2 skips center
+    canvas.drawLine(ui.Offset(0, _cellH), ui.Offset(size.width, _cellH), linePaint);
+    canvas.drawLine(ui.Offset(0, 3 * _cellH), ui.Offset(size.width, 3 * _cellH), linePaint);
+    // Row 2: left column and right column only
+    canvas.drawLine(ui.Offset(0, 2 * _cellH), ui.Offset(_cellW, 2 * _cellH), linePaint);
+    canvas.drawLine(ui.Offset(3 * _cellW, 2 * _cellH), ui.Offset(size.width, 2 * _cellH), linePaint);
 
     // Sign labels in each cell
     final signFontSize = (_cellH * 0.12).clamp(8.0, 14.0);
