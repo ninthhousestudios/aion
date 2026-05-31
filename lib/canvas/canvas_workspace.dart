@@ -88,9 +88,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
               return;
             }
             if (!mounted) return;
-            final state = store.expressionState(exprRef);
-            if (state is ExpressionError) {
-              _showError(context, '${state.error}');
+            final exprState = store.expressionState(exprRef);
+            if (exprState is ExpressionError) {
+              _showError(context, '${exprState.error}');
+              return;
             }
             ref.read(workspaceProvider.notifier).addCard(
               local,
