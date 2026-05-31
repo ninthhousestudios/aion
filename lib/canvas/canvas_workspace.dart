@@ -72,10 +72,29 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
       case 'open_chart':
         final store = ref.read(chartStoreProvider);
         final loadResult = await loadChartFromFile(store);
-        if (loadResult is ChartLoadFailed && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(loadResult.message)),
-          );
+        switch (loadResult) {
+          case ChartLoadedOk(:final chartId, :final doc):
+            final viewportLocal = _globalToViewport(globalPos);
+            final local = _viewportToWorkspace(viewportLocal);
+            final exprRef = await store.computeExpression(
+              chartId, 'drishti', 'calculate_chart', const {},
+            );
+            if (!mounted) return;
+            ref.read(workspaceProvider.notifier).addCard(
+              local,
+              const Size(300, 300),
+              doc.name.isEmpty ? 'Chart' : doc.name,
+              expressions: [exprRef],
+              rendererType: 'south_indian',
+            );
+          case ChartLoadFailed(:final message):
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(message)),
+              );
+            }
+          case ChartLoadCancelled():
+            break;
         }
     }
   }
@@ -211,6 +230,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                               onPointerCancel: _handleCardPointerEnd,
                               child: CanvasCard(
                                 model: card,
+                                chartStore: ref.read(chartStoreProvider),
                                 selected: card.id == workspaceState.selectedId,
                                 onSelect: () => workspace.selectCard(card.id),
                                 onResizeUpdate: (delta, corner) =>

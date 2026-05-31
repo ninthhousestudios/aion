@@ -57,8 +57,10 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
   void addCard(Offset position, Size size, String label, {
     List<ExpressionRef> expressions = const [],
+    String? rendererType,
   }) {
-    state = _addCardToState(state, position, size, label, expressions: expressions);
+    state = _addCardToState(state, position, size, label,
+        expressions: expressions, rendererType: rendererType);
   }
 
   void duplicateCard(String id) {

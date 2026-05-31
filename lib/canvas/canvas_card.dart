@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../renderer/dev_data.dart';
+import '../mcp/chart_store.dart';
+import '../mcp/expression_state.dart';
 import '../renderer/renderer_host.dart';
 import '../renderer/renderer_registry.dart';
 import '../renderer/south_indian/south_indian_renderer.dart';
@@ -15,6 +16,7 @@ class CanvasCard extends StatefulWidget {
   const CanvasCard({
     super.key,
     required this.model,
+    required this.chartStore,
     required this.selected,
     required this.onSelect,
     required this.onResizeUpdate,
@@ -23,6 +25,7 @@ class CanvasCard extends StatefulWidget {
   });
 
   final CardModel model;
+  final ChartStore chartStore;
   final bool selected;
   final VoidCallback onSelect;
   final void Function(Offset delta, ResizeCorner corner) onResizeUpdate;
@@ -84,10 +87,40 @@ class _CanvasCardState extends State<CanvasCard> {
         ),
       );
     }
-    return RendererHost(
-      renderer: renderer,
-      expressionData: const [devExpressionData],
-      displayConfig: m.displayConfig,
+    if (m.expressions.isEmpty) {
+      return RendererHost(
+        renderer: renderer,
+        expressionData: const [],
+        displayConfig: m.displayConfig,
+      );
+    }
+    final ref = m.expressions.first;
+    return StreamBuilder<ExpressionState>(
+      stream: widget.chartStore.watchExpression(ref),
+      initialData: widget.chartStore.expressionState(ref),
+      builder: (context, snapshot) {
+        final exprState = snapshot.data;
+        return switch (exprState) {
+          ExpressionLoading() => Center(
+              child: CircularProgressIndicator(color: t.cardDimColor),
+            ),
+          ExpressionError(:final error) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  '$error',
+                  style: TextStyle(color: t.cardDimColor, fontSize: 12),
+                ),
+              ),
+            ),
+          ExpressionReady(:final data) => RendererHost(
+              renderer: renderer,
+              expressionData: [data],
+              displayConfig: m.displayConfig,
+            ),
+          _ => const SizedBox.shrink(),
+        };
+      },
     );
   }
 
