@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:chart_db_core/chart_db_core.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:test/test.dart';
 
@@ -25,11 +26,12 @@ class MockPluginHost extends PluginHost {
   }
 }
 
-const _birthData = {
-  'date': '2000-01-01T12:00:00Z',
-  'latitude': 28.6,
-  'longitude': 77.2,
-};
+const _testDoc = ChartDoc(
+  jd: 2451545.0,
+  lat: 28.6,
+  lon: 77.2,
+  name: 'Test Chart',
+);
 
 const _config = {'preset': 'lahiri'};
 const _configAlt = {'preset': 'ernst'};
@@ -51,18 +53,18 @@ void main() {
   });
 
   test('loadChart sets ChartLoaded state', () {
-    store.loadChart('chart-1', _birthData);
+    store.loadChart('chart-1', _testDoc);
 
     final state = store.chartState('chart-1');
     expect(state, isA<ChartLoaded>());
     final loaded = state as ChartLoaded;
     expect(loaded.id, 'chart-1');
-    expect(loaded.birthData, _birthData);
+    expect(loaded.doc, _testDoc);
     expect(store.loadedChartIds, ['chart-1']);
   });
 
   test('computeExpression lifecycle: idle → loading → ready', () async {
-    store.loadChart('chart-1', _birthData);
+    store.loadChart('chart-1', _testDoc);
 
     host.nextResult = _jsonResult({'sun': 'aries'});
 
@@ -82,7 +84,7 @@ void main() {
   });
 
   test('same (chartId, config) returns cached expression', () async {
-    store.loadChart('chart-1', _birthData);
+    store.loadChart('chart-1', _testDoc);
 
     host.nextResult = _jsonResult({'sun': 'aries'});
 
@@ -98,7 +100,7 @@ void main() {
   });
 
   test('different config produces separate expression', () async {
-    store.loadChart('chart-1', _birthData);
+    store.loadChart('chart-1', _testDoc);
 
     host.nextResult = _jsonResult({'sun': 'aries'});
     final ref1 = await store.computeExpression(
@@ -123,7 +125,7 @@ void main() {
   });
 
   test('unloadChart removes chart and all its expressions', () async {
-    store.loadChart('chart-1', _birthData);
+    store.loadChart('chart-1', _testDoc);
     host.nextResult = _jsonResult({'sun': 'aries'});
     final ref = await store.computeExpression(
       'chart-1', 'drishti', 'calculate_chart', _config,
@@ -139,7 +141,7 @@ void main() {
   });
 
   test('error propagation from plugin', () async {
-    store.loadChart('chart-1', _birthData);
+    store.loadChart('chart-1', _testDoc);
     host.nextError = Exception('server unreachable');
 
     final ref = await store.computeExpression(
@@ -150,12 +152,13 @@ void main() {
   });
 
   test('concurrent chart loads and computations', () async {
-    store.loadChart('chart-1', _birthData);
-    store.loadChart('chart-2', {
-      'date': '1990-06-15T08:00:00Z',
-      'latitude': 40.7,
-      'longitude': -74.0,
-    });
+    store.loadChart('chart-1', _testDoc);
+    store.loadChart('chart-2', const ChartDoc(
+      jd: 2448058.833,
+      lat: 40.7,
+      lon: -74.0,
+      name: 'Chart 2',
+    ));
 
     host.nextResult = _jsonResult({'result': 'ok'});
 
@@ -181,10 +184,12 @@ void main() {
   });
 
   test('loadChart is idempotent', () {
-    store.loadChart('chart-1', _birthData);
-    store.loadChart('chart-1', {'date': 'different'});
+    store.loadChart('chart-1', _testDoc);
+    store.loadChart('chart-1', const ChartDoc(
+      jd: 0.0, lat: 0.0, lon: 0.0, name: 'Different',
+    ));
 
     final loaded = store.chartState('chart-1') as ChartLoaded;
-    expect(loaded.birthData, _birthData);
+    expect(loaded.doc, _testDoc);
   });
 }

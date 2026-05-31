@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:chart_db_core/chart_db_core.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -17,10 +18,10 @@ class ChartStore {
 
   ChartStore(this._host);
 
-  void loadChart(String chartId, Map<String, dynamic> birthData) {
+  void loadChart(String chartId, ChartDoc doc) {
     if (_charts.containsKey(chartId)) return;
     _charts[chartId] = BehaviorSubject.seeded(
-      ChartLoaded(id: chartId, birthData: birthData),
+      ChartLoaded(id: chartId, doc: doc),
     );
   }
 
@@ -58,7 +59,12 @@ class ChartStore {
       return ref;
     }
 
-    final args = {...chart.birthData, ...config};
+    final args = <String, dynamic>{
+      'jd': chart.doc.jd,
+      'lat': chart.doc.lat,
+      'lon': chart.doc.lon,
+      ...config,
+    };
     final future = _compute(subject, server, tool, args);
     _inFlight[ref] = future;
     try {

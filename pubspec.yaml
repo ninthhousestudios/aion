@@ -20,6 +20,7 @@ dependencies:
     path: ../charts_dart
   chart_db_core:
     path: packages/chart_db_core
+  file_selector: ^1.0.3
 
 dev_dependencies:
   flutter_test:

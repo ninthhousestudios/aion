@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../actions/load_chart_action.dart';
+import '../providers/chart_store_provider.dart';
 import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
 import 'card_model.dart';
@@ -48,6 +50,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           const PopupMenuDivider(),
         ],
         const PopupMenuItem(value: 'add', child: Text('Add Card')),
+        const PopupMenuItem(
+          value: 'open_chart',
+          child: Text('Open Chart…'),
+        ),
       ],
     );
     if (result == null) return;
@@ -63,6 +69,14 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         final local = _viewportToWorkspace(viewportLocal);
         final counter = ref.read(workspaceProvider).cardCounter;
         workspace.addCard(local, const Size(240, 160), 'Card $counter');
+      case 'open_chart':
+        final store = ref.read(chartStoreProvider);
+        final loadResult = await loadChartFromFile(store);
+        if (loadResult is ChartLoadFailed && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(loadResult.message)),
+          );
+        }
     }
   }
 

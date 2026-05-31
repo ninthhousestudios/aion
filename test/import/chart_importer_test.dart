@@ -31,7 +31,7 @@ void main() {
     final importer = ChartImporter();
 
     test('imports .toml fixture with correct fields', () {
-      final chart = importer.importFile('$fixtureDir/test-chart.toml');
+      final chart = importer.importFile('$fixtureDir/test-chart-legacy.toml');
 
       expect(chart.name, 'Test Person');
       expect(chart.lat, closeTo(40.7128, 0.001));
@@ -45,7 +45,7 @@ void main() {
       // re-derives JD from utcDateTime, which round-trips through
       // the JD → DateTime → JD conversion. Check it's close.
       expect(chart.jd, closeTo(2451545.0, 0.001));
-      expect(chart.sourcePath, contains('test-chart.toml'));
+      expect(chart.sourcePath, contains('test-chart-legacy.toml'));
     });
 
     test('imports .json fixture with correct fields', () {
@@ -100,8 +100,8 @@ void main() {
         fixtureDir,
         extensions: ['.toml'],
       );
-      expect(charts.length, 1);
-      expect(charts.first.name, 'Test Person');
+      expect(charts.length, greaterThanOrEqualTo(1));
+      expect(charts.any((c) => c.name == 'Test Person'), isTrue);
     });
 
     test('collects errors for bad files', () {

@@ -1,3 +1,5 @@
+import 'package:chart_db_core/chart_db_core.dart';
+
 sealed class ChartState {
   const ChartState();
 }
@@ -8,13 +10,13 @@ class ChartLoading extends ChartState {
 
 class ChartLoaded extends ChartState {
   final String id;
-  final Map<String, dynamic> birthData;
-  const ChartLoaded({required this.id, required this.birthData});
+  final ChartDoc doc;
+  const ChartLoaded({required this.id, required this.doc});
 
-  ChartLoaded copyWith({String? id, Map<String, dynamic>? birthData}) =>
+  ChartLoaded copyWith({String? id, ChartDoc? doc}) =>
       ChartLoaded(
         id: id ?? this.id,
-        birthData: birthData ?? this.birthData,
+        doc: doc ?? this.doc,
       );
 }
 
