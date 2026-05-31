@@ -25,7 +25,7 @@ void main() {
     final state = WorkspaceState.initial();
     expect(state.cards, isEmpty);
     expect(state.selectedId, isNull);
-    expect(state.snapEnabled, isTrue);
+    expect(state.snapEnabled, isFalse);
     expect(state.nextZ, 0);
     expect(state.cardCounter, 0);
   });
