@@ -6,6 +6,7 @@ import '../mcp/plugin_host.dart';
 import '../mcp/plugin_manifest.dart';
 import '../providers/plugin_host_provider.dart';
 
+
 class PluginStatusPage extends ConsumerStatefulWidget {
   const PluginStatusPage({super.key});
 
@@ -16,17 +17,6 @@ class PluginStatusPage extends ConsumerStatefulWidget {
 class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
   final _expanded = <String>{};
 
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() async {
-      try {
-        await ref.read(pluginHostProvider).startAll(BundledManifests.all);
-      } catch (e, st) {
-        debugPrint('Failed to start plugins: $e\n$st');
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {

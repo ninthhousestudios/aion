@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'canvas/canvas_workspace.dart';
+import 'mcp/plugin_manifest.dart';
+import 'providers/plugin_host_provider.dart';
 import 'theme/aion_theme.dart';
 
 void main() async {
@@ -29,8 +31,21 @@ void main() async {
   runApp(const ProviderScope(child: AionApp()));
 }
 
-class AionApp extends StatelessWidget {
+class AionApp extends ConsumerStatefulWidget {
   const AionApp({super.key});
+
+  @override
+  ConsumerState<AionApp> createState() => _AionAppState();
+}
+
+class _AionAppState extends ConsumerState<AionApp> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(pluginHostProvider).startAll(BundledManifests.all);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -63,6 +63,7 @@ class ChartStore {
       'jd': chart.doc.jd,
       'lat': chart.doc.lat,
       'lon': chart.doc.lon,
+      if (chart.doc.alt != 0) 'altitude': chart.doc.alt,
       ...config,
     };
     final future = _compute(subject, server, tool, args);

@@ -172,6 +172,30 @@ class SouthIndianPainter extends ChartPainter {
       );
     }
 
+    // House cusp numbers
+    final houses = expr[ExpressionKeys.houses];
+    if (houses is List) {
+      final cuspFontSize = (_cellH * 0.11).clamp(7.0, 12.0);
+      for (final house in houses) {
+        if (house is! Map<String, dynamic>) continue;
+        final houseSignIndex = house[ExpressionKeys.signIndex];
+        final houseNumber = house['number'];
+        if (houseSignIndex is! int || !_signToCell.containsKey(houseSignIndex)) continue;
+        if (houseNumber is! int) continue;
+        final (hCol, hRow) = _signToCell[houseSignIndex]!;
+        _drawText(
+          canvas,
+          '$houseNumber',
+          ui.Offset(
+            hCol * _cellW + _cellW * 0.75,
+            hRow * _cellH + _cellH * 0.75,
+          ),
+          cuspFontSize,
+          const ui.Color(0x66FFFFFF),
+        );
+      }
+    }
+
     final planets = expr[ExpressionKeys.planets];
     if (planets is! List) return;
 
