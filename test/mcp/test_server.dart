@@ -8,11 +8,7 @@ void main() async {
   server.registerTool(
     'echo',
     description: 'Echoes input',
-    inputSchema: JsonObject(
-      properties: {
-        'message': JsonString(),
-      },
-    ),
+    inputSchema: JsonObject(properties: {'message': JsonString()}),
     callback: (args, extra) async {
       final msg = args['message'] ?? 'no message';
       return CallToolResult(content: [TextContent(text: msg.toString())]);

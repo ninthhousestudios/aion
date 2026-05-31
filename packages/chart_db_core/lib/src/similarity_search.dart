@@ -26,9 +26,9 @@ class SimilaritySearch {
     required ConfigRepository configRepository,
     required VectorSchemaRepository vectorSchemaRepository,
     required VecStore vecStore,
-  })  : _configRepo = configRepository,
-        _schemaRepo = vectorSchemaRepository,
-        _vecStore = vecStore;
+  }) : _configRepo = configRepository,
+       _schemaRepo = vectorSchemaRepository,
+       _vecStore = vecStore;
 
   final ConfigRepository _configRepo;
   final VectorSchemaRepository _schemaRepo;
@@ -58,9 +58,7 @@ class SimilaritySearch {
     }
     final schemaId = config.vectorSchemaId;
     if (schemaId == null) {
-      throw StateError(
-        'Config "$configId" has no vector schema assigned',
-      );
+      throw StateError('Config "$configId" has no vector schema assigned');
     }
 
     // 2. Look up schema (validates it exists).
@@ -76,8 +74,9 @@ class SimilaritySearch {
     }
 
     // 4. Apply weights if provided.
-    final searchVector =
-        weights != null ? _applyWeights(queryVector, weights) : queryVector;
+    final searchVector = weights != null
+        ? _applyWeights(queryVector, weights)
+        : queryVector;
 
     // 5. KNN search (k+1 because the query chart will appear in results).
     final results = _vecStore.knn(schemaId, configId, searchVector, k + 1);

@@ -75,8 +75,10 @@ void main() {
   test('keyboard actions move, cycle, delete, and toggle snap', () {
     final container = createContainer();
     final notifier = container.read(workspaceProvider.notifier);
-    final originalPos =
-        container.read(workspaceProvider).cardById('card_0')!.position;
+    final originalPos = container
+        .read(workspaceProvider)
+        .cardById('card_0')!
+        .position;
     final initialSnap = container.read(workspaceProvider).snapEnabled;
 
     notifier.selectCard('card_0');

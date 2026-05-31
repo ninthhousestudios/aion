@@ -10,9 +10,7 @@ class RendererRegistry {
   ChartRenderer? get(String id) => _renderers[id];
 
   List<ChartRenderer> forSystem(String system) => _renderers.values
-      .where(
-        (r) => r.meta.systems.isEmpty || r.meta.systems.contains(system),
-      )
+      .where((r) => r.meta.systems.isEmpty || r.meta.systems.contains(system))
       .toList();
 
   List<ChartRenderer> get all => _renderers.values.toList();

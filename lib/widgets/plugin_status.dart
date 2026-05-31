@@ -6,7 +6,6 @@ import '../mcp/plugin_host.dart';
 import '../mcp/plugin_manifest.dart';
 import '../providers/plugin_host_provider.dart';
 
-
 class PluginStatusPage extends ConsumerStatefulWidget {
   const PluginStatusPage({super.key});
 
@@ -16,7 +15,6 @@ class PluginStatusPage extends ConsumerStatefulWidget {
 
 class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
   final _expanded = <String>{};
-
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +64,10 @@ class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
               : null,
           onTap: state.tools.isNotEmpty
               ? () => setState(() {
-                    isExpanded
-                        ? _expanded.remove(manifest.name)
-                        : _expanded.add(manifest.name);
-                  })
+                  isExpanded
+                      ? _expanded.remove(manifest.name)
+                      : _expanded.add(manifest.name);
+                })
               : null,
         ),
         if (isExpanded)
@@ -78,8 +76,9 @@ class _PluginStatusPageState extends ConsumerState<PluginStatusPage> {
               contentPadding: const EdgeInsets.only(left: 56),
               dense: true,
               title: Text(tool.name),
-              subtitle:
-                  tool.description != null ? Text(tool.description!) : null,
+              subtitle: tool.description != null
+                  ? Text(tool.description!)
+                  : null,
             ),
           ),
       ],

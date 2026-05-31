@@ -7,8 +7,7 @@ import '../renderer/south_indian/south_indian_renderer.dart';
 import '../theme/aion_theme.dart';
 import 'card_model.dart';
 
-final rendererRegistry = RendererRegistry()
-  ..register(SouthIndianRenderer());
+final rendererRegistry = RendererRegistry()..register(SouthIndianRenderer());
 
 enum ResizeCorner { topLeft, topRight, bottomLeft, bottomRight }
 
@@ -102,22 +101,22 @@ class _CanvasCardState extends State<CanvasCard> {
         final exprState = snapshot.data;
         return switch (exprState) {
           ExpressionLoading() => Center(
-              child: CircularProgressIndicator(color: t.cardDimColor),
-            ),
+            child: CircularProgressIndicator(color: t.cardDimColor),
+          ),
           ExpressionError(:final error) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  '$error',
-                  style: TextStyle(color: t.cardDimColor, fontSize: 12),
-                ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                '$error',
+                style: TextStyle(color: t.cardDimColor, fontSize: 12),
               ),
             ),
+          ),
           ExpressionReady(:final data) => RendererHost(
-              renderer: renderer,
-              expressionData: [data],
-              displayConfig: m.displayConfig,
-            ),
+            renderer: renderer,
+            expressionData: [data],
+            displayConfig: m.displayConfig,
+          ),
           _ => const SizedBox.shrink(),
         };
       },
@@ -153,11 +152,7 @@ class _CanvasCardState extends State<CanvasCard> {
             ),
             boxShadow: [
               if (widget.selected)
-                BoxShadow(
-                  color: t.cardShadow,
-                  blurRadius: 16,
-                  spreadRadius: 2,
-                ),
+                BoxShadow(color: t.cardShadow, blurRadius: 16, spreadRadius: 2),
             ],
           ),
           child: Stack(
@@ -184,10 +179,7 @@ class _CanvasCardState extends State<CanvasCard> {
                       const SizedBox(height: 4),
                       Text(
                         '${m.size.width.round()} x ${m.size.height.round()}',
-                        style: TextStyle(
-                          color: t.cardDimColor,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: t.cardDimColor, fontSize: 11),
                       ),
                     ],
                   ),

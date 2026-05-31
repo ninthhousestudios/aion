@@ -37,11 +37,9 @@ void main() {
     test('testCallTool', () async {
       await host.startPlugin(_testManifest);
 
-      final result = await host.callTool(
-        'test-server',
-        'echo',
-        {'message': 'hello world'},
-      );
+      final result = await host.callTool('test-server', 'echo', {
+        'message': 'hello world',
+      });
 
       final texts = result.content
           .whereType<TextContent>()
@@ -88,11 +86,14 @@ void main() {
 
       await subscription.cancel();
 
-      expect(states, containsAllInOrder([
-        PluginStatus.stopped,
-        PluginStatus.starting,
-        PluginStatus.connected,
-      ]));
+      expect(
+        states,
+        containsAllInOrder([
+          PluginStatus.stopped,
+          PluginStatus.starting,
+          PluginStatus.connected,
+        ]),
+      );
     });
   });
 }

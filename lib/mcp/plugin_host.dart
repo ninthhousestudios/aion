@@ -13,30 +13,24 @@ class PluginState {
   final Object? error;
   final List<Tool> tools;
 
-  const PluginState({
-    required this.status,
-    this.error,
-    this.tools = const [],
-  });
+  const PluginState({required this.status, this.error, this.tools = const []});
 
   const PluginState.stopped()
-      : status = PluginStatus.stopped,
-        error = null,
-        tools = const [];
+    : status = PluginStatus.stopped,
+      error = null,
+      tools = const [];
 
   const PluginState.starting()
-      : status = PluginStatus.starting,
-        error = null,
-        tools = const [];
+    : status = PluginStatus.starting,
+      error = null,
+      tools = const [];
 
   PluginState.connected(List<Tool> tools)
-      : status = PluginStatus.connected,
-        error = null,
-        tools = List.unmodifiable(tools);
+    : status = PluginStatus.connected,
+      error = null,
+      tools = List.unmodifiable(tools);
 
-  PluginState.error(this.error)
-      : status = PluginStatus.error,
-        tools = const [];
+  PluginState.error(this.error) : status = PluginStatus.error, tools = const [];
 }
 
 class PluginNotConnected implements Exception {
@@ -70,9 +64,7 @@ class PluginHost {
     McpClient? client;
     try {
       final transport = _buildTransport(manifest);
-      client = McpClient(
-        const Implementation(name: 'aion', version: '0.1.0'),
-      );
+      client = McpClient(const Implementation(name: 'aion', version: '0.1.0'));
       await client.connect(transport).timeout(_connectTimeout);
       final result = await client.listTools();
       _clients[manifest.name] = client;
@@ -88,9 +80,7 @@ class PluginHost {
   void _onUnexpectedClose(String name) {
     if (_disposed || !_clients.containsKey(name)) return;
     _clients.remove(name);
-    _stateOf(name).add(
-      PluginState.error('Plugin process exited unexpectedly'),
-    );
+    _stateOf(name).add(PluginState.error('Plugin process exited unexpectedly'));
   }
 
   Transport _buildTransport(PluginManifest manifest) {
@@ -131,17 +121,15 @@ class PluginHost {
 
   Future<void> startAll(List<PluginManifest> manifests) async {
     await Future.wait(
-      manifests
-          .where((m) => m.autoStart)
-          .map((m) async {
-            try {
-              await startPlugin(m);
-            } catch (e) {
-              // startPlugin already sets error state on the stream;
-              // log here so failures aren't completely invisible.
-              Zone.current.handleUncaughtError(e, StackTrace.current);
-            }
-          }),
+      manifests.where((m) => m.autoStart).map((m) async {
+        try {
+          await startPlugin(m);
+        } catch (e) {
+          // startPlugin already sets error state on the stream;
+          // log here so failures aren't completely invisible.
+          Zone.current.handleUncaughtError(e, StackTrace.current);
+        }
+      }),
     );
   }
 

@@ -35,10 +35,8 @@ class WorkspaceStore {
     try {
       final result = await _host.callTool(server, tool, args);
       if (result.isError) {
-        final message = result.content
-                .whereType<TextContent>()
-                .firstOrNull
-                ?.text ??
+        final message =
+            result.content.whereType<TextContent>().firstOrNull?.text ??
             'Unknown tool error';
         subject.add(ExpressionError(message, args));
         return;
@@ -52,10 +50,12 @@ class WorkspaceStore {
       try {
         data = json.decode(textContent.text) as Map<String, dynamic>;
       } catch (_) {
-        subject.add(ExpressionError(
-          'Tool result is not valid JSON: ${textContent.text}',
-          args,
-        ));
+        subject.add(
+          ExpressionError(
+            'Tool result is not valid JSON: ${textContent.text}',
+            args,
+          ),
+        );
         return;
       }
       subject.add(ExpressionReady(data, args));

@@ -71,12 +71,7 @@ void main() {
 
     vecStore.deleteVectors(schemaId: schema.id, chartId: 'chart-a');
 
-    final results = vecStore.knn(
-      schema.id,
-      'cfg-1',
-      v,
-      10,
-    );
+    final results = vecStore.knn(schema.id, 'cfg-1', v, 10);
     expect(results, hasLength(1));
     expect(results[0].chartId, equals('chart-b'));
   });
@@ -119,8 +114,9 @@ void main() {
     final remaining = chartDb.db.select('SELECT * FROM $table');
     expect(remaining, hasLength(2));
 
-    final ids = remaining.map((r) =>
-        '${r['chart_id']}:${r['config_id']}').toSet();
+    final ids = remaining
+        .map((r) => '${r['chart_id']}:${r['config_id']}')
+        .toSet();
     expect(ids, containsAll(['chart-a:cfg-2', 'chart-b:cfg-1']));
   });
 
@@ -167,12 +163,7 @@ void main() {
 
   test('KNN respects k limit', () {
     for (var i = 0; i < 5; i++) {
-      final v = Float64List.fromList([
-        (i + 1).toDouble(),
-        0.0,
-        0.0,
-        0.0,
-      ]);
+      final v = Float64List.fromList([(i + 1).toDouble(), 0.0, 0.0, 0.0]);
       vecStore.insertVector(schema.id, 'chart-$i', 'cfg-1', v);
     }
 

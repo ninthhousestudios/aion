@@ -25,7 +25,8 @@ double dateTimeToJd(DateTime dt) {
   // The Gregorian calendar took effect 1582-10-15; dates on or after it use the
   // Gregorian correction, earlier dates are Julian (b = 0). This must match the
   // historical switch in [dateTimeFromJd] so the pair round-trips.
-  final isGregorian = dt.year > 1582 ||
+  final isGregorian =
+      dt.year > 1582 ||
       (dt.year == 1582 && (dt.month > 10 || (dt.month == 10 && dt.day >= 15)));
   int b;
   if (isGregorian) {
@@ -34,7 +35,8 @@ double dateTimeToJd(DateTime dt) {
   } else {
     b = 0;
   }
-  final dayFrac = (dt.hour +
+  final dayFrac =
+      (dt.hour +
           dt.minute / 60.0 +
           dt.second / 3600.0 +
           dt.millisecond / 3600000.0) /
@@ -74,6 +76,11 @@ DateTime dateTimeFromJd(double jd) {
   final second = ((totalMinutes - minute) * 60.0).round();
 
   // Normalise via Duration so a rounded 60s rolls over cleanly.
-  return DateTime.utc(year, month, day, hour, minute)
-      .add(Duration(seconds: second));
+  return DateTime.utc(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+  ).add(Duration(seconds: second));
 }

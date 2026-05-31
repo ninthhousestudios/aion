@@ -118,20 +118,44 @@ class AionTheme extends ThemeExtension<AionTheme> {
   AionTheme lerp(AionTheme? other, double t) {
     if (other == null) return this;
     return AionTheme(
-      canvasBackground: Color.lerp(canvasBackground, other.canvasBackground, t)!,
+      canvasBackground: Color.lerp(
+        canvasBackground,
+        other.canvasBackground,
+        t,
+      )!,
       surfaceOverlay: Color.lerp(surfaceOverlay, other.surfaceOverlay, t)!,
       surfaceBorder: Color.lerp(surfaceBorder, other.surfaceBorder, t)!,
-      cardBorderSelected: Color.lerp(cardBorderSelected, other.cardBorderSelected, t)!,
-      cardBorderHovered: Color.lerp(cardBorderHovered, other.cardBorderHovered, t)!,
+      cardBorderSelected: Color.lerp(
+        cardBorderSelected,
+        other.cardBorderSelected,
+        t,
+      )!,
+      cardBorderHovered: Color.lerp(
+        cardBorderHovered,
+        other.cardBorderHovered,
+        t,
+      )!,
       cardBorderIdle: Color.lerp(cardBorderIdle, other.cardBorderIdle, t)!,
       cardShadow: Color.lerp(cardShadow, other.cardShadow, t)!,
       cardLabelColor: Color.lerp(cardLabelColor, other.cardLabelColor, t)!,
       cardDimColor: Color.lerp(cardDimColor, other.cardDimColor, t)!,
       snapAccent: Color.lerp(snapAccent, other.snapAccent, t)!,
       snapGuideColor: Color.lerp(snapGuideColor, other.snapGuideColor, t)!,
-      snapInactiveColor: Color.lerp(snapInactiveColor, other.snapInactiveColor, t)!,
-      chromeButtonHover: Color.lerp(chromeButtonHover, other.chromeButtonHover, t)!,
-      chromeCloseHover: Color.lerp(chromeCloseHover, other.chromeCloseHover, t)!,
+      snapInactiveColor: Color.lerp(
+        snapInactiveColor,
+        other.snapInactiveColor,
+        t,
+      )!,
+      chromeButtonHover: Color.lerp(
+        chromeButtonHover,
+        other.chromeButtonHover,
+        t,
+      )!,
+      chromeCloseHover: Color.lerp(
+        chromeCloseHover,
+        other.chromeCloseHover,
+        t,
+      )!,
       chromeIconColor: Color.lerp(chromeIconColor, other.chromeIconColor, t)!,
       statusConnected: Color.lerp(statusConnected, other.statusConnected, t)!,
       statusStarting: Color.lerp(statusStarting, other.statusStarting, t)!,

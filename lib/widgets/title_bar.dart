@@ -98,11 +98,7 @@ class _WindowButtonState extends State<_WindowButton> {
           color: _hovered
               ? (widget.hoverColor ?? widget.defaultHoverColor)
               : Colors.transparent,
-          child: Icon(
-            widget.icon,
-            size: 16,
-            color: widget.iconColor,
-          ),
+          child: Icon(widget.icon, size: 16, color: widget.iconColor),
         ),
       ),
     );

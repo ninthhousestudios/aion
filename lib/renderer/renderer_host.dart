@@ -70,10 +70,7 @@ class _RendererHostState extends State<RendererHost> {
     Widget chart = MouseRegion(
       onHover: _onHover,
       onExit: (_) => setState(() => _hitResult = null),
-      child: CustomPaint(
-        painter: _painter,
-        child: const SizedBox.expand(),
-      ),
+      child: CustomPaint(painter: _painter, child: const SizedBox.expand()),
     );
 
     if (aspect != null) {

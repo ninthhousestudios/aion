@@ -82,21 +82,21 @@ class Chart {
 
   /// Returns a map suitable for INSERT parameter binding (column order).
   Map<String, Object?> toMap() => {
-        'id': id,
-        'jd': jd,
-        'lat': lat,
-        'lon': lon,
-        'alt': alt,
-        'name': name,
-        'gender': gender,
-        'placename': placename,
-        'country': country,
-        'utc_offset': utcOffset,
-        'dst_offset': dstOffset,
-        'notes': notes,
-        'rodden': rodden,
-        'source_path': sourcePath,
-      };
+    'id': id,
+    'jd': jd,
+    'lat': lat,
+    'lon': lon,
+    'alt': alt,
+    'name': name,
+    'gender': gender,
+    'placename': placename,
+    'country': country,
+    'utc_offset': utcOffset,
+    'dst_offset': dstOffset,
+    'notes': notes,
+    'rodden': rodden,
+    'source_path': sourcePath,
+  };
 }
 
 /// CRUD and full-text search for the `charts` table.
@@ -204,10 +204,7 @@ class ChartRepository {
     sets.add("updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')");
     params.add(id);
 
-    _db.execute(
-      'UPDATE charts SET ${sets.join(', ')} WHERE id = ?;',
-      params,
-    );
+    _db.execute('UPDATE charts SET ${sets.join(', ')} WHERE id = ?;', params);
   }
 
   /// Deletes a chart by [id]. Tags and collection memberships cascade via FK.
@@ -238,7 +235,8 @@ class ChartRepository {
 
     // FTS match
     if (query != null && query.isNotEmpty) {
-      from = 'charts_fts '
+      from =
+          'charts_fts '
           'JOIN charts c ON c.rowid = charts_fts.rowid';
       where.add('charts_fts MATCH ?');
       params.add(query);
@@ -278,7 +276,8 @@ class ChartRepository {
     final whereClause = where.isEmpty ? '' : 'WHERE ${where.join(' AND ')}';
     params.add(limit);
 
-    final sql = '''
+    final sql =
+        '''
       SELECT DISTINCT c.*
       FROM $from
       $whereClause

@@ -44,10 +44,7 @@ class TomlChartCodec {
     map['moment'] = <String, dynamic>{'jd': doc.jd};
 
     // Location.
-    final location = <String, dynamic>{
-      'lat': doc.lat,
-      'lon': doc.lon,
-    };
+    final location = <String, dynamic>{'lat': doc.lat, 'lon': doc.lon};
     if (doc.alt != 0) location['alt'] = doc.alt;
     if (doc.placename != null) location['placename'] = doc.placename;
     if (doc.country != null) location['country'] = doc.country;
@@ -194,8 +191,7 @@ class TomlChartCodec {
     return dateTimeToJd(ut);
   }
 
-  static double? _asDouble(Object? v) =>
-      v is num ? v.toDouble() : null;
+  static double? _asDouble(Object? v) => v is num ? v.toDouble() : null;
 
   static List<String> _asStringList(Object? v) {
     if (v is List) {

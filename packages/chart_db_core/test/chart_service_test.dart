@@ -12,16 +12,22 @@ Future<Map<String, dynamic>> mockCalculateChart(
   String presetJson,
 ) async {
   return {
-    'summary': {
-      'jd': jd,
-      'ayanamsa': 24.1,
-      'ascendant': 30.0,
-      'mc': 120.0,
-    },
+    'summary': {'jd': jd, 'ayanamsa': 24.1, 'ascendant': 30.0, 'mc': 120.0},
     'planets': [
       for (final name in [
-        'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
-        'uranus', 'neptune', 'pluto', 'chiron', 'rahu', 'ketu',
+        'sun',
+        'moon',
+        'mercury',
+        'venus',
+        'mars',
+        'jupiter',
+        'saturn',
+        'uranus',
+        'neptune',
+        'pluto',
+        'chiron',
+        'rahu',
+        'ketu',
       ])
         {
           'name': name,
@@ -72,7 +78,8 @@ void main() {
   late Config westernConfig;
 
   /// Preset JSON for a 13-body western config.
-  const westernPreset = '{"sweConfig":{"bodies":["sun","moon","mercury",'
+  const westernPreset =
+      '{"sweConfig":{"bodies":["sun","moon","mercury",'
       '"venus","mars","jupiter","saturn","uranus","neptune","pluto",'
       '"chiron","rahu","ketu"]}}';
 
@@ -143,7 +150,11 @@ void main() {
     expect(stored!.name, equals('Test Chart'));
 
     // Vector should be stored.
-    final vec = vecStore.getVector(westernSchema.id, 'chart-1', westernConfig.id);
+    final vec = vecStore.getVector(
+      westernSchema.id,
+      'chart-1',
+      westernConfig.id,
+    );
     expect(vec, isNotNull);
     expect(vec!.length, equals(westernSchema.dims));
 
@@ -151,29 +162,43 @@ void main() {
     expect(_callCount, equals(1));
   });
 
-  test('createChart with specific configIds only processes those configs',
-      () async {
-    // Register a second config without a vector schema.
-    final noVecConfig = configRepo.register(
-      'no-vec',
-      '{"sweConfig":{"bodies":["sun"]}}',
-    );
+  test(
+    'createChart with specific configIds only processes those configs',
+    () async {
+      // Register a second config without a vector schema.
+      final noVecConfig = configRepo.register(
+        'no-vec',
+        '{"sweConfig":{"bodies":["sun"]}}',
+      );
 
-    final chart = _makeChart(id: 'chart-2', jd: 2451546.0, lat: 51.5, lon: -0.1);
-    await service.createChart(chart, configIds: [noVecConfig.id]);
+      final chart = _makeChart(
+        id: 'chart-2',
+        jd: 2451546.0,
+        lat: 51.5,
+        lon: -0.1,
+      );
+      await service.createChart(chart, configIds: [noVecConfig.id]);
 
-    // No vector should exist (config has no schema).
-    final vec = vecStore.getVector(westernSchema.id, 'chart-2', noVecConfig.id);
-    expect(vec, isNull);
+      // No vector should exist (config has no schema).
+      final vec = vecStore.getVector(
+        westernSchema.id,
+        'chart-2',
+        noVecConfig.id,
+      );
+      expect(vec, isNull);
 
-    // calculateChart should not have been called (config has no schema).
-    expect(_callCount, equals(0));
-  });
+      // calculateChart should not have been called (config has no schema).
+      expect(_callCount, equals(0));
+    },
+  );
 
   test('createChart with multiple configs creates vectors for each', () async {
     // Register a second schema and config.
-    final vedicSchema = schemaRepo.list().firstWhere((s) => s.name == 'vedic-13');
-    final vedicPreset = '{"sweConfig":{"bodies":["sun","moon","mercury",'
+    final vedicSchema = schemaRepo.list().firstWhere(
+      (s) => s.name == 'vedic-13',
+    );
+    final vedicPreset =
+        '{"sweConfig":{"bodies":["sun","moon","mercury",'
         '"venus","mars","jupiter","saturn","uranus","neptune","pluto",'
         '"chiron","rahu","ketu"],"ayanamsa":"lahiri"}}';
     final vedicConfig = configRepo.register(
@@ -183,17 +208,28 @@ void main() {
     );
     vecStore.ensureTable(vedicSchema);
 
-    final chart = _makeChart(id: 'multi-1', jd: 2451547.0, lat: 28.6, lon: 77.2);
+    final chart = _makeChart(
+      id: 'multi-1',
+      jd: 2451547.0,
+      lat: 28.6,
+      lon: 77.2,
+    );
     await service.createChart(chart);
 
     // Vectors should exist for both configs.
-    final westernVec =
-        vecStore.getVector(westernSchema.id, 'multi-1', westernConfig.id);
+    final westernVec = vecStore.getVector(
+      westernSchema.id,
+      'multi-1',
+      westernConfig.id,
+    );
     expect(westernVec, isNotNull);
     expect(westernVec!.length, equals(westernSchema.dims));
 
-    final vedicVec =
-        vecStore.getVector(vedicSchema.id, 'multi-1', vedicConfig.id);
+    final vedicVec = vecStore.getVector(
+      vedicSchema.id,
+      'multi-1',
+      vedicConfig.id,
+    );
     expect(vedicVec, isNotNull);
     expect(vedicVec!.length, equals(vedicSchema.dims));
 
@@ -232,10 +268,16 @@ void main() {
     await service.createChart(c2);
 
     // Record original vectors.
-    final origVec1 =
-        vecStore.getVector(westernSchema.id, 'rc-1', westernConfig.id)!;
-    final origVec2 =
-        vecStore.getVector(westernSchema.id, 'rc-2', westernConfig.id)!;
+    final origVec1 = vecStore.getVector(
+      westernSchema.id,
+      'rc-1',
+      westernConfig.id,
+    )!;
+    final origVec2 = vecStore.getVector(
+      westernSchema.id,
+      'rc-2',
+      westernConfig.id,
+    )!;
 
     // Reset call count and recompute.
     _callCount = 0;
@@ -246,13 +288,19 @@ void main() {
 
     // Vectors should still exist (same mock returns same values, but the
     // point is the flow worked without errors).
-    final newVec1 =
-        vecStore.getVector(westernSchema.id, 'rc-1', westernConfig.id);
+    final newVec1 = vecStore.getVector(
+      westernSchema.id,
+      'rc-1',
+      westernConfig.id,
+    );
     expect(newVec1, isNotNull);
     expect(newVec1!.length, equals(origVec1.length));
 
-    final newVec2 =
-        vecStore.getVector(westernSchema.id, 'rc-2', westernConfig.id);
+    final newVec2 = vecStore.getVector(
+      westernSchema.id,
+      'rc-2',
+      westernConfig.id,
+    );
     expect(newVec2, isNotNull);
     expect(newVec2!.length, equals(origVec2.length));
   });
@@ -287,8 +335,11 @@ void main() {
     expect(oldTables, isEmpty);
 
     // New vector should exist under the new schema.
-    final newVec =
-        vecStore.getVector(simpleSchema.id, 'mig-1', westernConfig.id);
+    final newVec = vecStore.getVector(
+      simpleSchema.id,
+      'mig-1',
+      westernConfig.id,
+    );
     expect(newVec, isNotNull);
     expect(newVec!.length, equals(simpleSchema.dims)); // 2 bodies * 2 = 4
 

@@ -257,9 +257,7 @@ void main() {
     test('minimal spec with only longitudes', () {
       final spec = {
         'bodies': ['sun', 'moon'],
-        'features': {
-          'longitudes': true,
-        },
+        'features': {'longitudes': true},
       };
       final vec = extractVector(fixtureChart, spec);
       expect(vec.length, equals(4));

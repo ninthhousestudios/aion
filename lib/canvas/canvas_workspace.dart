@@ -52,10 +52,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           const PopupMenuDivider(),
         ],
         const PopupMenuItem(value: 'add', child: Text('Add Card')),
-        const PopupMenuItem(
-          value: 'open_chart',
-          child: Text('Open Chart…'),
-        ),
+        const PopupMenuItem(value: 'open_chart', child: Text('Open Chart…')),
       ],
     );
     if (result == null) return;
@@ -81,7 +78,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
             ExpressionRef? exprRef;
             try {
               exprRef = await store.computeExpression(
-                chartId, 'drishti', 'calculate_chart', const {},
+                chartId,
+                'drishti',
+                'calculate_chart',
+                const {},
               );
             } catch (e) {
               if (mounted) _showError(context, '$e');
@@ -93,13 +93,15 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
               _showError(context, '${exprState.error}');
               return;
             }
-            ref.read(workspaceProvider.notifier).addCard(
-              local,
-              const Size(300, 300),
-              doc.name.isEmpty ? 'Chart' : doc.name,
-              expressions: [exprRef],
-              rendererType: 'south_indian',
-            );
+            ref
+                .read(workspaceProvider.notifier)
+                .addCard(
+                  local,
+                  const Size(300, 300),
+                  doc.name.isEmpty ? 'Chart' : doc.name,
+                  expressions: [exprRef],
+                  rendererType: 'south_indian',
+                );
           case ChartLoadFailed(:final message):
             if (mounted) _showError(context, message);
           case ChartLoadCancelled():
@@ -270,12 +272,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                 ),
               ),
             ),
-            const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: TitleBar(),
-            ),
+            const Positioned(top: 0, left: 0, right: 0, child: TitleBar()),
             Positioned(
               left: 12,
               bottom: 12,
@@ -314,7 +311,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 }
 
 class _GuidePainter extends CustomPainter {
-  _GuidePainter(this.guides, {required this.viewportOffset, required this.color});
+  _GuidePainter(
+    this.guides, {
+    required this.viewportOffset,
+    required this.color,
+  });
   final List<SnapGuide> guides;
   final Offset viewportOffset;
   final Color color;

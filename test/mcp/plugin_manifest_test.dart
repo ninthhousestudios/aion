@@ -83,7 +83,8 @@ void main() {
 
       final manifest = PluginManifest.fromJson(json);
 
-      final expectedBase = originalPlugins ??
+      final expectedBase =
+          originalPlugins ??
           '${Platform.environment['HOME']}/.config/aion/plugins';
 
       expect(manifest.command, equals('$expectedBase/bin/server'));
@@ -95,7 +96,10 @@ void main() {
       final drishti = BundledManifests.drishti;
 
       expect(drishti.command, equals('dart'));
-      expect(drishti.args, equals(['run', '--verbosity=error', 'drishti:drishti']));
+      expect(
+        drishti.args,
+        equals(['run', '--verbosity=error', 'drishti:drishti']),
+      );
       expect(drishti.workingDirectory, isNotNull);
       expect(drishti.bundled, isTrue);
       expect(drishti.autoStart, isTrue);

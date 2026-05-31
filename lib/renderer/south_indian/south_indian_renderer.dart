@@ -40,11 +40,10 @@ class SouthIndianRenderer extends ChartRenderer {
   ChartPainter createPainter({
     required List<Map<String, dynamic>> expressions,
     required Map<String, dynamic> displayConfig,
-  }) =>
-      SouthIndianPainter(
-        expressions: expressions,
-        displayConfig: displayConfig,
-      );
+  }) => SouthIndianPainter(
+    expressions: expressions,
+    displayConfig: displayConfig,
+  );
 }
 
 class _PlacedGlyph {
@@ -60,10 +59,7 @@ class _PlacedGlyph {
 }
 
 class SouthIndianPainter extends ChartPainter {
-  SouthIndianPainter({
-    required this.expressions,
-    required this.displayConfig,
-  });
+  SouthIndianPainter({required this.expressions, required this.displayConfig});
 
   final List<Map<String, dynamic>> expressions;
   final Map<String, dynamic> displayConfig;
@@ -86,8 +82,18 @@ class SouthIndianPainter extends ChartPainter {
   };
 
   static const _signAbbreviations = [
-    'Ar', 'Ta', 'Ge', 'Cn', 'Le', 'Vi',
-    'Li', 'Sc', 'Sg', 'Cp', 'Aq', 'Pi',
+    'Ar',
+    'Ta',
+    'Ge',
+    'Cn',
+    'Le',
+    'Vi',
+    'Li',
+    'Sc',
+    'Sg',
+    'Cp',
+    'Aq',
+    'Pi',
   ];
 
   static const _planetAbbreviations = {
@@ -125,18 +131,50 @@ class SouthIndianPainter extends ChartPainter {
     canvas.drawRect(ui.Offset.zero & size, linePaint);
 
     // Vertical lines — columns 1 and 3 run full height; column 2 skips center
-    canvas.drawLine(ui.Offset(_cellW, 0), ui.Offset(_cellW, size.height), linePaint);
-    canvas.drawLine(ui.Offset(3 * _cellW, 0), ui.Offset(3 * _cellW, size.height), linePaint);
+    canvas.drawLine(
+      ui.Offset(_cellW, 0),
+      ui.Offset(_cellW, size.height),
+      linePaint,
+    );
+    canvas.drawLine(
+      ui.Offset(3 * _cellW, 0),
+      ui.Offset(3 * _cellW, size.height),
+      linePaint,
+    );
     // Column 2: top row and bottom row only
-    canvas.drawLine(ui.Offset(2 * _cellW, 0), ui.Offset(2 * _cellW, _cellH), linePaint);
-    canvas.drawLine(ui.Offset(2 * _cellW, 3 * _cellH), ui.Offset(2 * _cellW, size.height), linePaint);
+    canvas.drawLine(
+      ui.Offset(2 * _cellW, 0),
+      ui.Offset(2 * _cellW, _cellH),
+      linePaint,
+    );
+    canvas.drawLine(
+      ui.Offset(2 * _cellW, 3 * _cellH),
+      ui.Offset(2 * _cellW, size.height),
+      linePaint,
+    );
 
     // Horizontal lines — rows 1 and 3 run full width; row 2 skips center
-    canvas.drawLine(ui.Offset(0, _cellH), ui.Offset(size.width, _cellH), linePaint);
-    canvas.drawLine(ui.Offset(0, 3 * _cellH), ui.Offset(size.width, 3 * _cellH), linePaint);
+    canvas.drawLine(
+      ui.Offset(0, _cellH),
+      ui.Offset(size.width, _cellH),
+      linePaint,
+    );
+    canvas.drawLine(
+      ui.Offset(0, 3 * _cellH),
+      ui.Offset(size.width, 3 * _cellH),
+      linePaint,
+    );
     // Row 2: left column and right column only
-    canvas.drawLine(ui.Offset(0, 2 * _cellH), ui.Offset(_cellW, 2 * _cellH), linePaint);
-    canvas.drawLine(ui.Offset(3 * _cellW, 2 * _cellH), ui.Offset(size.width, 2 * _cellH), linePaint);
+    canvas.drawLine(
+      ui.Offset(0, 2 * _cellH),
+      ui.Offset(_cellW, 2 * _cellH),
+      linePaint,
+    );
+    canvas.drawLine(
+      ui.Offset(3 * _cellW, 2 * _cellH),
+      ui.Offset(size.width, 2 * _cellH),
+      linePaint,
+    );
 
     // Sign labels in each cell
     final signFontSize = (_cellH * 0.12).clamp(8.0, 14.0);
@@ -149,7 +187,12 @@ class SouthIndianPainter extends ChartPainter {
         _cellW,
         _cellH,
       );
-      _drawSignLabel(canvas, cellRect, _signAbbreviations[signIndex], signFontSize);
+      _drawSignLabel(
+        canvas,
+        cellRect,
+        _signAbbreviations[signIndex],
+        signFontSize,
+      );
     }
 
     // Ascendant and planet placement
@@ -157,7 +200,9 @@ class SouthIndianPainter extends ChartPainter {
     if (expr == null) return;
 
     final ascendant = expr[ExpressionKeys.ascendant];
-    final ascSignIndex = ascendant is Map ? ascendant[ExpressionKeys.signIndex] : null;
+    final ascSignIndex = ascendant is Map
+        ? ascendant[ExpressionKeys.signIndex]
+        : null;
 
     // Mark ascendant cell
     if (ascSignIndex is int && _signToCell.containsKey(ascSignIndex)) {
@@ -180,7 +225,8 @@ class SouthIndianPainter extends ChartPainter {
         if (house is! Map<String, dynamic>) continue;
         final houseSignIndex = house[ExpressionKeys.signIndex];
         final houseNumber = house['number'];
-        if (houseSignIndex is! int || !_signToCell.containsKey(houseSignIndex)) continue;
+        if (houseSignIndex is! int || !_signToCell.containsKey(houseSignIndex))
+          continue;
         if (houseNumber is! int) continue;
         final (hCol, hRow) = _signToCell[houseSignIndex]!;
         _drawText(
@@ -219,7 +265,9 @@ class SouthIndianPainter extends ChartPainter {
       for (var i = 0; i < planetsInCell.length; i++) {
         final planet = planetsInCell[i];
         final planetId = planet[ExpressionKeys.id] as String? ?? '?';
-        final abbr = _planetAbbreviations[planetId] ?? planetId.substring(0, 2).capitalize();
+        final abbr =
+            _planetAbbreviations[planetId] ??
+            planetId.substring(0, 2).capitalize();
         final retro = planet[ExpressionKeys.retrograde] == true;
         final label = retro ? '$abbr(R)' : abbr;
 
@@ -237,11 +285,9 @@ class SouthIndianPainter extends ChartPainter {
           const ui.Color(0xFFFFFFFF),
         );
 
-        _placedGlyphs.add(_PlacedGlyph(
-          planetId: planetId,
-          bounds: textBounds,
-          details: planet,
-        ));
+        _placedGlyphs.add(
+          _PlacedGlyph(planetId: planetId, bounds: textBounds, details: planet),
+        );
       }
     }
   }
@@ -271,14 +317,12 @@ class SouthIndianPainter extends ChartPainter {
     double fontSize,
     ui.Color color,
   ) {
-    final builder = ui.ParagraphBuilder(
-      ui.ParagraphStyle(
-        fontSize: fontSize,
-        fontFamily: 'monospace',
-      ),
-    )
-      ..pushStyle(ui.TextStyle(color: color))
-      ..addText(text);
+    final builder =
+        ui.ParagraphBuilder(
+            ui.ParagraphStyle(fontSize: fontSize, fontFamily: 'monospace'),
+          )
+          ..pushStyle(ui.TextStyle(color: color))
+          ..addText(text);
 
     final paragraph = builder.build()
       ..layout(ui.ParagraphConstraints(width: _cellW * 0.9));
@@ -319,12 +363,7 @@ class SouthIndianPainter extends ChartPainter {
       if (c == col && r == row) {
         return HouseHit(
           houseNumber: entry.key + 1,
-          bounds: ui.Rect.fromLTWH(
-            col * _cellW,
-            row * _cellH,
-            _cellW,
-            _cellH,
-          ),
+          bounds: ui.Rect.fromLTWH(col * _cellW, row * _cellH, _cellW, _cellH),
         );
       }
     }

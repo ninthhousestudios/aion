@@ -40,7 +40,9 @@ class PluginManifest {
 
     List<String>? args;
     if (json['args'] != null) {
-      args = (json['args'] as List).map((e) => PluginConfig._substituteVars(e as String)).toList();
+      args = (json['args'] as List)
+          .map((e) => PluginConfig._substituteVars(e as String))
+          .toList();
     }
 
     Map<String, String>? env;
@@ -56,10 +58,14 @@ class PluginManifest {
       displayName: json['displayName'] as String,
       description: json['description'] as String,
       transport: transport,
-      command: rawCommand != null ? PluginConfig._substituteVars(rawCommand) : null,
+      command: rawCommand != null
+          ? PluginConfig._substituteVars(rawCommand)
+          : null,
       args: args,
       env: env,
-      workingDirectory: rawWorkingDirectory != null ? PluginConfig._substituteVars(rawWorkingDirectory) : null,
+      workingDirectory: rawWorkingDirectory != null
+          ? PluginConfig._substituteVars(rawWorkingDirectory)
+          : null,
       url: json['url'] as String?,
       bundled: json['bundled'] as bool? ?? false,
       autoStart: json['autoStart'] as bool? ?? false,
@@ -134,8 +140,7 @@ class BundledManifests {
     transport: PluginTransport.stdio,
     command: 'dart',
     args: ['run', '--verbosity=error', 'mundus:mundus'],
-    workingDirectory:
-        Platform.environment['MUNDUS_PATH'] ?? '../mundus',
+    workingDirectory: Platform.environment['MUNDUS_PATH'] ?? '../mundus',
     bundled: true,
     autoStart: true,
   );
@@ -163,8 +168,7 @@ class BundledManifests {
     transport: PluginTransport.stdio,
     command: 'dart',
     args: ['run', '--verbosity=error', 'drishti:drishti'],
-    workingDirectory:
-        Platform.environment['DRISHTI_PATH'] ?? '../arjuna',
+    workingDirectory: Platform.environment['DRISHTI_PATH'] ?? '../arjuna',
     env: {
       if (Platform.environment.containsKey('DRISHTI_EPHE_PATH'))
         'DRISHTI_EPHE_PATH': Platform.environment['DRISHTI_EPHE_PATH']!,

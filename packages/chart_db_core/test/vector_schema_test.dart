@@ -44,9 +44,7 @@ void main() {
     test('minimal spec: bodies only', () {
       final spec = {
         'bodies': ['sun', 'moon'],
-        'features': {
-          'longitudes': true,
-        },
+        'features': {'longitudes': true},
       };
       // 2 bodies × 2 = 4
       expect(computeDims(spec), equals(4));
@@ -136,7 +134,9 @@ void main() {
       expect(
         () => repo.register('bad', {
           'bodies': ['sun'],
-          'features': {'swe_aux': ['armc', 'bogus']},
+          'features': {
+            'swe_aux': ['armc', 'bogus'],
+          },
         }),
         throwsA(isA<ArgumentError>()),
       );
@@ -204,10 +204,7 @@ void main() {
         ['cfg-1', 'test-config', 'default', schema.id],
       );
 
-      expect(
-        () => repo.delete(schema.id),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => repo.delete(schema.id), throwsA(isA<StateError>()));
 
       // Schema still exists.
       expect(repo.get(schema.id), isNotNull);

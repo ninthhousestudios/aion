@@ -51,19 +51,17 @@ class CollectionRepository {
   /// Creates a new collection and returns its id.
   String create(String name, {String? note}) {
     final id = _uuid.v4();
-    _db.execute(
-      'INSERT INTO collections (id, name, note) VALUES (?, ?, ?);',
-      [id, name, note],
-    );
+    _db.execute('INSERT INTO collections (id, name, note) VALUES (?, ?, ?);', [
+      id,
+      name,
+      note,
+    ]);
     return id;
   }
 
   /// Returns a single collection by [id], or `null` if not found.
   Collection? get(String id) {
-    final rows = _db.select(
-      'SELECT * FROM collections WHERE id = ?;',
-      [id],
-    );
+    final rows = _db.select('SELECT * FROM collections WHERE id = ?;', [id]);
     if (rows.isEmpty) return null;
     return Collection.fromRow(rows.first);
   }
@@ -129,10 +127,10 @@ class CollectionRepository {
 
   /// Removes a tag from a chart.
   void removeTag(String chartId, String tag) {
-    _db.execute(
-      'DELETE FROM chart_tags WHERE chart_id = ? AND tag = ?;',
-      [chartId, tag],
-    );
+    _db.execute('DELETE FROM chart_tags WHERE chart_id = ? AND tag = ?;', [
+      chartId,
+      tag,
+    ]);
   }
 
   /// Returns all tags for a chart.

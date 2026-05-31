@@ -7,9 +7,7 @@ import 'package:chart_db_core/chart_db_core.dart';
 /// Helper: builds a minimal preset JSON with the given bodies.
 String _preset(List<String> bodies) {
   return jsonEncode({
-    'sweConfig': {
-      'bodies': bodies,
-    },
+    'sweConfig': {'bodies': bodies},
   });
 }
 
@@ -74,16 +72,22 @@ void main() {
       final schemaId = schemas.first.id;
 
       final presetJson = _preset(['sun', 'moon']);
-      final config = repo.register('with-schema', presetJson,
-          vectorSchemaId: schemaId);
+      final config = repo.register(
+        'with-schema',
+        presetJson,
+        vectorSchemaId: schemaId,
+      );
 
       expect(config.vectorSchemaId, equals(schemaId));
     });
 
     test('register with non-existent vectorSchemaId throws', () {
       expect(
-        () => repo.register('bad', _preset(['sun']),
-            vectorSchemaId: 'no-such-id'),
+        () => repo.register(
+          'bad',
+          _preset(['sun']),
+          vectorSchemaId: 'no-such-id',
+        ),
         throwsA(isA<ArgumentError>()),
       );
     });
@@ -115,8 +119,7 @@ void main() {
       final western = schemas.firstWhere((s) => s.name == 'western-13');
 
       repo.register('alpha', _preset(['sun']));
-      repo.register('beta', _preset(['moon']),
-          vectorSchemaId: western.id);
+      repo.register('beta', _preset(['moon']), vectorSchemaId: western.id);
 
       final all = repo.list();
       expect(all, hasLength(2));
@@ -144,11 +147,25 @@ void main() {
 
       // Register with all 13 bodies so both schemas are valid subsets.
       final allBodies = [
-        'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
-        'uranus', 'neptune', 'pluto', 'chiron', 'rahu', 'ketu',
+        'sun',
+        'moon',
+        'mercury',
+        'venus',
+        'mars',
+        'jupiter',
+        'saturn',
+        'uranus',
+        'neptune',
+        'pluto',
+        'chiron',
+        'rahu',
+        'ketu',
       ];
-      final config = repo.register('full', _preset(allBodies),
-          vectorSchemaId: western.id);
+      final config = repo.register(
+        'full',
+        _preset(allBodies),
+        vectorSchemaId: western.id,
+      );
 
       final oldId = repo.updateSchema(config.id, vedic.id);
 
@@ -165,8 +182,19 @@ void main() {
       final western = schemas.firstWhere((s) => s.name == 'western-13');
 
       final allBodies = [
-        'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
-        'uranus', 'neptune', 'pluto', 'chiron', 'rahu', 'ketu',
+        'sun',
+        'moon',
+        'mercury',
+        'venus',
+        'mars',
+        'jupiter',
+        'saturn',
+        'uranus',
+        'neptune',
+        'pluto',
+        'chiron',
+        'rahu',
+        'ketu',
       ];
       final config = repo.register('no-schema', _preset(allBodies));
 
@@ -205,11 +233,13 @@ void main() {
 
       expect(
         () => repo.updateSchema(config.id, western.id),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('not present in config preset bodies'),
-        )),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('not present in config preset bodies'),
+          ),
+        ),
       );
     });
 
@@ -222,8 +252,7 @@ void main() {
       final smallSchema = schemaRepo.register('small-2', smallSpec);
 
       // Config has sun, moon, mars — superset of schema.
-      final config =
-          repo.register('bigger', _preset(['sun', 'moon', 'mars']));
+      final config = repo.register('bigger', _preset(['sun', 'moon', 'mars']));
 
       // Should not throw.
       final oldId = repo.updateSchema(config.id, smallSchema.id);

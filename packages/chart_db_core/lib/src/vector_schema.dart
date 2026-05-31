@@ -43,14 +43,29 @@ const Set<String> _knownFeatureKeys = {
 /// The default western-13 spec.
 const Map<String, dynamic> westernSpec = {
   'bodies': [
-    'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
-    'uranus', 'neptune', 'pluto', 'chiron', 'rahu', 'ketu',
+    'sun',
+    'moon',
+    'mercury',
+    'venus',
+    'mars',
+    'jupiter',
+    'saturn',
+    'uranus',
+    'neptune',
+    'pluto',
+    'chiron',
+    'rahu',
+    'ketu',
   ],
   'features': {
     'longitudes': true,
     'house_cusps': true,
     'swe_aux': [
-      'armc', 'vertex', 'equasc', 'co_asc_koch', 'co_asc_munkasey',
+      'armc',
+      'vertex',
+      'equasc',
+      'co_asc_koch',
+      'co_asc_munkasey',
       'polar_asc',
     ],
     'house_placements': true,
@@ -62,14 +77,29 @@ const Map<String, dynamic> westernSpec = {
 /// The default vedic-13 spec.
 const Map<String, dynamic> vedicSpec = {
   'bodies': [
-    'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
-    'uranus', 'neptune', 'pluto', 'chiron', 'rahu', 'ketu',
+    'sun',
+    'moon',
+    'mercury',
+    'venus',
+    'mars',
+    'jupiter',
+    'saturn',
+    'uranus',
+    'neptune',
+    'pluto',
+    'chiron',
+    'rahu',
+    'ketu',
   ],
   'features': {
     'longitudes': true,
     'house_cusps': true,
     'swe_aux': [
-      'armc', 'vertex', 'equasc', 'co_asc_koch', 'co_asc_munkasey',
+      'armc',
+      'vertex',
+      'equasc',
+      'co_asc_koch',
+      'co_asc_munkasey',
       'polar_asc',
     ],
     'house_placements': true,
@@ -267,10 +297,9 @@ class VectorSchemaRepository {
     final canonical = canonicalJson(spec);
 
     // Check if this hash already exists.
-    final existing = _db.select(
-      'SELECT * FROM vector_schemas WHERE id = ?;',
-      [id],
-    );
+    final existing = _db.select('SELECT * FROM vector_schemas WHERE id = ?;', [
+      id,
+    ]);
     if (existing.isNotEmpty) {
       return VectorSchema.fromRow(existing.first);
     }
@@ -280,28 +309,20 @@ class VectorSchemaRepository {
       [id, name, canonical, dims],
     );
 
-    final rows = _db.select(
-      'SELECT * FROM vector_schemas WHERE id = ?;',
-      [id],
-    );
+    final rows = _db.select('SELECT * FROM vector_schemas WHERE id = ?;', [id]);
     return VectorSchema.fromRow(rows.first);
   }
 
   /// Returns a schema by its content-hash [id], or `null` if not found.
   VectorSchema? get(String id) {
-    final rows = _db.select(
-      'SELECT * FROM vector_schemas WHERE id = ?;',
-      [id],
-    );
+    final rows = _db.select('SELECT * FROM vector_schemas WHERE id = ?;', [id]);
     if (rows.isEmpty) return null;
     return VectorSchema.fromRow(rows.first);
   }
 
   /// Lists all registered schemas.
   List<VectorSchema> list() {
-    final rows = _db.select(
-      'SELECT * FROM vector_schemas ORDER BY name;',
-    );
+    final rows = _db.select('SELECT * FROM vector_schemas ORDER BY name;');
     return rows.map(VectorSchema.fromRow).toList();
   }
 

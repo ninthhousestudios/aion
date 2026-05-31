@@ -4,7 +4,8 @@ import 'package:test/test.dart';
 import 'package:chart_db_core/chart_db_core.dart';
 
 /// A minimal preset JSON that includes all 13 western bodies.
-const _presetJson = '{"sweConfig":{"bodies":'
+const _presetJson =
+    '{"sweConfig":{"bodies":'
     '["sun","moon","mercury","venus","mars","jupiter","saturn",'
     '"uranus","neptune","pluto","chiron","rahu","ketu"]}}';
 
@@ -104,10 +105,7 @@ void main() {
     expect(noWeights.length, equals(uniformWeights.length));
     for (var i = 0; i < noWeights.length; i++) {
       expect(uniformWeights[i].chartId, equals(noWeights[i].chartId));
-      expect(
-        uniformWeights[i].distance,
-        closeTo(noWeights[i].distance, 1e-10),
-      );
+      expect(uniformWeights[i].distance, closeTo(noWeights[i].distance, 1e-10));
     }
   });
 

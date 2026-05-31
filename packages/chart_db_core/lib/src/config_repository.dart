@@ -111,10 +111,7 @@ class ConfigRepository {
     final id = _presetHash(presetJson);
 
     // Return existing if hash matches.
-    final existing = _db.select(
-      'SELECT * FROM configs WHERE id = ?;',
-      [id],
-    );
+    final existing = _db.select('SELECT * FROM configs WHERE id = ?;', [id]);
     if (existing.isNotEmpty) {
       return Config.fromRow(existing.first);
     }
@@ -171,10 +168,9 @@ class ConfigRepository {
   /// schema's bodies are not a subset of the config's preset bodies.
   String? updateSchema(String configId, String newSchemaId) {
     // Fetch the config.
-    final configRows = _db.select(
-      'SELECT * FROM configs WHERE id = ?;',
-      [configId],
-    );
+    final configRows = _db.select('SELECT * FROM configs WHERE id = ?;', [
+      configId,
+    ]);
     if (configRows.isEmpty) {
       throw StateError('Config "$configId" not found');
     }
@@ -191,8 +187,7 @@ class ConfigRepository {
 
     // Body validation: schema bodies must be subset of config bodies.
     final configBodies = extractBodies(config.preset);
-    final schemaBodies =
-        (schemaSpec['bodies'] as List).cast<String>().toSet();
+    final schemaBodies = (schemaSpec['bodies'] as List).cast<String>().toSet();
 
     if (!schemaBodies.every((b) => configBodies.contains(b))) {
       final missing = schemaBodies.difference(configBodies);
@@ -204,10 +199,10 @@ class ConfigRepository {
 
     final oldSchemaId = config.vectorSchemaId;
 
-    _db.execute(
-      'UPDATE configs SET vector_schema_id = ? WHERE id = ?;',
-      [newSchemaId, configId],
-    );
+    _db.execute('UPDATE configs SET vector_schema_id = ? WHERE id = ?;', [
+      newSchemaId,
+      configId,
+    ]);
 
     return oldSchemaId;
   }
@@ -224,10 +219,9 @@ class ConfigRepository {
   // ---------------------------------------------------------------------------
 
   void _validateSchemaExists(String schemaId) {
-    final rows = _db.select(
-      'SELECT id FROM vector_schemas WHERE id = ?;',
-      [schemaId],
-    );
+    final rows = _db.select('SELECT id FROM vector_schemas WHERE id = ?;', [
+      schemaId,
+    ]);
     if (rows.isEmpty) {
       throw ArgumentError('Vector schema "$schemaId" does not exist');
     }

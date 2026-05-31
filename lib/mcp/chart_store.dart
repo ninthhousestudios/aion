@@ -76,11 +76,9 @@ class ChartStore {
     return ref;
   }
 
-  Stream<ChartState> watchChart(String chartId) =>
-      _chartOf(chartId).stream;
+  Stream<ChartState> watchChart(String chartId) => _chartOf(chartId).stream;
 
-  ChartState chartState(String chartId) =>
-      _chartOf(chartId).value;
+  ChartState chartState(String chartId) => _chartOf(chartId).value;
 
   Stream<ExpressionState> watchExpression(ExpressionRef ref) =>
       _expressionOf(ref).stream;
@@ -91,9 +89,7 @@ class ChartStore {
   List<String> get loadedChartIds => _charts.keys.toList();
 
   List<ExpressionRef> expressionsForChart(String chartId) =>
-      _expressions.keys
-          .where((ref) => ref.chartId == chartId)
-          .toList();
+      _expressions.keys.where((ref) => ref.chartId == chartId).toList();
 
   void dispose() {
     for (final s in _charts.values) {
@@ -117,16 +113,13 @@ class ChartStore {
     try {
       final result = await _host.callTool(server, tool, args);
       if (result.isError) {
-        final message = result.content
-                .whereType<TextContent>()
-                .firstOrNull
-                ?.text ??
+        final message =
+            result.content.whereType<TextContent>().firstOrNull?.text ??
             'Unknown tool error';
         subject.add(ExpressionError(message, args));
         return;
       }
-      final textContent =
-          result.content.whereType<TextContent>().firstOrNull;
+      final textContent = result.content.whereType<TextContent>().firstOrNull;
       if (textContent == null) {
         subject.add(ExpressionError('No TextContent in tool result', args));
         return;
@@ -135,10 +128,12 @@ class ChartStore {
       try {
         data = json.decode(textContent.text) as Map<String, dynamic>;
       } catch (_) {
-        subject.add(ExpressionError(
-          'Tool result is not valid JSON: ${textContent.text}',
-          args,
-        ));
+        subject.add(
+          ExpressionError(
+            'Tool result is not valid JSON: ${textContent.text}',
+            args,
+          ),
+        );
         return;
       }
       subject.add(ExpressionReady(data, args));
@@ -147,11 +142,10 @@ class ChartStore {
     }
   }
 
-  BehaviorSubject<ChartState> _chartOf(String chartId) =>
-      _charts.putIfAbsent(
-        chartId,
-        () => BehaviorSubject.seeded(const ChartLoading()),
-      );
+  BehaviorSubject<ChartState> _chartOf(String chartId) => _charts.putIfAbsent(
+    chartId,
+    () => BehaviorSubject.seeded(const ChartLoading()),
+  );
 
   BehaviorSubject<ExpressionState> _expressionOf(ExpressionRef ref) =>
       _expressions.putIfAbsent(

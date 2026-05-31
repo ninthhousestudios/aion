@@ -11,6 +11,7 @@ final workspaceStoreProvider = Provider<WorkspaceStore>((ref) {
   return store;
 });
 
-final expressionProvider = StreamProvider.family<ExpressionState, ExpressionRef>(
-  (ref, exprRef) => ref.watch(workspaceStoreProvider).watch(exprRef),
-);
+final expressionProvider =
+    StreamProvider.family<ExpressionState, ExpressionRef>(
+      (ref, exprRef) => ref.watch(workspaceStoreProvider).watch(exprRef),
+    );

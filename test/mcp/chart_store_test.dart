@@ -70,7 +70,10 @@ void main() {
 
     final states = <ExpressionState>[];
     final ref = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _config,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
     );
     final sub = store.watchExpression(ref).listen(states.add);
     await Future<void>.delayed(Duration.zero);
@@ -89,10 +92,16 @@ void main() {
     host.nextResult = _jsonResult({'sun': 'aries'});
 
     final ref1 = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _config,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
     );
     final ref2 = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _config,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
     );
 
     expect(ref1, equals(ref2));
@@ -104,31 +113,38 @@ void main() {
 
     host.nextResult = _jsonResult({'sun': 'aries'});
     final ref1 = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _config,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
     );
 
     host.nextResult = _jsonResult({'sun': 'pisces'});
     final ref2 = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _configAlt,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _configAlt,
     );
 
     expect(ref1, isNot(equals(ref2)));
     expect(host.callCount, 2);
-    expect(
-      (store.expressionState(ref1) as ExpressionReady).data,
-      {'sun': 'aries'},
-    );
-    expect(
-      (store.expressionState(ref2) as ExpressionReady).data,
-      {'sun': 'pisces'},
-    );
+    expect((store.expressionState(ref1) as ExpressionReady).data, {
+      'sun': 'aries',
+    });
+    expect((store.expressionState(ref2) as ExpressionReady).data, {
+      'sun': 'pisces',
+    });
   });
 
   test('unloadChart removes chart and all its expressions', () async {
     store.loadChart('chart-1', _testDoc);
     host.nextResult = _jsonResult({'sun': 'aries'});
     final ref = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _config,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
     );
 
     expect(store.expressionsForChart('chart-1'), [ref]);
@@ -145,7 +161,10 @@ void main() {
     host.nextError = Exception('server unreachable');
 
     final ref = await store.computeExpression(
-      'chart-1', 'drishti', 'calculate_chart', _config,
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
     );
 
     expect(store.expressionState(ref), isA<ExpressionError>());
@@ -153,12 +172,10 @@ void main() {
 
   test('concurrent chart loads and computations', () async {
     store.loadChart('chart-1', _testDoc);
-    store.loadChart('chart-2', const ChartDoc(
-      jd: 2448058.833,
-      lat: 40.7,
-      lon: -74.0,
-      name: 'Chart 2',
-    ));
+    store.loadChart(
+      'chart-2',
+      const ChartDoc(jd: 2448058.833, lat: 40.7, lon: -74.0, name: 'Chart 2'),
+    );
 
     host.nextResult = _jsonResult({'result': 'ok'});
 
@@ -177,7 +194,10 @@ void main() {
   test('computeExpression on unloaded chart throws', () {
     expect(
       () => store.computeExpression(
-        'no-such-chart', 'drishti', 'calculate_chart', _config,
+        'no-such-chart',
+        'drishti',
+        'calculate_chart',
+        _config,
       ),
       throwsStateError,
     );
@@ -185,9 +205,10 @@ void main() {
 
   test('loadChart is idempotent', () {
     store.loadChart('chart-1', _testDoc);
-    store.loadChart('chart-1', const ChartDoc(
-      jd: 0.0, lat: 0.0, lon: 0.0, name: 'Different',
-    ));
+    store.loadChart(
+      'chart-1',
+      const ChartDoc(jd: 0.0, lat: 0.0, lon: 0.0, name: 'Different'),
+    );
 
     final loaded = store.chartState('chart-1') as ChartLoaded;
     expect(loaded.doc, _testDoc);

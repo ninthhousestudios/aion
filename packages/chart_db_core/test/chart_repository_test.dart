@@ -76,7 +76,14 @@ void main() {
       final id = repo.insert(_makeChart(id: ''));
       expect(id, isNotEmpty);
       // UUID v4 format: 8-4-4-4-12 hex
-      expect(id, matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')));
+      expect(
+        id,
+        matches(
+          RegExp(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+          ),
+        ),
+      );
     });
 
     test('uses provided id when non-empty', () {
@@ -90,16 +97,18 @@ void main() {
     });
 
     test('preserves null optional fields', () {
-      final id = repo.insert(_makeChart(
-        gender: null,
-        placename: null,
-        country: null,
-        utcOffset: null,
-        dstOffset: null,
-        notes: null,
-        rodden: null,
-        sourcePath: null,
-      ));
+      final id = repo.insert(
+        _makeChart(
+          gender: null,
+          placename: null,
+          country: null,
+          utcOffset: null,
+          dstOffset: null,
+          notes: null,
+          rodden: null,
+          sourcePath: null,
+        ),
+      );
       final chart = repo.get(id)!;
       expect(chart.gender, isNull);
       expect(chart.placename, isNull);
@@ -114,14 +123,16 @@ void main() {
 
   group('update', () {
     test('partial update preserves other fields', () {
-      final id = repo.insert(_makeChart(
-        name: 'Isaac Newton',
-        gender: 'M',
-        notes: 'gravity guy',
-        rodden: 'AA',
-        placename: 'Woolsthorpe',
-        country: 'England',
-      ));
+      final id = repo.insert(
+        _makeChart(
+          name: 'Isaac Newton',
+          gender: 'M',
+          notes: 'gravity guy',
+          rodden: 'AA',
+          placename: 'Woolsthorpe',
+          country: 'England',
+        ),
+      );
 
       repo.update(id, name: 'Sir Isaac Newton');
 
@@ -153,8 +164,10 @@ void main() {
       repo.update(id, name: 'Updated');
       final after = repo.get(id)!.updatedAt;
 
-      expect(after.millisecondsSinceEpoch,
-          greaterThanOrEqualTo(before.millisecondsSinceEpoch));
+      expect(
+        after.millisecondsSinceEpoch,
+        greaterThanOrEqualTo(before.millisecondsSinceEpoch),
+      );
     });
 
     test('no-op when no fields provided', () {
@@ -234,30 +247,36 @@ void main() {
     late String curieId;
 
     setUp(() {
-      newtonId = repo.insert(_makeChart(
-        jd: 2305814.0,
-        lat: 52.81,
-        lon: -0.64,
-        name: 'Isaac Newton',
-        country: 'England',
-        notes: 'discovered gravity and calculus',
-      ));
-      einsteinId = repo.insert(_makeChart(
-        jd: 2411810.0,
-        lat: 48.40,
-        lon: 9.99,
-        name: 'Albert Einstein',
-        country: 'Germany',
-        notes: 'relativity and quantum theory',
-      ));
-      curieId = repo.insert(_makeChart(
-        jd: 2408506.0,
-        lat: 52.23,
-        lon: 21.01,
-        name: 'Marie Curie',
-        country: 'Poland',
-        notes: 'radioactivity pioneer',
-      ));
+      newtonId = repo.insert(
+        _makeChart(
+          jd: 2305814.0,
+          lat: 52.81,
+          lon: -0.64,
+          name: 'Isaac Newton',
+          country: 'England',
+          notes: 'discovered gravity and calculus',
+        ),
+      );
+      einsteinId = repo.insert(
+        _makeChart(
+          jd: 2411810.0,
+          lat: 48.40,
+          lon: 9.99,
+          name: 'Albert Einstein',
+          country: 'Germany',
+          notes: 'relativity and quantum theory',
+        ),
+      );
+      curieId = repo.insert(
+        _makeChart(
+          jd: 2408506.0,
+          lat: 52.23,
+          lon: 21.01,
+          name: 'Marie Curie',
+          country: 'Poland',
+          notes: 'radioactivity pioneer',
+        ),
+      );
     });
 
     test('FTS match returns ranked results', () {
@@ -388,39 +407,37 @@ void main() {
 
   group('natural key uniqueness', () {
     test('duplicate (jd, lat, lon) throws DuplicateChartException', () {
-      repo.insert(_makeChart(
-        jd: 2451545.0,
-        lat: 51.5074,
-        lon: -0.1278,
-        name: 'First',
-      ));
+      repo.insert(
+        _makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278, name: 'First'),
+      );
 
       expect(
-        () => repo.insert(_makeChart(
-          jd: 2451545.0,
-          lat: 51.5074,
-          lon: -0.1278,
-          name: 'Duplicate',
-        )),
+        () => repo.insert(
+          _makeChart(
+            jd: 2451545.0,
+            lat: 51.5074,
+            lon: -0.1278,
+            name: 'Duplicate',
+          ),
+        ),
         throwsA(isA<DuplicateChartException>()),
       );
     });
 
     test('DuplicateChartException contains existing chart id', () {
-      final firstId = repo.insert(_makeChart(
-        jd: 2451545.0,
-        lat: 51.5074,
-        lon: -0.1278,
-        name: 'First',
-      ));
+      final firstId = repo.insert(
+        _makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278, name: 'First'),
+      );
 
       try {
-        repo.insert(_makeChart(
-          jd: 2451545.0,
-          lat: 51.5074,
-          lon: -0.1278,
-          name: 'Duplicate',
-        ));
+        repo.insert(
+          _makeChart(
+            jd: 2451545.0,
+            lat: 51.5074,
+            lon: -0.1278,
+            name: 'Duplicate',
+          ),
+        );
         fail('Expected DuplicateChartException');
       } on DuplicateChartException catch (e) {
         expect(e.existingId, equals(firstId));
@@ -430,12 +447,14 @@ void main() {
     test('different coordinates are allowed', () {
       repo.insert(_makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278));
       // Same jd, different lat/lon -- should succeed
-      final id2 = repo.insert(_makeChart(
-        jd: 2451545.0,
-        lat: 48.8566,
-        lon: 2.3522,
-        name: 'Different location',
-      ));
+      final id2 = repo.insert(
+        _makeChart(
+          jd: 2451545.0,
+          lat: 48.8566,
+          lon: 2.3522,
+          name: 'Different location',
+        ),
+      );
       expect(repo.get(id2), isNotNull);
     });
   });

@@ -11,10 +11,7 @@ void main() {
     });
 
     test('Unix epoch: 1970-01-01T00:00:00Z = JD 2440587.5', () {
-      expect(
-        dateTimeToJd(DateTime.utc(1970, 1, 1)),
-        closeTo(2440587.5, 1e-9),
-      );
+      expect(dateTimeToJd(DateTime.utc(1970, 1, 1)), closeTo(2440587.5, 1e-9));
     });
 
     test('Feb date exercises the y-1/m+12 branch', () {
@@ -57,10 +54,7 @@ void main() {
       test('datetime -> jd -> datetime preserves $dt to the second', () {
         final back = dateTimeFromJd(dateTimeToJd(dt));
         // Meeus is second-resolution; allow 1s slack for rounding.
-        expect(
-          back.difference(dt).inSeconds.abs(),
-          lessThanOrEqualTo(1),
-        );
+        expect(back.difference(dt).inSeconds.abs(), lessThanOrEqualTo(1));
       });
     }
   });

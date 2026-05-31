@@ -131,10 +131,7 @@ class VecStore {
       params.add(configId);
     }
 
-    _db.execute(
-      'DELETE FROM $table WHERE ${clauses.join(' AND ')}',
-      params,
-    );
+    _db.execute('DELETE FROM $table WHERE ${clauses.join(' AND ')}', params);
   }
 
   /// Returns the [k] nearest neighbors for [query] within the given config.
@@ -172,13 +169,18 @@ class VecStore {
     final scored = <VecResult>[];
     for (final row in rows) {
       final blob = row['vector'] as Uint8List;
-      final stored = Float64List.view(blob.buffer, blob.offsetInBytes,
-          blob.lengthInBytes ~/ Float64List.bytesPerElement);
+      final stored = Float64List.view(
+        blob.buffer,
+        blob.offsetInBytes,
+        blob.lengthInBytes ~/ Float64List.bytesPerElement,
+      );
       final similarity = _cosineSimilarity(query, stored);
-      scored.add(VecResult(
-        chartId: row['chart_id'] as String,
-        distance: 1.0 - similarity,
-      ));
+      scored.add(
+        VecResult(
+          chartId: row['chart_id'] as String,
+          distance: 1.0 - similarity,
+        ),
+      );
     }
 
     scored.sort((a, b) => a.distance.compareTo(b.distance));

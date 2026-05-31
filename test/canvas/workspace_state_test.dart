@@ -8,7 +8,11 @@ import 'package:test/test.dart';
 const _ref1 = ExpressionRef(chartId: 'chart-1', configHash: 'lahiri');
 const _ref2 = ExpressionRef(chartId: 'chart-2', configHash: 'kp');
 
-CardModel _card(String id, {int zOrder = 0, List<ExpressionRef> expressions = const []}) {
+CardModel _card(
+  String id, {
+  int zOrder = 0,
+  List<ExpressionRef> expressions = const [],
+}) {
   return CardModel(
     id: id,
     label: 'Card $id',
@@ -72,7 +76,11 @@ void main() {
 
   test('sortedCards returns by ascending zOrder', () {
     final state = WorkspaceState(
-      cards: [_card('a', zOrder: 3), _card('b', zOrder: 1), _card('c', zOrder: 2)],
+      cards: [
+        _card('a', zOrder: 3),
+        _card('b', zOrder: 1),
+        _card('c', zOrder: 2),
+      ],
       selectedId: null,
       guides: const [],
       snapEnabled: true,
@@ -86,7 +94,9 @@ void main() {
 
   test('copyWith preserves fields when not overridden', () {
     final state = WorkspaceState(
-      cards: [_card('a', expressions: [_ref1])],
+      cards: [
+        _card('a', expressions: [_ref1]),
+      ],
       selectedId: 'a',
       guides: const [],
       snapEnabled: false,

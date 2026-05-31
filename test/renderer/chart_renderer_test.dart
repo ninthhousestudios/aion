@@ -21,11 +21,7 @@ void main() {
     });
 
     test('preferredAspectRatio defaults to null', () {
-      const meta = RendererMeta(
-        id: 'x',
-        displayName: 'X',
-        systems: [],
-      );
+      const meta = RendererMeta(id: 'x', displayName: 'X', systems: []);
       expect(meta.preferredAspectRatio, isNull);
     });
   });
@@ -143,6 +139,5 @@ class _UniversalRenderer extends ChartRenderer {
   ChartPainter createPainter({
     required List<Map<String, dynamic>> expressions,
     required Map<String, dynamic> displayConfig,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 }

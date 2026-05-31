@@ -8,12 +8,13 @@ import 'vector_schema.dart';
 ///
 /// Injected by the caller — either vayu in-process or drishti via MCP.
 /// Returns the chart JSON map (same format as drishti formatter output).
-typedef CalculateChart = Future<Map<String, dynamic>> Function(
-  double jd,
-  double lat,
-  double lon,
-  String presetJson,
-);
+typedef CalculateChart =
+    Future<Map<String, dynamic>> Function(
+      double jd,
+      double lat,
+      double lon,
+      String presetJson,
+    );
 
 /// Orchestrates chart lifecycle operations that span multiple repositories.
 ///
@@ -27,11 +28,11 @@ class ChartService {
     required VectorSchemaRepository vectorSchemaRepository,
     required VecStore vecStore,
     required CalculateChart calculateChart,
-  })  : _chartRepo = chartRepository,
-        _configRepo = configRepository,
-        _schemaRepo = vectorSchemaRepository,
-        _vecStore = vecStore,
-        _calculateChart = calculateChart;
+  }) : _chartRepo = chartRepository,
+       _configRepo = configRepository,
+       _schemaRepo = vectorSchemaRepository,
+       _vecStore = vecStore,
+       _calculateChart = calculateChart;
 
   final ChartRepository _chartRepo;
   final ConfigRepository _configRepo;

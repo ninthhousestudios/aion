@@ -5,7 +5,12 @@ import 'package:uuid/uuid.dart';
 const _uuid = Uuid();
 
 /// Inserts a minimal chart row and returns its id.
-String _insertChart(ChartDatabase chartDb, {double jd = 2451545.0, double lat = 51.5, double lon = -0.1}) {
+String _insertChart(
+  ChartDatabase chartDb, {
+  double jd = 2451545.0,
+  double lat = 51.5,
+  double lon = -0.1,
+}) {
   final id = _uuid.v4();
   chartDb.db.execute(
     "INSERT INTO charts (id, jd, lat, lon, name) VALUES (?, ?, ?, ?, '');",

@@ -45,7 +45,9 @@ void main() {
       content: [TextContent(text: '{"sun": "aries"}')],
     );
 
-    await store.recalculate(_natal, 'drishti', 'calculate_chart', {'date': '2000-01-01'});
+    await store.recalculate(_natal, 'drishti', 'calculate_chart', {
+      'date': '2000-01-01',
+    });
     await Future<void>.delayed(Duration.zero);
 
     await sub.cancel();
@@ -65,7 +67,9 @@ void main() {
 
     host.nextError = Exception('server unreachable');
 
-    await store.recalculate(_natal, 'drishti', 'calculate_chart', {'date': '2000-01-01'});
+    await store.recalculate(_natal, 'drishti', 'calculate_chart', {
+      'date': '2000-01-01',
+    });
     await Future<void>.delayed(Duration.zero);
 
     await sub.cancel();
@@ -85,7 +89,9 @@ void main() {
       content: [TextContent(text: 'not valid json {{')],
     );
 
-    await store.recalculate(_natal, 'drishti', 'calculate_chart', {'date': '2000-01-01'});
+    await store.recalculate(_natal, 'drishti', 'calculate_chart', {
+      'date': '2000-01-01',
+    });
     await Future<void>.delayed(Duration.zero);
 
     await sub.cancel();
@@ -105,10 +111,14 @@ void main() {
     host.nextResult = CallToolResult(
       content: [TextContent(text: '{"slot": "natal"}')],
     );
-    await store.recalculate(_natal, 'drishti', 'calculate_chart', {'id': 'natal'});
+    await store.recalculate(_natal, 'drishti', 'calculate_chart', {
+      'id': 'natal',
+    });
 
     host.nextError = Exception('transit error');
-    await store.recalculate(_transit, 'drishti', 'calculate_chart', {'id': 'transit'});
+    await store.recalculate(_transit, 'drishti', 'calculate_chart', {
+      'id': 'transit',
+    });
 
     await sub1.cancel();
     await sub2.cancel();

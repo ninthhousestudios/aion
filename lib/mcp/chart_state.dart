@@ -14,10 +14,7 @@ class ChartLoaded extends ChartState {
   const ChartLoaded({required this.id, required this.doc});
 
   ChartLoaded copyWith({String? id, ChartDoc? doc}) =>
-      ChartLoaded(
-        id: id ?? this.id,
-        doc: doc ?? this.doc,
-      );
+      ChartLoaded(id: id ?? this.id, doc: doc ?? this.doc);
 }
 
 class ChartError extends ChartState {

@@ -21,11 +21,7 @@ void main() {
   );
 
   // A minimal doc: only the required natural-key fields.
-  const minimal = ChartDoc(
-    jd: 2451545.0,
-    lat: 51.5,
-    lon: -0.12,
-  );
+  const minimal = ChartDoc(jd: 2451545.0, lat: 51.5, lon: -0.12);
 
   group('round-trip', () {
     test('encode -> decode preserves a fully-populated doc', () {
@@ -281,8 +277,11 @@ lon = 0.0
         lon: 0,
         tags: ['a', 'b', 'c'],
       );
-      expect(TomlChartCodec.decode(TomlChartCodec.encode(doc)).tags,
-          ['a', 'b', 'c']);
+      expect(TomlChartCodec.decode(TomlChartCodec.encode(doc)).tags, [
+        'a',
+        'b',
+        'c',
+      ]);
     });
 
     test('naturalKey is (jd, lat, lon)', () {

@@ -40,8 +40,7 @@ class ImportedChart {
   });
 
   @override
-  String toString() =>
-      'ImportedChart($name, jd=$jd, lat=$lat, lon=$lon)';
+  String toString() => 'ImportedChart($name, jd=$jd, lat=$lat, lon=$lon)';
 }
 
 /// Imports chart files from disk into [ImportedChart] instances.
@@ -69,7 +68,8 @@ class ChartImporter {
     List<String>? extensions,
     List<(String path, Object error)>? errors,
   }) {
-    final exts = extensions ??
+    final exts =
+        extensions ??
         ChartIO.supportedExtensions.map((e) => e.toLowerCase()).toList();
     final dir = Directory(dirPath);
     if (!dir.existsSync()) {

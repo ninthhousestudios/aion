@@ -122,21 +122,21 @@ class ChartDoc {
 
   @override
   int get hashCode => Object.hash(
-        jd,
-        lat,
-        lon,
-        alt,
-        name,
-        gender,
-        placename,
-        country,
-        utcOffset,
-        dstOffset,
-        timezone,
-        notes,
-        rodden,
-        Object.hashAll(tags),
-      );
+    jd,
+    lat,
+    lon,
+    alt,
+    name,
+    gender,
+    placename,
+    country,
+    utcOffset,
+    dstOffset,
+    timezone,
+    notes,
+    rodden,
+    Object.hashAll(tags),
+  );
 
   @override
   String toString() => 'ChartDoc($name, jd=$jd, lat=$lat, lon=$lon)';

@@ -33,14 +33,16 @@ void main() {
 
   group('displayOptions', () {
     test('has show_outer_planets toggle', () {
-      final opt =
-          renderer.displayOptions.firstWhere((o) => o.key == 'show_outer_planets');
+      final opt = renderer.displayOptions.firstWhere(
+        (o) => o.key == 'show_outer_planets',
+      );
       expect(opt.defaultValue, false);
     });
 
     test('has glyph_style choice', () {
-      final opt =
-          renderer.displayOptions.firstWhere((o) => o.key == 'glyph_style');
+      final opt = renderer.displayOptions.firstWhere(
+        (o) => o.key == 'glyph_style',
+      );
       expect(opt.defaultValue, 'abbreviation');
       expect(opt.choices, isNotNull);
     });
@@ -90,7 +92,9 @@ void main() {
 
     test('paints with malformed data — missing planets key', () {
       final painter = renderer.createPainter(
-        expressions: const [{'ascendant': {}}],
+        expressions: const [
+          {'ascendant': {}},
+        ],
         displayConfig: const {},
       );
       final recorder = PictureRecorder();
@@ -109,7 +113,7 @@ void main() {
               {'id': 'z'},
             ],
             'ascendant': {'sign_index': 4},
-          }
+          },
         ],
         displayConfig: const {},
       );
@@ -120,10 +124,12 @@ void main() {
     });
 
     test('hitTestChart returns null for center area', () {
-      final painter = renderer.createPainter(
-        expressions: const [testExpression],
-        displayConfig: const {},
-      ) as SouthIndianPainter;
+      final painter =
+          renderer.createPainter(
+                expressions: const [testExpression],
+                displayConfig: const {},
+              )
+              as SouthIndianPainter;
       // Paint first to set up geometry
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -136,10 +142,12 @@ void main() {
     });
 
     test('hitTestChart returns HouseHit for outer cell', () {
-      final painter = renderer.createPainter(
-        expressions: const [testExpression],
-        displayConfig: const {},
-      ) as SouthIndianPainter;
+      final painter =
+          renderer.createPainter(
+                expressions: const [testExpression],
+                displayConfig: const {},
+              )
+              as SouthIndianPainter;
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
       painter.paint(canvas, const Size(400, 400));
@@ -152,28 +160,28 @@ void main() {
     });
 
     test('shouldRepaint returns true for different list instances', () {
-      final p1 = renderer.createPainter(
-        expressions: [testExpression],
-        displayConfig: const {},
-      ) as SouthIndianPainter;
-      final p2 = renderer.createPainter(
-        expressions: [testExpression],
-        displayConfig: const {},
-      ) as SouthIndianPainter;
+      final p1 =
+          renderer.createPainter(
+                expressions: [testExpression],
+                displayConfig: const {},
+              )
+              as SouthIndianPainter;
+      final p2 =
+          renderer.createPainter(
+                expressions: [testExpression],
+                displayConfig: const {},
+              )
+              as SouthIndianPainter;
       expect(p1.shouldRepaint(p2), isTrue);
     });
 
     test('shouldRepaint returns false for identical data', () {
       const data = [testExpression];
       const config = <String, dynamic>{};
-      final p1 = renderer.createPainter(
-        expressions: data,
-        displayConfig: config,
-      ) as SouthIndianPainter;
-      final p2 = SouthIndianPainter(
-        expressions: data,
-        displayConfig: config,
-      );
+      final p1 =
+          renderer.createPainter(expressions: data, displayConfig: config)
+              as SouthIndianPainter;
+      final p2 = SouthIndianPainter(expressions: data, displayConfig: config);
       expect(p1.shouldRepaint(p2), isFalse);
     });
   });
