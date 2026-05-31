@@ -43,7 +43,7 @@ class AionApp extends StatelessWidget {
         ),
         extensions: const [AionTheme.dark],
       ),
-      home: const CanvasWorkspace(),
+      home: const Scaffold(body: CanvasWorkspace()),
     );
   }
 }
