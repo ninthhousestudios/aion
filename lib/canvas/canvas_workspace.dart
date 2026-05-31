@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../actions/load_chart_action.dart';
+import '../mcp/expression_ref.dart';
+import '../mcp/expression_state.dart';
 import '../providers/chart_store_provider.dart';
 import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
@@ -76,10 +78,20 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           case ChartLoadedOk(:final chartId, :final doc):
             final viewportLocal = _globalToViewport(globalPos);
             final local = _viewportToWorkspace(viewportLocal);
-            final exprRef = await store.computeExpression(
-              chartId, 'drishti', 'calculate_chart', const {},
-            );
+            ExpressionRef? exprRef;
+            try {
+              exprRef = await store.computeExpression(
+                chartId, 'drishti', 'calculate_chart', const {},
+              );
+            } catch (e) {
+              if (mounted) _showError(context, '$e');
+              return;
+            }
             if (!mounted) return;
+            final state = store.expressionState(exprRef);
+            if (state is ExpressionError) {
+              _showError(context, '${state.error}');
+            }
             ref.read(workspaceProvider.notifier).addCard(
               local,
               const Size(300, 300),
@@ -88,15 +100,21 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
               rendererType: 'south_indian',
             );
           case ChartLoadFailed(:final message):
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message)),
-              );
-            }
+            if (mounted) _showError(context, message);
           case ChartLoadCancelled():
             break;
         }
     }
+  }
+
+  void _showError(BuildContext context, String message) {
+    final t = Theme.of(context).extension<AionTheme>()!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: t.cardLabelColor)),
+        backgroundColor: t.surfaceOverlay,
+      ),
+    );
   }
 
   Offset _globalToViewport(Offset global) {
