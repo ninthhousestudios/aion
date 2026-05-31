@@ -16,7 +16,7 @@ class WorkspaceState {
     : cards = const [],
       selectedId = null,
       guides = const [],
-      snapEnabled = true,
+      snapEnabled = false,
       nextZ = 0,
       cardCounter = 0;
 

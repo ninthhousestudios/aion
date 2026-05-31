@@ -29,28 +29,28 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     var initialState = WorkspaceState.initial();
     initialState = _addCardToState(
       initialState,
-      const Offset(60, 60),
-      const Size(300, 300),
-      'Chart Wheel',
-      rendererType: 'south_indian',
-    );
-    initialState = _addCardToState(
-      initialState,
-      const Offset(400, 60),
-      const Size(280, 200),
+      const Offset(40, 60),
+      const Size(240, 160),
       'Planet Table',
     );
     initialState = _addCardToState(
       initialState,
-      const Offset(400, 300),
-      const Size(280, 180),
+      const Offset(40, 260),
+      const Size(240, 160),
       'Dasha Timeline',
     );
     initialState = _addCardToState(
       initialState,
-      const Offset(60, 400),
-      const Size(300, 160),
+      const Offset(40, 460),
+      const Size(260, 160),
       'Yoga List',
+    );
+    initialState = _addCardToState(
+      initialState,
+      const Offset(340, 60),
+      const Size(660, 660),
+      'Chart Wheel',
+      rendererType: 'south_indian',
     );
     return initialState;
   }
