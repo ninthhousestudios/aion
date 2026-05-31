@@ -67,4 +67,59 @@ void main() {
     expect(copy.label, 'Changed');
     expect(identical(card, copy), isFalse);
   });
+
+  test('default rendererType is null', () {
+    final card = _card();
+    expect(card.rendererType, isNull);
+  });
+
+  test('default displayConfig is empty map', () {
+    final card = _card();
+    expect(card.displayConfig, isEmpty);
+  });
+
+  test('copyWith preserves rendererType when not overridden', () {
+    final card = CardModel(
+      id: 'c1',
+      label: 'Test',
+      color: const Color(0xFF000000),
+      position: Offset.zero,
+      size: const Size(200, 150),
+      rendererType: 'south_indian',
+    );
+    final moved = card.copyWith(position: const Offset(10, 20));
+    expect(moved.rendererType, 'south_indian');
+  });
+
+  test('copyWith can set rendererType to a value', () {
+    final card = _card();
+    final updated = card.copyWith(rendererType: 'south_indian');
+    expect(updated.rendererType, 'south_indian');
+  });
+
+  test('copyWith can set rendererType back to null', () {
+    final card = CardModel(
+      id: 'c1',
+      label: 'Test',
+      color: const Color(0xFF000000),
+      position: Offset.zero,
+      size: const Size(200, 150),
+      rendererType: 'south_indian',
+    );
+    final cleared = card.copyWith(rendererType: null);
+    expect(cleared.rendererType, isNull);
+  });
+
+  test('copyWith preserves displayConfig when not overridden', () {
+    final card = CardModel(
+      id: 'c1',
+      label: 'Test',
+      color: const Color(0xFF000000),
+      position: Offset.zero,
+      size: const Size(200, 150),
+      displayConfig: const {'show_outer_planets': true},
+    );
+    final moved = card.copyWith(position: const Offset(10, 20));
+    expect(moved.displayConfig, {'show_outer_planets': true});
+  });
 }

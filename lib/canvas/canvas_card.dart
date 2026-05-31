@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import '../renderer/dev_data.dart';
+import '../renderer/renderer_host.dart';
+import '../renderer/renderer_registry.dart';
+import '../renderer/south_indian/south_indian_renderer.dart';
 import '../theme/aion_theme.dart';
 import 'card_model.dart';
+
+final rendererRegistry = RendererRegistry()
+  ..register(SouthIndianRenderer());
 
 enum ResizeCorner { topLeft, topRight, bottomLeft, bottomRight }
 
@@ -67,6 +74,23 @@ class _CanvasCardState extends State<CanvasCard> {
     );
   }
 
+  Widget _buildRenderer(CardModel m, AionTheme t) {
+    final renderer = rendererRegistry.get(m.rendererType!);
+    if (renderer == null) {
+      return Center(
+        child: Text(
+          'Unknown renderer: ${m.rendererType}',
+          style: TextStyle(color: t.cardDimColor),
+        ),
+      );
+    }
+    return RendererHost(
+      renderer: renderer,
+      expressionData: const [devExpressionData],
+      displayConfig: m.displayConfig,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).extension<AionTheme>()!;
@@ -105,30 +129,36 @@ class _CanvasCardState extends State<CanvasCard> {
           ),
           child: Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      m.label,
-                      style: TextStyle(
-                        color: t.cardLabelColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+              if (m.rendererType != null)
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: _buildRenderer(m, t),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        m.label,
+                        style: TextStyle(
+                          color: t.cardLabelColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${m.size.width.round()} x ${m.size.height.round()}',
-                      style: TextStyle(
-                        color: t.cardDimColor,
-                        fontSize: 11,
+                      const SizedBox(height: 4),
+                      Text(
+                        '${m.size.width.round()} x ${m.size.height.round()}',
+                        style: TextStyle(
+                          color: t.cardDimColor,
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               for (final corner in ResizeCorner.values) _cornerGrip(corner),
             ],
           ),

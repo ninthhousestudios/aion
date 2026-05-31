@@ -12,6 +12,8 @@ class CardModel {
     this.expressions = const [],
     this.minSize = const Size(120, 80),
     this.zOrder = 0,
+    this.rendererType,
+    this.displayConfig = const {},
   });
 
   final String id;
@@ -22,8 +24,12 @@ class CardModel {
   final List<ExpressionRef> expressions;
   final Size minSize;
   final int zOrder;
+  final String? rendererType;
+  final Map<String, dynamic> displayConfig;
 
   Rect get rect => position & size;
+
+  static const Object _unset = Object();
 
   CardModel copyWith({
     String? id,
@@ -34,6 +40,8 @@ class CardModel {
     List<ExpressionRef>? expressions,
     Size? minSize,
     int? zOrder,
+    Object? rendererType = _unset,
+    Map<String, dynamic>? displayConfig,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -44,6 +52,10 @@ class CardModel {
       expressions: expressions ?? this.expressions,
       minSize: minSize ?? this.minSize,
       zOrder: zOrder ?? this.zOrder,
+      rendererType: identical(rendererType, _unset)
+          ? this.rendererType
+          : rendererType as String?,
+      displayConfig: displayConfig ?? this.displayConfig,
     );
   }
 }
