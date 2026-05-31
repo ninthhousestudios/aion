@@ -1,11 +1,13 @@
 import 'package:chart_db_core/chart_db_core.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 
-/// Input schema for the create_config tool.
+import 'tool_helpers.dart';
+
 final _inputSchema = JsonObject(
   properties: {
     'name': JsonString(
-      description: 'Human-readable name for the config (e.g. "tropical-western")',
+      description:
+          'Human-readable name for the config (e.g. "tropical-western")',
     ),
     'preset_json': JsonString(
       description: 'Serialized ArrowOptions JSON string. The config id is '
@@ -19,7 +21,6 @@ final _inputSchema = JsonObject(
   additionalProperties: false,
 );
 
-/// Registers the create_config tool on the given [server].
 void registerCreateConfig(McpServer server, ConfigRepository configRepo) {
   server.registerTool(
     'create_config',
@@ -27,31 +28,34 @@ void registerCreateConfig(McpServer server, ConfigRepository configRepo) {
         'Idempotent: if the same preset already exists, returns the existing '
         'config. Optionally associates a vector schema.',
     inputSchema: _inputSchema,
-    callback: (args, extra) => _handle(args, configRepo),
+    callback: (args, extra) => handleCreateConfig(args, configRepo),
   );
 }
 
-CallToolResult _handle(
+CallToolResult handleCreateConfig(
   Map<String, dynamic> args,
   ConfigRepository configRepo,
 ) {
-  final name = args['name'] as String?;
-  if (name == null || name.isEmpty) {
-    return _errorResult('Missing required parameter: name');
+  final name = args['name'];
+  if (name is! String || name.isEmpty) {
+    return errorResult('Missing required parameter: name');
   }
 
-  final presetJson = args['preset_json'] as String?;
-  if (presetJson == null || presetJson.isEmpty) {
-    return _errorResult('Missing required parameter: preset_json');
+  final presetJson = args['preset_json'];
+  if (presetJson is! String || presetJson.isEmpty) {
+    return errorResult('Missing required parameter: preset_json');
   }
 
-  final schemaId = args['schema_id'] as String?;
+  final schemaId = args['schema_id'];
+  if (schemaId != null && schemaId is! String) {
+    return errorResult('Invalid parameter: schema_id (expected string)');
+  }
 
   try {
     final config = configRepo.register(
       name,
       presetJson,
-      vectorSchemaId: schemaId,
+      vectorSchemaId: schemaId as String?,
     );
 
     return CallToolResult.fromStructuredContent({
@@ -63,13 +67,6 @@ CallToolResult _handle(
       'created_at': config.createdAt.toIso8601String(),
     });
   } catch (e) {
-    return _errorResult('Failed to create config: $e');
+    return errorResult('Failed to create config: $e');
   }
-}
-
-CallToolResult _errorResult(String message) {
-  return CallToolResult(
-    content: [TextContent(text: message)],
-    isError: true,
-  );
 }

@@ -1,25 +1,25 @@
 import 'package:chart_db_core/chart_db_core.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 
-/// Input schema for the list_configs tool.
+import 'tool_helpers.dart';
+
 final _inputSchema = JsonObject(
   properties: {},
   required: [],
   additionalProperties: false,
 );
 
-/// Registers the list_configs tool on the given [server].
 void registerListConfigs(McpServer server, ConfigRepository configRepo) {
   server.registerTool(
     'list_configs',
     description: 'List all registered configs with their associated '
         'vector schema info.',
     inputSchema: _inputSchema,
-    callback: (args, extra) => _handle(configRepo),
+    callback: (args, extra) => handleListConfigs(configRepo),
   );
 }
 
-CallToolResult _handle(ConfigRepository configRepo) {
+CallToolResult handleListConfigs(ConfigRepository configRepo) {
   try {
     final configs = configRepo.list();
 
@@ -39,9 +39,6 @@ CallToolResult _handle(ConfigRepository configRepo) {
           .toList(),
     });
   } catch (e) {
-    return CallToolResult(
-      content: [TextContent(text: 'Failed to list configs: $e')],
-      isError: true,
-    );
+    return errorResult('Failed to list configs: $e');
   }
 }

@@ -1,14 +1,14 @@
 import 'package:chart_db_core/chart_db_core.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 
-/// Input schema for the list_schemas tool.
+import 'tool_helpers.dart';
+
 final _inputSchema = JsonObject(
   properties: {},
   required: [],
   additionalProperties: false,
 );
 
-/// Registers the list_schemas tool on the given [server].
 void registerListSchemas(
   McpServer server,
   VectorSchemaRepository schemaRepo,
@@ -18,11 +18,11 @@ void registerListSchemas(
     description: 'List all registered vector schemas with their dimensions '
         'and spec details.',
     inputSchema: _inputSchema,
-    callback: (args, extra) => _handle(schemaRepo),
+    callback: (args, extra) => handleListSchemas(schemaRepo),
   );
 }
 
-CallToolResult _handle(VectorSchemaRepository schemaRepo) {
+CallToolResult handleListSchemas(VectorSchemaRepository schemaRepo) {
   try {
     final schemas = schemaRepo.list();
 
@@ -39,9 +39,6 @@ CallToolResult _handle(VectorSchemaRepository schemaRepo) {
           .toList(),
     });
   } catch (e) {
-    return CallToolResult(
-      content: [TextContent(text: 'Failed to list schemas: $e')],
-      isError: true,
-    );
+    return errorResult('Failed to list schemas: $e');
   }
 }

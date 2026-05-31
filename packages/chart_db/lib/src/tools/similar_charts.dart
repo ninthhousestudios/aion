@@ -1,7 +1,8 @@
 import 'package:chart_db_core/chart_db_core.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 
-/// Input schema for the similar_charts tool.
+import 'tool_helpers.dart';
+
 final _inputSchema = JsonObject(
   properties: {
     'chart_id': JsonString(
@@ -24,44 +25,55 @@ final _inputSchema = JsonObject(
   additionalProperties: false,
 );
 
-/// Registers the similar_charts tool on the given [server].
 void registerSimilarCharts(McpServer server, SimilaritySearch search) {
   server.registerTool(
     'similar_charts',
     description: 'Find charts similar to a given chart using vector '
         'similarity search. Returns ranked results with distance scores.',
     inputSchema: _inputSchema,
-    callback: (args, extra) => _handle(args, search),
+    callback: (args, extra) => handleSimilarCharts(args, search),
   );
 }
 
-CallToolResult _handle(
+CallToolResult handleSimilarCharts(
   Map<String, dynamic> args,
   SimilaritySearch search,
 ) {
-  final chartId = args['chart_id'] as String?;
-  if (chartId == null || chartId.isEmpty) {
-    return _errorResult('Missing required parameter: chart_id');
+  final chartId = args['chart_id'];
+  if (chartId is! String || chartId.isEmpty) {
+    return errorResult('Missing required parameter: chart_id');
   }
 
-  final configId = args['config_id'] as String?;
-  if (configId == null || configId.isEmpty) {
-    return _errorResult('Missing required parameter: config_id');
+  final configId = args['config_id'];
+  if (configId is! String || configId.isEmpty) {
+    return errorResult('Missing required parameter: config_id');
   }
 
-  final k = (args['k'] as num?)?.toInt() ?? 20;
+  final rawK = args['k'];
+  if (rawK != null && rawK is! num) {
+    return errorResult('Invalid parameter: k (expected number)');
+  }
+  final k = (rawK as num?)?.toInt() ?? 20;
 
-  // Parse weights: JSON object with string keys (dimension indices) to doubles.
   Map<int, double>? weights;
   if (args['weights'] != null) {
+    if (args['weights'] is! Map) {
+      return errorResult(
+          'Invalid parameter: weights (expected object with string keys)');
+    }
     final rawWeights = args['weights'] as Map<String, dynamic>;
     weights = {};
     for (final entry in rawWeights.entries) {
       final dim = int.tryParse(entry.key);
-      final weight = (entry.value as num?)?.toDouble();
-      if (dim != null && weight != null) {
-        weights[dim] = weight;
+      if (dim == null) {
+        return errorResult(
+            'Invalid weights key: "${entry.key}" (expected integer string)');
       }
+      if (entry.value is! num) {
+        return errorResult(
+            'Invalid weights value for key "${entry.key}" (expected number)');
+      }
+      weights[dim] = (entry.value as num).toDouble();
     }
   }
 
@@ -85,13 +97,6 @@ CallToolResult _handle(
           .toList(),
     });
   } catch (e) {
-    return _errorResult('Similarity search failed: $e');
+    return errorResult('Similarity search failed: $e');
   }
-}
-
-CallToolResult _errorResult(String message) {
-  return CallToolResult(
-    content: [TextContent(text: message)],
-    isError: true,
-  );
 }

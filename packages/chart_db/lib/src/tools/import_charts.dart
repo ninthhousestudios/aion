@@ -4,7 +4,8 @@ import 'package:chart_db_core/chart_db_core.dart';
 import 'package:charts_dart/charts_dart.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 
-/// Input schema for the import_charts tool.
+import 'tool_helpers.dart';
+
 final _inputSchema = JsonObject(
   properties: {
     'path': JsonString(
@@ -20,7 +21,6 @@ final _inputSchema = JsonObject(
   additionalProperties: false,
 );
 
-/// Registers the import_charts tool on the given [server].
 void registerImportCharts(McpServer server, ChartRepository chartRepo) {
   server.registerTool(
     'import_charts',
@@ -28,20 +28,24 @@ void registerImportCharts(McpServer server, ChartRepository chartRepo) {
         'Accepts a single file path or a directory path. '
         'Duplicate charts (same jd, lat, lon) are skipped.',
     inputSchema: _inputSchema,
-    callback: (args, extra) => _handle(args, chartRepo),
+    callback: (args, extra) => handleImportCharts(args, chartRepo),
   );
 }
 
-CallToolResult _handle(
+CallToolResult handleImportCharts(
   Map<String, dynamic> args,
   ChartRepository chartRepo,
 ) {
-  final path = args['path'] as String?;
-  if (path == null || path.isEmpty) {
-    return _errorResult('Missing required parameter: path');
+  final path = args['path'];
+  if (path is! String || path.isEmpty) {
+    return errorResult('Missing required parameter: path');
   }
 
-  final extensions = (args['extensions'] as List?)
+  final rawExtensions = args['extensions'];
+  if (rawExtensions != null && rawExtensions is! List) {
+    return errorResult('Invalid parameter: extensions (expected array)');
+  }
+  final extensions = (rawExtensions as List?)
       ?.map((e) => (e as String).toLowerCase())
       .toList();
 
@@ -52,7 +56,7 @@ CallToolResult _handle(
     if (FileSystemEntity.isDirectorySync(path)) {
       final dir = Directory(path);
       if (!dir.existsSync()) {
-        return _errorResult('Directory not found: $path');
+        return errorResult('Directory not found: $path');
       }
 
       final exts = extensions ??
@@ -67,13 +71,12 @@ CallToolResult _handle(
     } else if (FileSystemEntity.isFileSync(path)) {
       _importFile(path, chartRepo, imported, errors);
     } else {
-      return _errorResult('Path not found: $path');
+      return errorResult('Path not found: $path');
     }
 
     return CallToolResult.fromStructuredContent({
       'imported': imported.length,
-      'skipped_duplicates':
-          imported.where((r) => r.skippedDuplicate).length,
+      'skipped_duplicates': imported.where((r) => r.skippedDuplicate).length,
       'errors': errors.length,
       'results': imported
           .map((r) => {
@@ -86,7 +89,7 @@ CallToolResult _handle(
       if (errors.isNotEmpty) 'error_details': errors,
     });
   } catch (e) {
-    return _errorResult('Import failed: $e');
+    return errorResult('Import failed: $e');
   }
 }
 
@@ -158,16 +161,8 @@ class _ImportResult {
   final bool skippedDuplicate;
 }
 
-/// Lowercase file extension including the dot.
 String _extension(String path) {
   final dot = path.lastIndexOf('.');
   if (dot < 0) return '';
   return path.substring(dot).toLowerCase();
-}
-
-CallToolResult _errorResult(String message) {
-  return CallToolResult(
-    content: [TextContent(text: message)],
-    isError: true,
-  );
 }
