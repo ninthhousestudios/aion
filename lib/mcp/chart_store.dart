@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:chart_db_core/chart_db_core.dart';
@@ -47,8 +46,8 @@ class ChartStore {
       throw StateError('Chart $chartId is not loaded');
     }
 
-    final configHash = _hashConfig(config);
-    final ref = ExpressionRef(chartId: chartId, configHash: configHash);
+    final hash = configHash(jsonEncode(config));
+    final ref = ExpressionRef(chartId: chartId, configHash: hash);
     final subject = _expressionOf(ref);
 
     if (subject.value is ExpressionReady) return ref;
@@ -153,18 +152,4 @@ class ChartStore {
         () => BehaviorSubject.seeded(const ExpressionIdle()),
       );
 
-  static String _hashConfig(Map<String, dynamic> config) =>
-      json.encode(_sortedValue(config));
-
-  static Object? _sortedValue(Object? value) {
-    if (value is Map<String, dynamic>) {
-      final sorted = SplayTreeMap<String, dynamic>();
-      for (final key in value.keys) {
-        sorted[key] = _sortedValue(value[key]);
-      }
-      return sorted;
-    }
-    if (value is List) return value.map(_sortedValue).toList();
-    return value;
-  }
 }

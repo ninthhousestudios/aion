@@ -2,6 +2,7 @@ export 'src/chart_doc.dart';
 export 'src/chart_repository.dart';
 export 'src/chart_service.dart';
 export 'src/collection_repository.dart';
+export 'src/config_hash.dart';
 export 'src/config_repository.dart';
 export 'src/database.dart';
 export 'src/julian_day.dart';

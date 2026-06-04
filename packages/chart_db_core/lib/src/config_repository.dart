@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:sqlite3/sqlite3.dart';
+
+import 'config_hash.dart';
 
 /// A config binds a name to a serialized ArrowOptions preset and an optional
 /// vector schema. The id is the SHA-256 hash of the exact preset JSON string,
@@ -54,15 +55,6 @@ class ConfigWithSchema {
   final int? schemaDims;
 }
 
-// ---------------------------------------------------------------------------
-// Hashing
-// ---------------------------------------------------------------------------
-
-/// SHA-256 hash of the raw preset JSON string (not canonicalized).
-String _presetHash(String presetJson) {
-  final bytes = utf8.encode(presetJson);
-  return sha256.convert(bytes).toString();
-}
 
 // ---------------------------------------------------------------------------
 // Body extraction
@@ -108,7 +100,7 @@ class ConfigRepository {
   ///
   /// Throws [ArgumentError] if [vectorSchemaId] is given but does not exist.
   Config register(String name, String presetJson, {String? vectorSchemaId}) {
-    final id = _presetHash(presetJson);
+    final id = configHash(presetJson);
 
     // Return existing if hash matches.
     final existing = _db.select('SELECT * FROM configs WHERE id = ?;', [id]);
