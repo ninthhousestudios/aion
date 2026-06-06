@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../actions/bind_chart_action.dart';
+import '../actions/load_chart_action.dart';
 import '../providers/chart_store_provider.dart';
 import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
@@ -67,10 +68,20 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         final counter = ref.read(workspaceProvider).cardCounter;
         workspace.addCard(local, const Size(240, 160), 'Card $counter');
       case 'open_chart':
-        final result = await bindChartToCard(ref.read(chartStoreProvider));
+        final loadResult = await loadChartFromFile(ref.read(chartStoreProvider));
+        if (!mounted) return;
+        if (loadResult is ChartLoadCancelled) break;
+        final result = await bindChartToCard(
+          ref.read(chartStoreProvider),
+          loadResult,
+        );
         if (!mounted) return;
         switch (result) {
-          case ChartBound(:final chartName, :final expressionRef):
+          case ChartBound(
+            :final chartName,
+            :final expressionRef,
+            :final rendererType,
+          ):
             final viewportLocal = _globalToViewport(globalPos);
             final local = _viewportToWorkspace(viewportLocal);
             ref
@@ -80,12 +91,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                   const Size(300, 300),
                   chartName,
                   expressions: [expressionRef],
-                  rendererType: 'south_indian',
+                  rendererType: rendererType,
                 );
           case BindFailed(:final message):
             _showError(context, message);
-          case BindCancelled():
-            break;
         }
     }
   }

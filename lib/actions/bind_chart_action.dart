@@ -10,11 +10,8 @@ sealed class BindChartResult {
 class ChartBound extends BindChartResult {
   final String chartName;
   final ExpressionRef expressionRef;
-  const ChartBound(this.chartName, this.expressionRef);
-}
-
-class BindCancelled extends BindChartResult {
-  const BindCancelled();
+  final String rendererType;
+  const ChartBound(this.chartName, this.expressionRef, this.rendererType);
 }
 
 class BindFailed extends BindChartResult {
@@ -23,13 +20,13 @@ class BindFailed extends BindChartResult {
 }
 
 Future<BindChartResult> bindChartToCard(
-  ChartStore store, {
+  ChartStore store,
+  LoadChartResult loadResult, {
   String server = 'drishti',
   String tool = 'calculate_chart',
   Map<String, dynamic> config = const {},
   String rendererType = 'south_indian',
 }) async {
-  final loadResult = await loadChartFromFile(store);
   switch (loadResult) {
     case ChartLoadedOk(:final chartId, :final doc):
       ExpressionRef exprRef;
@@ -45,10 +42,11 @@ Future<BindChartResult> bindChartToCard(
       return ChartBound(
         doc.name.isEmpty ? 'Chart' : doc.name,
         exprRef,
+        rendererType,
       );
     case ChartLoadFailed(:final message):
       return BindFailed(message);
     case ChartLoadCancelled():
-      return const BindCancelled();
+      return const BindFailed('Load cancelled');
   }
 }
