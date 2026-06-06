@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../actions/load_chart_action.dart';
-import '../mcp/expression_ref.dart';
-import '../mcp/expression_state.dart';
+import '../actions/bind_chart_action.dart';
 import '../providers/chart_store_provider.dart';
 import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
@@ -69,42 +67,24 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         final counter = ref.read(workspaceProvider).cardCounter;
         workspace.addCard(local, const Size(240, 160), 'Card $counter');
       case 'open_chart':
-        final store = ref.read(chartStoreProvider);
-        final loadResult = await loadChartFromFile(store);
-        switch (loadResult) {
-          case ChartLoadedOk(:final chartId, :final doc):
+        final result = await bindChartToCard(ref.read(chartStoreProvider));
+        if (!mounted) return;
+        switch (result) {
+          case ChartBound(:final chartName, :final expressionRef):
             final viewportLocal = _globalToViewport(globalPos);
             final local = _viewportToWorkspace(viewportLocal);
-            ExpressionRef? exprRef;
-            try {
-              exprRef = await store.computeExpression(
-                chartId,
-                'drishti',
-                'calculate_chart',
-                const {},
-              );
-            } catch (e) {
-              if (mounted) _showError(context, '$e');
-              return;
-            }
-            if (!mounted) return;
-            final exprState = store.expressionState(exprRef);
-            if (exprState is ExpressionError) {
-              _showError(context, '${exprState.error}');
-              return;
-            }
             ref
                 .read(workspaceProvider.notifier)
                 .addCard(
                   local,
                   const Size(300, 300),
-                  doc.name.isEmpty ? 'Chart' : doc.name,
-                  expressions: [exprRef],
+                  chartName,
+                  expressions: [expressionRef],
                   rendererType: 'south_indian',
                 );
-          case ChartLoadFailed(:final message):
-            if (mounted) _showError(context, message);
-          case ChartLoadCancelled():
+          case BindFailed(:final message):
+            _showError(context, message);
+          case BindCancelled():
             break;
         }
     }
