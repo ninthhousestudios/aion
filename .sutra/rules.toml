@@ -1,0 +1,138 @@
+# .sutra/rules.toml — Architectural constraints for aion
+#
+# Severity levels:
+#   blocking      — guard denies edits that introduce these
+#   advisory      — warning in review, agent proceeds
+#   informational — tracked in review output, silent otherwise
+
+# ═══════════════════════════════════════════════════════════════════
+# Package DAG
+# ═══════════════════════════════════════════════════════════════════
+# chart_model ← chart_db_core ← chart_db (MCP wrapper)
+#      ↑              ↑
+#      └── lib/ (app) ─┘
+# No back-edges. Packages never import app code.
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "packages/chart_model/**"
+to = "packages/chart_db_core/**"
+name = "chart-model-no-core"
+severity = "blocking"
+provenance = "docs/adr/001-typed-expression-boundary.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "packages/chart_model/**"
+to = "packages/chart_db/**"
+name = "chart-model-no-db"
+severity = "blocking"
+provenance = "docs/adr/001-typed-expression-boundary.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "packages/chart_model/**"
+to = "lib/**"
+name = "chart-model-no-app"
+severity = "blocking"
+provenance = "docs/adr/001-typed-expression-boundary.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "packages/chart_db_core/lib/**"
+to = "packages/chart_db/**"
+name = "core-no-mcp-wrapper"
+severity = "blocking"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "packages/chart_db_core/lib/**"
+to = "lib/**"
+name = "core-no-app"
+severity = "blocking"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "packages/chart_db/**"
+to = "lib/**"
+name = "chart-db-no-app"
+severity = "blocking"
+provenance = "docs/chart-db-design.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/**"
+to = "packages/chart_db/lib/**"
+name = "app-uses-core-not-tools"
+severity = "blocking"
+provenance = "docs/chart-db-design.md"
+
+# ═══════════════════════════════════════════════════════════════════
+# App layer boundaries
+# ═══════════════════════════════════════════════════════════════════
+# mcp/ is pure Dart domain — no presentation deps.
+# Renderers consume chart_model, not the MCP host or canvas.
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/mcp/**"
+to = "lib/canvas/**"
+name = "mcp-no-canvas"
+severity = "blocking"
+provenance = "docs/mcp-spine-architecture.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/mcp/**"
+to = "lib/widgets/**"
+name = "mcp-no-widgets"
+severity = "blocking"
+provenance = "docs/mcp-spine-architecture.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/mcp/**"
+to = "lib/renderer/**"
+name = "mcp-no-renderer"
+severity = "blocking"
+provenance = "docs/mcp-spine-architecture.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/mcp/**"
+to = "lib/providers/**"
+name = "mcp-no-providers"
+severity = "blocking"
+provenance = "docs/mcp-spine-architecture.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/renderer/**"
+to = "lib/mcp/**"
+name = "renderer-no-mcp"
+severity = "blocking"
+provenance = "docs/architecture-plan-overview.md"
+
+[[constraint]]
+kind = "forbidden_dep"
+from = "lib/renderer/**"
+to = "lib/canvas/**"
+name = "renderer-no-canvas"
+severity = "blocking"
+provenance = "docs/architecture-plan-overview.md"
+
+# ═══════════════════════════════════════════════════════════════════
+# Cycle prevention
+# ═══════════════════════════════════════════════════════════════════
+
+[[constraint]]
+kind = "no_cycles"
+scope = "packages/chart_db/lib/src/tools/"
+name = "tools-no-cycles"
+severity = "blocking"
+
+[[constraint]]
+kind = "no_cycles"
+scope = "lib/providers/"
+name = "providers-no-cycles"
+severity = "blocking"
