@@ -1,17 +1,9 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'vector_schema.dart';
+import 'package:chart_model/chart_model.dart';
 
-/// Mapping from schema swe_aux key names to chartJson ascmc key names.
-const Map<String, String> _sweAuxKeyMap = {
-  'armc': 'armc',
-  'vertex': 'vertex',
-  'equasc': 'equatorial_ascendant',
-  'co_asc_koch': 'co_ascendant_koch',
-  'co_asc_munkasey': 'co_ascendant_munkasey',
-  'polar_asc': 'polar_ascendant',
-};
+import 'vector_schema.dart';
 
 /// Encodes an angle in degrees as a (sin, cos) pair.
 (double, double) sinCos(double degrees) {
@@ -19,7 +11,7 @@ const Map<String, String> _sweAuxKeyMap = {
   return (sin(radians), cos(radians));
 }
 
-/// Extracts a fixed-length numeric vector from [chartJson] according to
+/// Extracts a fixed-length numeric vector from [expression] according to
 /// [schemaSpec].
 ///
 /// Pure function — no I/O, no side effects.
@@ -27,24 +19,21 @@ const Map<String, String> _sweAuxKeyMap = {
 /// The dimension order is deterministic:
 /// longitudes → house_cusps → swe_aux → house_placements → nakshatras → retrogrades
 Float64List extractVector(
-  Map<String, dynamic> chartJson,
+  ChartExpression expression,
   Map<String, dynamic> schemaSpec,
 ) {
   final bodies = (schemaSpec['bodies'] as List).cast<String>();
   final features = schemaSpec['features'] as Map<String, dynamic>;
-  final planets = (chartJson['planets'] as List).cast<Map<String, dynamic>>();
 
-  // Build a lookup map: body name → planet entry.
-  final planetMap = <String, Map<String, dynamic>>{};
-  for (final p in planets) {
-    planetMap[p['name'] as String] = p;
+  final planetMap = <String, Planet>{};
+  for (final p in expression.planets) {
+    planetMap[p.name.toLowerCase()] = p;
   }
 
-  // Verify all schema bodies exist in chartJson.
   for (final body in bodies) {
     if (!planetMap.containsKey(body)) {
       throw ArgumentError(
-        'Body "$body" required by schema but not found in chart JSON planets',
+        'Body "$body" required by schema but not found in expression planets',
       );
     }
   }
@@ -54,8 +43,7 @@ Float64List extractVector(
   // --- longitudes ---
   if (features['longitudes'] == true) {
     for (final body in bodies) {
-      final longitude = (planetMap[body]!['longitude'] as num).toDouble();
-      final (s, c) = sinCos(longitude);
+      final (s, c) = sinCos(planetMap[body]!.longitude);
       values.add(s);
       values.add(c);
     }
@@ -63,13 +51,10 @@ Float64List extractVector(
 
   // --- house_cusps ---
   if (features['house_cusps'] == true) {
-    final houses = (chartJson['houses'] as List).cast<Map<String, dynamic>>();
-    // Sort by house number to guarantee order 1-12.
-    final sorted = List<Map<String, dynamic>>.from(houses)
-      ..sort((a, b) => (a['number'] as int).compareTo(b['number'] as int));
+    final sorted = List<House>.from(expression.houses)
+      ..sort((a, b) => a.number.compareTo(b.number));
     for (final house in sorted) {
-      final longitude = (house['longitude'] as num).toDouble();
-      final (s, c) = sinCos(longitude);
+      final (s, c) = sinCos(house.cuspLongitude);
       values.add(s);
       values.add(c);
     }
@@ -78,13 +63,20 @@ Float64List extractVector(
   // --- swe_aux ---
   final sweAux = features['swe_aux'];
   if (sweAux is List && sweAux.isNotEmpty) {
-    final ascmc = chartJson['ascmc'] as Map<String, dynamic>;
+    final ascmc = expression.ascmc;
+    if (ascmc == null) {
+      throw StateError('swe_aux features requested but expression has no ascmc');
+    }
     for (final key in sweAux) {
-      final chartKey = _sweAuxKeyMap[key as String];
-      if (chartKey == null) {
-        throw ArgumentError('Unknown swe_aux key: "$key"');
-      }
-      final value = (ascmc[chartKey] as num).toDouble();
+      final value = switch (key as String) {
+        'armc' => ascmc.armc,
+        'vertex' => ascmc.vertex,
+        'equasc' => ascmc.equatorialAscendant,
+        'co_asc_koch' => ascmc.coAscendantKoch,
+        'co_asc_munkasey' => ascmc.coAscendantMunkasey,
+        'polar_asc' => ascmc.polarAscendant,
+        _ => throw ArgumentError('Unknown swe_aux key: "$key"'),
+      };
       final (s, c) = sinCos(value);
       values.add(s);
       values.add(c);
@@ -94,8 +86,7 @@ Float64List extractVector(
   // --- house_placements ---
   if (features['house_placements'] == true) {
     for (final body in bodies) {
-      final houseNumber = (planetMap[body]!['house_number'] as num).toDouble();
-      final degrees = houseNumber * 30.0;
+      final degrees = planetMap[body]!.house * 30.0;
       final (s, c) = sinCos(degrees);
       values.add(s);
       values.add(c);
@@ -105,8 +96,14 @@ Float64List extractVector(
   // --- nakshatras ---
   if (features['nakshatras'] == true) {
     for (final body in bodies) {
-      final nakshatra = (planetMap[body]!['nakshatra'] as num).toDouble();
-      final degrees = nakshatra * 360.0 / 27.0;
+      final planet = planetMap[body]!;
+      final index = nakshatraToIndex(planet.nakshatra);
+      if (index == null) {
+        throw ArgumentError(
+          'Unknown nakshatra "${planet.nakshatra}" for body "$body"',
+        );
+      }
+      final degrees = index * 360.0 / 27.0;
       final (s, c) = sinCos(degrees);
       values.add(s);
       values.add(c);
@@ -116,8 +113,7 @@ Float64List extractVector(
   // --- retrogrades ---
   if (features['retrogrades'] == true) {
     for (final body in bodies) {
-      final isRetrograde = planetMap[body]!['is_retrograde'] as bool;
-      values.add(isRetrograde ? 1.0 : 0.0);
+      values.add(planetMap[body]!.retrograde ? 1.0 : 0.0);
     }
   }
 

@@ -41,6 +41,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  chart_model:
+    dependency: "direct main"
+    description:
+      path: "../chart_model"
+      relative: true
+    source: path
+    version: "0.1.0"
   cli_config:
     dependency: transitive
     description:

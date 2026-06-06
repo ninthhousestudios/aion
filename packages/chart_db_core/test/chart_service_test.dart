@@ -1,10 +1,15 @@
 import 'package:test/test.dart';
 import 'package:chart_db_core/chart_db_core.dart';
 
-/// Mock chart calculation that returns a deterministic chart JSON map.
-///
-/// The output matches the drishti formatter structure and includes all fields
-/// needed by both western and vedic vector schemas.
+const _signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+
+const _nakshatras = ['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira',
+  'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni',
+  'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha',
+  'Jyeshtha', 'Moola', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana',
+  'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'];
+
 Future<Map<String, dynamic>> mockCalculateChart(
   double jd,
   double lat,
@@ -12,35 +17,38 @@ Future<Map<String, dynamic>> mockCalculateChart(
   String presetJson,
 ) async {
   return {
-    'summary': {'jd': jd, 'ayanamsa': 24.1, 'ascendant': 30.0, 'mc': 120.0},
     'planets': [
       for (final name in [
-        'sun',
-        'moon',
-        'mercury',
-        'venus',
-        'mars',
-        'jupiter',
-        'saturn',
-        'uranus',
-        'neptune',
-        'pluto',
-        'chiron',
-        'rahu',
-        'ketu',
+        'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
+        'uranus', 'neptune', 'pluto', 'chiron', 'rahu', 'ketu',
       ])
-        {
-          'name': name,
-          'longitude': (jd * 13.37 + name.hashCode) % 360,
-          'is_retrograde': name == 'saturn',
-          'house_number': (name.hashCode % 12) + 1,
-          'nakshatra': name.hashCode % 27,
-        },
+        () {
+          final lng = (jd * 13.37 + name.hashCode) % 360;
+          final signIdx = (lng / 30).floor();
+          final nakshatraIdx = name.hashCode.abs() % 27;
+          return {
+            'id': name,
+            'name': name.substring(0, 1).toUpperCase() + name.substring(1),
+            'longitude': lng,
+            'sign': _signs[signIdx],
+            'sign_index': signIdx,
+            'degree_in_sign': lng % 30,
+            'retrograde': name == 'saturn',
+            'nakshatra': _nakshatras[nakshatraIdx],
+            'nakshatra_pada': (name.hashCode.abs() % 4) + 1,
+            'house': (name.hashCode.abs() % 12) + 1,
+          };
+        }(),
     ],
     'houses': [
       for (var i = 1; i <= 12; i++)
-        {'number': i, 'longitude': (i * 30.0 + jd) % 360},
+        {
+          'number': i,
+          'sign_index': (i - 1) % 12,
+          'cusp_longitude': (i * 30.0 + jd) % 360,
+        },
     ],
+    'ascendant': {'sign_index': 0, 'longitude': 30.0},
     'ascmc': {
       'armc': 123.4,
       'vertex': 234.5,

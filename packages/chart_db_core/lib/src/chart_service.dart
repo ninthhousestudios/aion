@@ -1,3 +1,5 @@
+import 'package:chart_model/chart_model.dart';
+
 import 'chart_repository.dart';
 import 'config_repository.dart';
 import 'vec_store.dart';
@@ -67,8 +69,8 @@ class ChartService {
         chart.lon,
         config.preset,
       );
-
-      final vector = extractVector(chartJson, schema.spec);
+      final expression = ChartExpression.fromJson(chartJson);
+      final vector = extractVector(expression, schema.spec);
 
       _vecStore.ensureTable(schema);
       _vecStore.insertVector(schema.id, chartId, config.id, vector);
@@ -133,8 +135,8 @@ class ChartService {
         chart.lon,
         config.preset,
       );
-
-      final vector = extractVector(chartJson, schema.spec);
+      final expression = ChartExpression.fromJson(chartJson);
+      final vector = extractVector(expression, schema.spec);
       _vecStore.insertVector(schema.id, chart.id, configId, vector);
     }
   }
