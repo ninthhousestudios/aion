@@ -1,0 +1,7 @@
+name: chart_model
+description: Typed chart expression types for aion — the contract between MCP plugin output and all downstream consumers.
+version: 0.1.0
+environment:
+  sdk: ^3.11.1
+dev_dependencies:
+  test: ^1.25.0

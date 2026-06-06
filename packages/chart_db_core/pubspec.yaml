@@ -8,5 +8,7 @@ dependencies:
   uuid: ^4.0.0
   crypto: ^3.0.0
   toml: ^0.18.0
+  chart_model:
+    path: ../chart_model
 dev_dependencies:
   test: ^1.25.0
