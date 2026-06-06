@@ -1,9 +1,9 @@
 import 'dart:ui' as ui;
 
+import 'package:chart_model/chart_model.dart';
 import 'package:flutter/rendering.dart';
 
 import '../chart_renderer.dart';
-import '../expression_data.dart';
 
 class SouthIndianRenderer extends ChartRenderer {
   @override
@@ -38,7 +38,7 @@ class SouthIndianRenderer extends ChartRenderer {
 
   @override
   ChartPainter createPainter({
-    required List<Map<String, dynamic>> expressions,
+    required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
   }) => SouthIndianPainter(
     expressions: expressions,
@@ -49,19 +49,19 @@ class SouthIndianRenderer extends ChartRenderer {
 class _PlacedGlyph {
   final String planetId;
   final ui.Rect bounds;
-  final Map<String, dynamic> details;
+  final Planet planet;
 
   _PlacedGlyph({
     required this.planetId,
     required this.bounds,
-    required this.details,
+    required this.planet,
   });
 }
 
 class SouthIndianPainter extends ChartPainter {
   SouthIndianPainter({required this.expressions, required this.displayConfig});
 
-  final List<Map<String, dynamic>> expressions;
+  final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
 
   // Sign index (0=Aries) → grid column, row in a 4×4 grid.
@@ -195,17 +195,12 @@ class SouthIndianPainter extends ChartPainter {
       );
     }
 
-    // Ascendant and planet placement
     final expr = expressions.firstOrNull;
     if (expr == null) return;
 
-    final ascendant = expr[ExpressionKeys.ascendant];
-    final ascSignIndex = ascendant is Map
-        ? ascendant[ExpressionKeys.signIndex]
-        : null;
-
     // Mark ascendant cell
-    if (ascSignIndex is int && _signToCell.containsKey(ascSignIndex)) {
+    final ascSignIndex = expr.ascendant.signIndex;
+    if (_signToCell.containsKey(ascSignIndex)) {
       final (col, row) = _signToCell[ascSignIndex]!;
       final ascFontSize = (_cellH * 0.11).clamp(7.0, 12.0);
       _drawText(
@@ -218,40 +213,27 @@ class SouthIndianPainter extends ChartPainter {
     }
 
     // House cusp numbers
-    final houses = expr[ExpressionKeys.houses];
-    if (houses is List) {
-      final cuspFontSize = (_cellH * 0.11).clamp(7.0, 12.0);
-      for (final house in houses) {
-        if (house is! Map<String, dynamic>) continue;
-        final houseSignIndex = house[ExpressionKeys.signIndex];
-        final houseNumber = house['number'];
-        if (houseSignIndex is! int || !_signToCell.containsKey(houseSignIndex))
-          continue;
-        if (houseNumber is! int) continue;
-        final (hCol, hRow) = _signToCell[houseSignIndex]!;
-        _drawText(
-          canvas,
-          '$houseNumber',
-          ui.Offset(
-            hCol * _cellW + _cellW * 0.75,
-            hRow * _cellH + _cellH * 0.75,
-          ),
-          cuspFontSize,
-          const ui.Color(0x66FFFFFF),
-        );
-      }
+    final cuspFontSize = (_cellH * 0.11).clamp(7.0, 12.0);
+    for (final house in expr.houses) {
+      if (!_signToCell.containsKey(house.signIndex)) continue;
+      final (hCol, hRow) = _signToCell[house.signIndex]!;
+      _drawText(
+        canvas,
+        '${house.number}',
+        ui.Offset(
+          hCol * _cellW + _cellW * 0.75,
+          hRow * _cellH + _cellH * 0.75,
+        ),
+        cuspFontSize,
+        const ui.Color(0x66FFFFFF),
+      );
     }
 
-    final planets = expr[ExpressionKeys.planets];
-    if (planets is! List) return;
-
     // Group planets by sign for layout within cells
-    final planetsBySign = <int, List<Map<String, dynamic>>>{};
-    for (final planet in planets) {
-      if (planet is! Map<String, dynamic>) continue;
-      final signIndex = planet[ExpressionKeys.signIndex];
-      if (signIndex is! int || !_signToCell.containsKey(signIndex)) continue;
-      planetsBySign.putIfAbsent(signIndex, () => []).add(planet);
+    final planetsBySign = <int, List<Planet>>{};
+    for (final planet in expr.planets) {
+      if (!_signToCell.containsKey(planet.signIndex)) continue;
+      planetsBySign.putIfAbsent(planet.signIndex, () => []).add(planet);
     }
 
     final planetFontSize = (_cellH * 0.14).clamp(9.0, 16.0);
@@ -264,14 +246,11 @@ class SouthIndianPainter extends ChartPainter {
 
       for (var i = 0; i < planetsInCell.length; i++) {
         final planet = planetsInCell[i];
-        final planetId = planet[ExpressionKeys.id] as String? ?? '?';
         final abbr =
-            _planetAbbreviations[planetId] ??
-            planetId.substring(0, 2).capitalize();
-        final retro = planet[ExpressionKeys.retrograde] == true;
-        final label = retro ? '$abbr(R)' : abbr;
+            _planetAbbreviations[planet.id] ??
+            planet.id.substring(0, 2).capitalize();
+        final label = planet.retrograde ? '$abbr(R)' : abbr;
 
-        // Stack planets vertically within the cell
         final x = cellX + _cellW * 0.15;
         final y = cellY + _cellH * 0.25 + (i * planetFontSize * 1.3);
 
@@ -286,7 +265,7 @@ class SouthIndianPainter extends ChartPainter {
         );
 
         _placedGlyphs.add(
-          _PlacedGlyph(planetId: planetId, bounds: textBounds, details: planet),
+          _PlacedGlyph(planetId: planet.id, bounds: textBounds, planet: planet),
         );
       }
     }
@@ -344,7 +323,7 @@ class SouthIndianPainter extends ChartPainter {
         return PlanetHit(
           planetId: g.planetId,
           bounds: g.bounds,
-          details: g.details,
+          planet: g.planet,
         );
       }
     }

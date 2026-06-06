@@ -36,6 +36,27 @@ const _testDoc = ChartDoc(
 const _config = {'preset': 'lahiri'};
 const _configAlt = {'preset': 'ernst'};
 
+Map<String, dynamic> _validExprJson({String sunSign = 'Leo'}) => {
+      'planets': [
+        {
+          'id': 'sun',
+          'name': 'Sun',
+          'longitude': 135.5,
+          'sign': sunSign,
+          'sign_index': 4,
+          'degree_in_sign': 15.5,
+          'retrograde': false,
+          'nakshatra': 'Magha',
+          'nakshatra_pada': 2,
+          'house': 1,
+        },
+      ],
+      'ascendant': {'sign_index': 4, 'longitude': 130.0},
+      'houses': [
+        {'number': 1, 'sign_index': 4, 'cusp_longitude': 130.0},
+      ],
+    };
+
 CallToolResult _jsonResult(Map<String, dynamic> data) =>
     CallToolResult(content: [TextContent(text: json.encode(data))]);
 
@@ -66,7 +87,7 @@ void main() {
   test('computeExpression lifecycle: idle → loading → ready', () async {
     store.loadChart('chart-1', _testDoc);
 
-    host.nextResult = _jsonResult({'sun': 'aries'});
+    host.nextResult = _jsonResult(_validExprJson());
 
     final states = <ExpressionState>[];
     final ref = await store.computeExpression(
@@ -82,14 +103,14 @@ void main() {
     final current = store.expressionState(ref);
     expect(current, isA<ExpressionReady>());
     final ready = current as ExpressionReady;
-    expect(ready.data, {'sun': 'aries'});
+    expect(ready.data.planets.first.sign, 'Leo');
     expect(host.callCount, 1);
   });
 
   test('same (chartId, config) returns cached expression', () async {
     store.loadChart('chart-1', _testDoc);
 
-    host.nextResult = _jsonResult({'sun': 'aries'});
+    host.nextResult = _jsonResult(_validExprJson());
 
     final ref1 = await store.computeExpression(
       'chart-1',
@@ -111,7 +132,7 @@ void main() {
   test('different config produces separate expression', () async {
     store.loadChart('chart-1', _testDoc);
 
-    host.nextResult = _jsonResult({'sun': 'aries'});
+    host.nextResult = _jsonResult(_validExprJson(sunSign: 'Aries'));
     final ref1 = await store.computeExpression(
       'chart-1',
       'drishti',
@@ -119,7 +140,7 @@ void main() {
       _config,
     );
 
-    host.nextResult = _jsonResult({'sun': 'pisces'});
+    host.nextResult = _jsonResult(_validExprJson(sunSign: 'Pisces'));
     final ref2 = await store.computeExpression(
       'chart-1',
       'drishti',
@@ -129,17 +150,19 @@ void main() {
 
     expect(ref1, isNot(equals(ref2)));
     expect(host.callCount, 2);
-    expect((store.expressionState(ref1) as ExpressionReady).data, {
-      'sun': 'aries',
-    });
-    expect((store.expressionState(ref2) as ExpressionReady).data, {
-      'sun': 'pisces',
-    });
+    expect(
+      (store.expressionState(ref1) as ExpressionReady).data.planets.first.sign,
+      'Aries',
+    );
+    expect(
+      (store.expressionState(ref2) as ExpressionReady).data.planets.first.sign,
+      'Pisces',
+    );
   });
 
   test('unloadChart removes chart and all its expressions', () async {
     store.loadChart('chart-1', _testDoc);
-    host.nextResult = _jsonResult({'sun': 'aries'});
+    host.nextResult = _jsonResult(_validExprJson());
     final ref = await store.computeExpression(
       'chart-1',
       'drishti',
@@ -177,7 +200,7 @@ void main() {
       const ChartDoc(jd: 2448058.833, lat: 40.7, lon: -74.0, name: 'Chart 2'),
     );
 
-    host.nextResult = _jsonResult({'result': 'ok'});
+    host.nextResult = _jsonResult(_validExprJson());
 
     final results = await Future.wait([
       store.computeExpression('chart-1', 'drishti', 'calculate_chart', _config),

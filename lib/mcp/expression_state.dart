@@ -1,3 +1,5 @@
+import 'package:chart_model/chart_model.dart';
+
 sealed class ExpressionState {
   const ExpressionState();
 }
@@ -12,7 +14,7 @@ class ExpressionLoading extends ExpressionState {
 }
 
 class ExpressionReady extends ExpressionState {
-  final Map<String, dynamic> data;
+  final ChartExpression data;
   final Map<String, dynamic> args;
   const ExpressionReady(this.data, this.args);
 }

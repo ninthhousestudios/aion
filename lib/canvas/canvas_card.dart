@@ -3,9 +3,10 @@ import '../mcp/chart_store.dart';
 import '../mcp/expression_state.dart';
 import '../renderer/renderer_host.dart';
 import '../renderer/renderer_registry.dart';
-import '../renderer/south_indian/south_indian_renderer.dart';
 import '../theme/aion_theme.dart';
 import 'card_model.dart';
+
+import '../renderer/south_indian/south_indian_renderer.dart';
 
 final rendererRegistry = RendererRegistry()..register(SouthIndianRenderer());
 

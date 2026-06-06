@@ -1,3 +1,4 @@
+import 'package:chart_model/chart_model.dart';
 import 'package:flutter/rendering.dart';
 
 class RendererMeta {
@@ -48,12 +49,12 @@ sealed class ChartHitResult {
 
 class PlanetHit extends ChartHitResult {
   final String planetId;
-  final Map<String, dynamic> details;
+  final Planet planet;
 
   const PlanetHit({
     required this.planetId,
     required super.bounds,
-    required this.details,
+    required this.planet,
   });
 }
 
@@ -72,7 +73,7 @@ abstract class ChartRenderer {
   List<DisplayOption> get displayOptions;
 
   ChartPainter createPainter({
-    required List<Map<String, dynamic>> expressions,
+    required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
   });
 }

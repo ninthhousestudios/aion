@@ -90,39 +90,6 @@ void main() {
       recorder.endRecording();
     });
 
-    test('paints with malformed data — missing planets key', () {
-      final painter = renderer.createPainter(
-        expressions: const [
-          {'ascendant': {}},
-        ],
-        displayConfig: const {},
-      );
-      final recorder = PictureRecorder();
-      final canvas = Canvas(recorder);
-      painter.paint(canvas, const Size(400, 400));
-      recorder.endRecording();
-    });
-
-    test('paints with malformed data — bad sign_index', () {
-      final painter = renderer.createPainter(
-        expressions: const [
-          {
-            'planets': [
-              {'id': 'x', 'sign_index': 99},
-              {'id': 'y', 'sign_index': 'not_a_number'},
-              {'id': 'z'},
-            ],
-            'ascendant': {'sign_index': 4},
-          },
-        ],
-        displayConfig: const {},
-      );
-      final recorder = PictureRecorder();
-      final canvas = Canvas(recorder);
-      painter.paint(canvas, const Size(400, 400));
-      recorder.endRecording();
-    });
-
     test('hitTestChart returns null for center area', () {
       final painter =
           renderer.createPainter(

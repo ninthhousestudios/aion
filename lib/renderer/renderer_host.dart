@@ -1,3 +1,4 @@
+import 'package:chart_model/chart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,7 @@ class RendererHost extends StatefulWidget {
   });
 
   final ChartRenderer renderer;
-  final List<Map<String, dynamic>> expressionData;
+  final List<ChartExpression> expressionData;
   final Map<String, dynamic> displayConfig;
 
   @override
@@ -96,11 +97,9 @@ class _PlanetPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).extension<AionTheme>()!;
-    final name = hit.details['name'] ?? hit.planetId;
-    final degree = hit.details['degree_in_sign'];
-    final sign = hit.details['sign'] ?? '';
-    final retro = hit.details['retrograde'] == true ? ' (R)' : '';
-    final degreeStr = degree is num ? '${degree.toStringAsFixed(1)}°' : '';
+    final p = hit.planet;
+    final retro = p.retrograde ? ' (R)' : '';
+    final degreeStr = '${p.degreeInSign.toStringAsFixed(1)}°';
 
     return Positioned(
       left: hit.bounds.right + 8,
@@ -113,7 +112,7 @@ class _PlanetPopup extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
-          '$name $degreeStr $sign$retro'.trim(),
+          '${p.name} $degreeStr ${p.sign}$retro'.trim(),
           style: TextStyle(color: t.cardLabelColor, fontSize: 12),
         ),
       ),

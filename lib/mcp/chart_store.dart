@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:chart_db_core/chart_db_core.dart';
+import 'package:chart_model/chart_model.dart';
 import 'package:mcp_dart/mcp_dart.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -123,9 +124,13 @@ class ChartStore {
         subject.add(ExpressionError('No TextContent in tool result', args));
         return;
       }
-      final Map<String, dynamic> data;
+      final ChartExpression expression;
       try {
-        data = json.decode(textContent.text) as Map<String, dynamic>;
+        final data = json.decode(textContent.text) as Map<String, dynamic>;
+        expression = ChartExpression.fromJson(data);
+      } on FormatException catch (e) {
+        subject.add(ExpressionError('Invalid expression data: $e', args));
+        return;
       } catch (_) {
         subject.add(
           ExpressionError(
@@ -135,7 +140,7 @@ class ChartStore {
         );
         return;
       }
-      subject.add(ExpressionReady(data, args));
+      subject.add(ExpressionReady(expression, args));
     } catch (error) {
       subject.add(ExpressionError(error, args));
     }
