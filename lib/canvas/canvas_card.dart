@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../mcp/chart_store.dart';
 import '../mcp/expression_state.dart';
+import '../providers/renderer_registry_provider.dart';
 import '../renderer/renderer_host.dart';
-import '../renderer/renderer_registry.dart';
 import '../theme/aion_theme.dart';
 import 'card_model.dart';
 
-import '../renderer/south_indian/south_indian_renderer.dart';
-
-final rendererRegistry = RendererRegistry()..register(SouthIndianRenderer());
-
 enum ResizeCorner { topLeft, topRight, bottomLeft, bottomRight }
 
-class CanvasCard extends StatefulWidget {
+class CanvasCard extends ConsumerStatefulWidget {
   const CanvasCard({
     super.key,
     required this.model,
@@ -33,10 +30,10 @@ class CanvasCard extends StatefulWidget {
   final ValueChanged<Offset> onContextMenu;
 
   @override
-  State<CanvasCard> createState() => _CanvasCardState();
+  ConsumerState<CanvasCard> createState() => _CanvasCardState();
 }
 
-class _CanvasCardState extends State<CanvasCard> {
+class _CanvasCardState extends ConsumerState<CanvasCard> {
   bool _hovered = false;
 
   static const double _gripSize = 14;
@@ -78,7 +75,8 @@ class _CanvasCardState extends State<CanvasCard> {
   }
 
   Widget _buildRenderer(CardModel m, AionTheme t) {
-    final renderer = rendererRegistry.get(m.rendererType!);
+    final registry = ref.watch(rendererRegistryProvider);
+    final renderer = registry.get(m.rendererType!);
     if (renderer == null) {
       return Center(
         child: Text(
@@ -94,10 +92,10 @@ class _CanvasCardState extends State<CanvasCard> {
         displayConfig: m.displayConfig,
       );
     }
-    final ref = m.expressions.first;
+    final exprRef = m.expressions.first;
     return StreamBuilder<ExpressionState>(
-      stream: widget.chartStore.watchExpression(ref),
-      initialData: widget.chartStore.expressionState(ref),
+      stream: widget.chartStore.watchExpression(exprRef),
+      initialData: widget.chartStore.expressionState(exprRef),
       builder: (context, snapshot) {
         final exprState = snapshot.data;
         return switch (exprState) {
