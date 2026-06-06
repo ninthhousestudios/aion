@@ -25,6 +25,9 @@ doc/handoff.md
 # is commented out by default.
 #.vscode/
 
+# Package build artifacts
+packages/*/build/
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
