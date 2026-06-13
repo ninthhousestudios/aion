@@ -19,7 +19,7 @@ Three-layer model: Canvas (pure geometry) → Card bindings (declarative data re
 
 Key packages: `mcp_dart` for MCP transport, `drift` for chart-db sqlite, Riverpod for state.
 
-See `docs/architecture-plan-overview.md` and `docs/roadmap.md` for full design.
+See `docs/architecture-plan-overview.md` and `docs/roadmap.md` for full design. `docs/code-map.md` has the directory index, key types, providers, and data flow.
 
 ## Theming
 
