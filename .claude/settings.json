@@ -3,7 +3,12 @@
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "sutra-guard"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sutra-guard"
+          }
+        ]
       }
     ]
   }
