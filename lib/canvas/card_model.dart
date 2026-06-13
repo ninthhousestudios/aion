@@ -14,6 +14,7 @@ class CardModel {
     this.zOrder = 0,
     this.rendererType,
     this.displayConfig = const {},
+    this.preferredAspectRatio,
   });
 
   final String id;
@@ -26,6 +27,7 @@ class CardModel {
   final int zOrder;
   final String? rendererType;
   final Map<String, dynamic> displayConfig;
+  final double? preferredAspectRatio;
 
   Rect get rect => position & size;
 
@@ -42,6 +44,7 @@ class CardModel {
     int? zOrder,
     Object? rendererType = _unset,
     Map<String, dynamic>? displayConfig,
+    Object? preferredAspectRatio = _unset,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -56,6 +59,9 @@ class CardModel {
           ? this.rendererType
           : rendererType as String?,
       displayConfig: displayConfig ?? this.displayConfig,
+      preferredAspectRatio: identical(preferredAspectRatio, _unset)
+          ? this.preferredAspectRatio
+          : preferredAspectRatio as double?,
     );
   }
 }

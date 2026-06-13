@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../actions/bind_chart_action.dart';
 import '../actions/load_chart_action.dart';
 import '../providers/chart_store_provider.dart';
+import '../providers/renderer_registry_provider.dart';
 import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
 import 'card_model.dart';
@@ -90,16 +91,20 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     if (!mounted) return;
     switch (result) {
       case ChartBound(:final chartName, :final expressionRef):
+        final renderer = ref.read(rendererRegistryProvider).get(rendererType);
+        final ar = renderer?.meta.preferredAspectRatio;
+        final size = ar != null ? const Size(500, 500) : const Size(500, 400);
         final viewportLocal = _globalToViewport(globalPos);
         final local = _viewportToWorkspace(viewportLocal);
         ref
             .read(workspaceProvider.notifier)
             .addCard(
               local,
-              const Size(500, 400),
+              size,
               chartName,
               expressions: [expressionRef],
               rendererType: rendererType,
+              preferredAspectRatio: ar,
             );
       case BindFailed(:final message):
         _showError(context, message);

@@ -35,6 +35,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     String label, {
     List<ExpressionRef> expressions = const [],
     String? rendererType,
+    double? preferredAspectRatio,
   }) {
     state = _addCardToState(
       state,
@@ -43,6 +44,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       label,
       expressions: expressions,
       rendererType: rendererType,
+      preferredAspectRatio: preferredAspectRatio,
     );
   }
 
@@ -56,6 +58,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       card.size,
       '${card.label} (copy)',
       expressions: card.expressions,
+      rendererType: card.rendererType,
+      preferredAspectRatio: card.preferredAspectRatio,
     );
   }
 
@@ -121,12 +125,21 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     if (flipX) dx = -dx;
     if (flipY) dy = -dy;
 
-    final newW = (card.size.width + dx)
+    var newW = (card.size.width + dx)
         .clamp(card.minSize.width, double.infinity)
         .toDouble();
-    final newH = (card.size.height + dy)
+    var newH = (card.size.height + dy)
         .clamp(card.minSize.height, double.infinity)
         .toDouble();
+
+    final ar = card.preferredAspectRatio;
+    if (ar != null) {
+      if (newW / ar > newH) {
+        newH = newW / ar;
+      } else {
+        newW = newH * ar;
+      }
+    }
 
     final actualDx = newW - card.size.width;
     final actualDy = newH - card.size.height;
@@ -210,6 +223,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     String label, {
     List<ExpressionRef> expressions = const [],
     String? rendererType,
+    double? preferredAspectRatio,
   }) {
     final color = _palette[current.cardCounter % _palette.length];
     final card = CardModel(
@@ -220,6 +234,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       size: size,
       expressions: expressions,
       rendererType: rendererType,
+      preferredAspectRatio: preferredAspectRatio,
       zOrder: current.nextZ,
     );
 
