@@ -10,30 +10,38 @@ void main() {
     return container;
   }
 
-  test('seeds default workspace cards', () {
+  void seedCards(ProviderContainer container) {
+    final notifier = container.read(workspaceProvider.notifier);
+    notifier.addCard(const Offset(40, 60), const Size(240, 160), 'Card A');
+    notifier.addCard(const Offset(40, 260), const Size(240, 160), 'Card B');
+  }
+
+  test('workspace starts empty', () {
     final container = createContainer();
 
     final state = container.read(workspaceProvider);
 
-    expect(state.cards, isNotEmpty);
-    expect(state.cardCounter, state.cards.length);
-    expect(state.nextZ, state.cards.length);
+    expect(state.cards, isEmpty);
+    expect(state.cardCounter, 0);
+    expect(state.nextZ, 0);
   });
 
   test('selecting a card records selection and brings it forward', () {
     final container = createContainer();
+    seedCards(container);
     final notifier = container.read(workspaceProvider.notifier);
 
     notifier.selectCard('card_0');
     final state = container.read(workspaceProvider);
 
     expect(state.selectedId, 'card_0');
-    expect(state.cardById('card_0')!.zOrder, 4);
-    expect(state.nextZ, 5);
+    expect(state.cardById('card_0')!.zOrder, 2);
+    expect(state.nextZ, 3);
   });
 
   test('moves a card without mutating the original model instance', () {
     final container = createContainer();
+    seedCards(container);
     final notifier = container.read(workspaceProvider.notifier);
     final original = container.read(workspaceProvider).cardById('card_0')!;
 
@@ -51,6 +59,7 @@ void main() {
 
   test('duplicate and delete update cards and selection', () {
     final container = createContainer();
+    seedCards(container);
     final notifier = container.read(workspaceProvider.notifier);
     final initialCount = container.read(workspaceProvider).cards.length;
     final source = container.read(workspaceProvider).cardById('card_1')!;
@@ -74,6 +83,7 @@ void main() {
 
   test('keyboard actions move, cycle, delete, and toggle snap', () {
     final container = createContainer();
+    seedCards(container);
     final notifier = container.read(workspaceProvider.notifier);
     final originalPos = container
         .read(workspaceProvider)
@@ -101,14 +111,14 @@ void main() {
 
   test('snap toggle clears active guides', () {
     final container = createContainer();
+    seedCards(container);
     final notifier = container.read(workspaceProvider.notifier);
 
-    // Ensure snap is on so moveCard produces guides.
     if (!container.read(workspaceProvider).snapEnabled) {
       notifier.toggleSnap();
     }
 
-    notifier.moveCard('card_0', const Offset(30, 0), const Size(4000, 4000));
+    notifier.moveCard('card_0', const Offset(5, 0), const Size(4000, 4000));
     expect(container.read(workspaceProvider).guides, isNotEmpty);
 
     notifier.toggleSnap();

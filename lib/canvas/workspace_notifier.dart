@@ -26,33 +26,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
   @override
   WorkspaceState build() {
-    var initialState = WorkspaceState.initial();
-    initialState = _addCardToState(
-      initialState,
-      const Offset(40, 60),
-      const Size(240, 160),
-      'Planet Table',
-    );
-    initialState = _addCardToState(
-      initialState,
-      const Offset(40, 260),
-      const Size(240, 160),
-      'Dasha Timeline',
-    );
-    initialState = _addCardToState(
-      initialState,
-      const Offset(40, 460),
-      const Size(260, 160),
-      'Yoga List',
-    );
-    initialState = _addCardToState(
-      initialState,
-      const Offset(340, 60),
-      const Size(660, 660),
-      'Chart Wheel',
-      rendererType: 'south_indian',
-    );
-    return initialState;
+    return WorkspaceState.initial();
   }
 
   void addCard(

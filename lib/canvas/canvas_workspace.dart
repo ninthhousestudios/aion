@@ -52,6 +52,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         ],
         const PopupMenuItem(value: 'add', child: Text('Add Card')),
         const PopupMenuItem(value: 'open_chart', child: Text('Open Chart…')),
+        const PopupMenuItem(
+          value: 'open_data_table',
+          child: Text('Open Data Table…'),
+        ),
       ],
     );
     if (result == null) return;
@@ -68,34 +72,37 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         final counter = ref.read(workspaceProvider).cardCounter;
         workspace.addCard(local, const Size(240, 160), 'Card $counter');
       case 'open_chart':
-        final loadResult = await loadChartFromFile(ref.read(chartStoreProvider));
-        if (!mounted) return;
-        if (loadResult is ChartLoadCancelled) break;
-        final result = await bindChartToCard(
-          ref.read(chartStoreProvider),
-          loadResult,
-        );
-        if (!mounted) return;
-        switch (result) {
-          case ChartBound(
-            :final chartName,
-            :final expressionRef,
-            :final rendererType,
-          ):
-            final viewportLocal = _globalToViewport(globalPos);
-            final local = _viewportToWorkspace(viewportLocal);
-            ref
-                .read(workspaceProvider.notifier)
-                .addCard(
-                  local,
-                  const Size(300, 300),
-                  chartName,
-                  expressions: [expressionRef],
-                  rendererType: rendererType,
-                );
-          case BindFailed(:final message):
-            _showError(context, message);
-        }
+        await _openChartAs(globalPos, 'south_indian');
+      case 'open_data_table':
+        await _openChartAs(globalPos, 'data_table');
+    }
+  }
+
+  Future<void> _openChartAs(Offset globalPos, String rendererType) async {
+    final loadResult = await loadChartFromFile(ref.read(chartStoreProvider));
+    if (!mounted) return;
+    if (loadResult is ChartLoadCancelled) return;
+    final result = await bindChartToCard(
+      ref.read(chartStoreProvider),
+      loadResult,
+      rendererType: rendererType,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case ChartBound(:final chartName, :final expressionRef):
+        final viewportLocal = _globalToViewport(globalPos);
+        final local = _viewportToWorkspace(viewportLocal);
+        ref
+            .read(workspaceProvider.notifier)
+            .addCard(
+              local,
+              const Size(500, 400),
+              chartName,
+              expressions: [expressionRef],
+              rendererType: rendererType,
+            );
+      case BindFailed(:final message):
+        _showError(context, message);
     }
   }
 

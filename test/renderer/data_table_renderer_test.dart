@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:aion/renderer/chart_renderer.dart';
 import 'package:aion/renderer/data_table/data_table_renderer.dart';
-import 'package:chart_model/chart_model.dart';
 import 'package:test/test.dart';
 
 import 'test_expressions.dart';
