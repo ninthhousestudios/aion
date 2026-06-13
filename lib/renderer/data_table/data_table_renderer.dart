@@ -1,0 +1,319 @@
+import 'dart:ui' as ui;
+
+import 'package:chart_model/chart_model.dart';
+import 'package:flutter/rendering.dart';
+
+import '../chart_renderer.dart';
+
+class DataTableRenderer extends ChartRenderer {
+  @override
+  RendererMeta get meta => const RendererMeta(
+    id: 'data_table',
+    displayName: 'Data Table',
+    systems: [],
+  );
+
+  @override
+  List<DisplayOption> get displayOptions => const [
+    DisplayOption(
+      key: 'show_outer_planets',
+      label: 'Outer planets',
+      group: 'Planets',
+      type: DisplayOptionType.toggle,
+      defaultValue: false,
+    ),
+    DisplayOption(
+      key: 'show_house_cusps',
+      label: 'House cusps',
+      group: 'Display',
+      type: DisplayOptionType.toggle,
+      defaultValue: false,
+    ),
+  ];
+
+  @override
+  ChartPainter createPainter({
+    required List<ChartExpression> expressions,
+    required Map<String, dynamic> displayConfig,
+  }) =>
+      DataTablePainter(expressions: expressions, displayConfig: displayConfig);
+}
+
+class DataTablePainter extends ChartPainter {
+  DataTablePainter({required this.expressions, required this.displayConfig});
+
+  final List<ChartExpression> expressions;
+  final Map<String, dynamic> displayConfig;
+
+  static const _outerPlanets = {'uranus', 'neptune', 'pluto'};
+
+  static const _signAbbr = [
+    'Ari',
+    'Tau',
+    'Gem',
+    'Can',
+    'Leo',
+    'Vir',
+    'Lib',
+    'Sco',
+    'Sag',
+    'Cap',
+    'Aqu',
+    'Pis',
+  ];
+
+  static const _headers = [
+    'Planet',
+    'Longitude',
+    'Hse',
+    'Nakshatra',
+    'Dignity',
+  ];
+  static const _colFractions = [0.18, 0.22, 0.08, 0.28, 0.16];
+
+  final _rowHits = <(ui.Rect, Planet)>[];
+
+  @override
+  void paint(Canvas canvas, ui.Size size) {
+    _rowHits.clear();
+    final expr = expressions.firstOrNull;
+    if (expr == null) return;
+
+    final showOuter = displayConfig['show_outer_planets'] == true;
+    final showCusps = displayConfig['show_house_cusps'] == true;
+    final planets = showOuter
+        ? expr.planets
+        : expr.planets.where((p) => !_outerPlanets.contains(p.id)).toList();
+
+    final cuspCount = showCusps ? expr.houses.length : 0;
+    final totalRows = 1 + planets.length + (showCusps ? 1 + cuspCount : 0);
+    final fontSize = (size.height / (totalRows + 1.5)).clamp(9.0, 16.0);
+    final rowH = fontSize * 1.6;
+    final pad = size.width * 0.03;
+
+    final colX = <double>[];
+    var cx = pad;
+    for (final f in _colFractions) {
+      colX.add(cx);
+      cx += size.width * f;
+    }
+
+    final linePaint = Paint()
+      ..color = const ui.Color(0x44FFFFFF)
+      ..strokeWidth = 1.0;
+    const headerColor = ui.Color(0xFF6366F1);
+    const textColor = ui.Color(0xFFFFFFFF);
+    const dimColor = ui.Color(0x88FFFFFF);
+
+    var y = pad;
+
+    // Header row
+    for (var i = 0; i < _headers.length; i++) {
+      _drawCell(
+        canvas,
+        _headers[i],
+        colX[i],
+        y,
+        size.width * _colFractions[i],
+        fontSize,
+        headerColor,
+      );
+    }
+    y += rowH;
+    canvas.drawLine(
+      ui.Offset(pad, y),
+      ui.Offset(size.width - pad, y),
+      linePaint,
+    );
+    y += 2;
+
+    // Planet rows
+    for (final planet in planets) {
+      if (y + rowH > size.height) break;
+
+      final rowRect = ui.Rect.fromLTWH(0, y, size.width, rowH);
+      _rowHits.add((rowRect, planet));
+
+      final name = planet.retrograde ? '${planet.name} (R)' : planet.name;
+      _drawCell(
+        canvas,
+        name,
+        colX[0],
+        y,
+        size.width * _colFractions[0],
+        fontSize,
+        textColor,
+      );
+
+      final sign =
+          (planet.signIndex >= 0 && planet.signIndex < _signAbbr.length)
+          ? _signAbbr[planet.signIndex]
+          : planet.sign;
+      _drawCell(
+        canvas,
+        '${planet.degreeInSign.toStringAsFixed(1)}° $sign',
+        colX[1],
+        y,
+        size.width * _colFractions[1],
+        fontSize,
+        textColor,
+      );
+
+      _drawCell(
+        canvas,
+        '${planet.house}',
+        colX[2],
+        y,
+        size.width * _colFractions[2],
+        fontSize,
+        dimColor,
+      );
+
+      _drawCell(
+        canvas,
+        '${planet.nakshatra} ${planet.nakshatraPada}',
+        colX[3],
+        y,
+        size.width * _colFractions[3],
+        fontSize,
+        textColor,
+      );
+
+      _drawCell(
+        canvas,
+        planet.dignity ?? '—',
+        colX[4],
+        y,
+        size.width * _colFractions[4],
+        fontSize,
+        dimColor,
+      );
+
+      y += rowH;
+    }
+
+    // House cusps section
+    if (showCusps && expr.houses.isNotEmpty) {
+      y += rowH * 0.3;
+      canvas.drawLine(
+        ui.Offset(pad, y),
+        ui.Offset(size.width - pad, y),
+        linePaint,
+      );
+      y += 2;
+
+      _drawCell(
+        canvas,
+        'House',
+        colX[0],
+        y,
+        size.width * 0.15,
+        fontSize,
+        headerColor,
+      );
+      _drawCell(
+        canvas,
+        'Cusp',
+        colX[1],
+        y,
+        size.width * 0.22,
+        fontSize,
+        headerColor,
+      );
+      _drawCell(
+        canvas,
+        'Sign',
+        colX[2],
+        y,
+        size.width * 0.15,
+        fontSize,
+        headerColor,
+      );
+      y += rowH;
+      canvas.drawLine(
+        ui.Offset(pad, y),
+        ui.Offset(size.width - pad, y),
+        linePaint,
+      );
+      y += 2;
+
+      for (final house in expr.houses) {
+        if (y + rowH > size.height) break;
+        _drawCell(
+          canvas,
+          '${house.number}',
+          colX[0],
+          y,
+          size.width * 0.15,
+          fontSize,
+          textColor,
+        );
+        _drawCell(
+          canvas,
+          '${house.cuspLongitude.toStringAsFixed(1)}°',
+          colX[1],
+          y,
+          size.width * 0.22,
+          fontSize,
+          textColor,
+        );
+        final sign =
+            (house.signIndex >= 0 && house.signIndex < _signAbbr.length)
+            ? _signAbbr[house.signIndex]
+            : '?';
+        _drawCell(
+          canvas,
+          sign,
+          colX[2],
+          y,
+          size.width * 0.15,
+          fontSize,
+          dimColor,
+        );
+        y += rowH;
+      }
+    }
+  }
+
+  void _drawCell(
+    Canvas canvas,
+    String text,
+    double x,
+    double y,
+    double maxWidth,
+    double fontSize,
+    ui.Color color,
+  ) {
+    final builder =
+        ui.ParagraphBuilder(
+            ui.ParagraphStyle(
+              fontSize: fontSize,
+              fontFamily: 'monospace',
+              maxLines: 1,
+              ellipsis: '…',
+            ),
+          )
+          ..pushStyle(ui.TextStyle(color: color))
+          ..addText(text);
+
+    final paragraph = builder.build()
+      ..layout(ui.ParagraphConstraints(width: maxWidth));
+
+    canvas.drawParagraph(paragraph, ui.Offset(x, y));
+  }
+
+  @override
+  ChartHitResult? hitTestChart(ui.Offset localPosition) {
+    for (final (bounds, planet) in _rowHits) {
+      if (bounds.contains(localPosition)) {
+        return PlanetHit(planetId: planet.id, bounds: bounds, planet: planet);
+      }
+    }
+    return null;
+  }
+
+  @override
+  bool shouldRepaint(covariant DataTablePainter oldDelegate) =>
+      !identical(expressions, oldDelegate.expressions) ||
+      !identical(displayConfig, oldDelegate.displayConfig);
+}

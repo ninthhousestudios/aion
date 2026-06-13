@@ -29,9 +29,15 @@ class ChartExpression {
     final ascmcRaw = json['ascmc'];
 
     return ChartExpression(
-      planets: planetsRaw.cast<Map<String, dynamic>>().map(Planet.fromJson).toList(),
+      planets: planetsRaw
+          .cast<Map<String, dynamic>>()
+          .map(Planet.fromJson)
+          .toList(),
       ascendant: Ascendant.fromJson(ascendantRaw),
-      houses: housesRaw.cast<Map<String, dynamic>>().map(House.fromJson).toList(),
+      houses: housesRaw
+          .cast<Map<String, dynamic>>()
+          .map(House.fromJson)
+          .toList(),
       ascmc: ascmcRaw is Map<String, dynamic> ? AscMc.fromJson(ascmcRaw) : null,
     );
   }
@@ -48,6 +54,7 @@ class Planet {
   final String nakshatra;
   final int nakshatraPada;
   final int house;
+  final String? dignity;
 
   const Planet({
     required this.id,
@@ -60,6 +67,7 @@ class Planet {
     required this.nakshatra,
     required this.nakshatraPada,
     required this.house,
+    this.dignity,
   });
 
   factory Planet.fromJson(Map<String, dynamic> json) {
@@ -74,6 +82,7 @@ class Planet {
       nakshatra: json['nakshatra'] as String,
       nakshatraPada: json['nakshatra_pada'] as int,
       house: json['house'] as int,
+      dignity: json['dignity'] as String?,
     );
   }
 }
