@@ -13,7 +13,7 @@ void main() {
     tmpDir = Directory.systemTemp.createTempSync('chart_indexer_test_');
     chartDb = ChartDatabase();
     repo = ChartRepository(chartDb.db);
-    indexer = ChartIndexer(repo);
+    indexer = ChartIndexer(chartDb.db, repo);
   });
 
   tearDown(() {

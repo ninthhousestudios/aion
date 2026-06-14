@@ -41,6 +41,14 @@ class ChartDatabase {
 
     if (currentVersion >= _schemaVersion) return;
 
+    // Migrations that rebuild tables must disable FK checks to avoid
+    // cascade-deleting child rows. PRAGMA foreign_keys can only be changed
+    // outside a transaction.
+    final isMigration = currentVersion > 0;
+    if (isMigration) {
+      _db.execute('PRAGMA foreign_keys = OFF;');
+    }
+
     _db.execute('BEGIN;');
     try {
       if (currentVersion == 0) {
@@ -56,29 +64,74 @@ class ChartDatabase {
       _db.execute('ROLLBACK;');
       rethrow;
     }
+
+    if (isMigration) {
+      _db.execute('PRAGMA foreign_keys = ON;');
+      final fkCheck = _db.select('PRAGMA foreign_key_check;');
+      if (fkCheck.isNotEmpty) {
+        throw StateError(
+          'Foreign key violations after migration: ${fkCheck.length} rows',
+        );
+      }
+    }
   }
 
   void _migrateV1ToV2() {
-    _db.execute('ALTER TABLE charts RENAME TO charts_old;');
+    // Strategy: create new table, copy data, drop old, rename new.
+    // Child tables (chart_tags, chart_collections) reference "charts" by name.
+    // With FK OFF, their definitions stay pointing at "charts" throughout.
+    // After rename, "charts" exists again with the correct IDs.
     _db.execute('DROP TRIGGER IF EXISTS charts_ai;');
     _db.execute('DROP TRIGGER IF EXISTS charts_ad;');
     _db.execute('DROP TRIGGER IF EXISTS charts_au;');
     _db.execute('DROP TABLE IF EXISTS charts_fts;');
 
-    _createTables();
-    _createFts();
-    _createFtsTriggers();
+    _db.execute('''
+      CREATE TABLE charts_new (
+        id TEXT PRIMARY KEY,
+        jd REAL NOT NULL,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        alt REAL NOT NULL DEFAULT 0,
+        name TEXT NOT NULL DEFAULT '',
+        gender TEXT,
+        placename TEXT,
+        country TEXT,
+        utc_offset REAL,
+        dst_offset REAL,
+        notes TEXT,
+        rodden TEXT,
+        source_path TEXT,
+        content_hash TEXT,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+      );
+    ''');
 
     _db.execute('''
-      INSERT INTO charts (id, jd, lat, lon, alt, name, gender, placename,
+      INSERT INTO charts_new (id, jd, lat, lon, alt, name, gender, placename,
         country, utc_offset, dst_offset, notes, rodden, source_path,
         created_at, updated_at)
       SELECT id, jd, lat, lon, alt, name, gender, placename,
         country, utc_offset, dst_offset, notes, rodden, source_path,
         created_at, updated_at
-      FROM charts_old;
+      FROM charts;
     ''');
-    _db.execute('DROP TABLE charts_old;');
+
+    _db.execute('DROP TABLE charts;');
+    _db.execute('ALTER TABLE charts_new RENAME TO charts;');
+
+    _db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_charts_jd_lat_lon
+      ON charts(jd, lat, lon);
+    ''');
+    _db.execute('''
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_charts_source_path
+      ON charts(source_path) WHERE source_path IS NOT NULL;
+    ''');
+
+    _createFts();
+    _createFtsTriggers();
     _db.execute("INSERT INTO charts_fts(charts_fts) VALUES('rebuild');");
   }
 
@@ -111,8 +164,8 @@ class ChartDatabase {
     ''');
 
     _db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_charts_source_path
-      ON charts(source_path);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_charts_source_path
+      ON charts(source_path) WHERE source_path IS NOT NULL;
     ''');
 
     _db.execute('''

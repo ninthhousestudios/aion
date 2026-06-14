@@ -1,5 +1,8 @@
-import 'package:test/test.dart';
+import 'dart:io';
+
 import 'package:chart_db_core/chart_db_core.dart';
+import 'package:sqlite3/sqlite3.dart' as raw;
+import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -129,6 +132,105 @@ void main() {
       chartDb.db.execute('PRAGMA user_version = 99;');
       final result = chartDb.db.select('PRAGMA user_version;');
       expect(result.first['user_version'], equals(99));
+    });
+
+    test('v1→v2 migration preserves chart_tags and chart_collections', () {
+      // Build a v1 database on disk so ChartDatabase can re-open and migrate.
+      final tmpFile =
+          '/tmp/test_migration_${DateTime.now().microsecondsSinceEpoch}.db';
+      final dbFile = raw.sqlite3.open(tmpFile);
+      dbFile.execute('PRAGMA journal_mode = WAL;');
+      dbFile.execute('PRAGMA foreign_keys = ON;');
+      dbFile.execute('''
+        CREATE TABLE charts (
+          id TEXT PRIMARY KEY,
+          jd REAL NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL,
+          alt REAL NOT NULL DEFAULT 0, name TEXT NOT NULL DEFAULT '',
+          gender TEXT, placename TEXT, country TEXT,
+          utc_offset REAL, dst_offset REAL, notes TEXT, rodden TEXT,
+          source_path TEXT,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          UNIQUE(jd, lat, lon)
+        );
+      ''');
+      dbFile.execute('''
+        CREATE TABLE collections (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, note TEXT,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+        );
+      ''');
+      dbFile.execute('''
+        CREATE TABLE chart_collections (
+          chart_id TEXT NOT NULL REFERENCES charts(id) ON DELETE CASCADE,
+          collection_id TEXT NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+          PRIMARY KEY (chart_id, collection_id)
+        );
+      ''');
+      dbFile.execute('''
+        CREATE TABLE chart_tags (
+          chart_id TEXT NOT NULL REFERENCES charts(id) ON DELETE CASCADE,
+          tag TEXT NOT NULL, PRIMARY KEY (chart_id, tag)
+        );
+      ''');
+      dbFile.execute('''
+        CREATE TABLE vector_schemas (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, spec TEXT NOT NULL,
+          dims INTEGER NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+        );
+      ''');
+      dbFile.execute('''
+        CREATE TABLE configs (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, preset TEXT NOT NULL,
+          vector_schema_id TEXT REFERENCES vector_schemas(id),
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+        );
+      ''');
+      dbFile.execute(
+        "INSERT INTO charts (id, jd, lat, lon, name) VALUES ('chart-1', 2451545.0, 51.5, -0.1, 'Test');",
+      );
+      dbFile.execute("INSERT INTO chart_tags VALUES ('chart-1', 'natal');");
+      dbFile.execute("INSERT INTO chart_tags VALUES ('chart-1', 'famous');");
+      dbFile.execute(
+        "INSERT INTO collections (id, name) VALUES ('col-1', 'My Charts');",
+      );
+      dbFile.execute(
+        "INSERT INTO chart_collections VALUES ('chart-1', 'col-1');",
+      );
+      dbFile.execute('PRAGMA user_version = 1;');
+      dbFile.dispose();
+
+      // Now open via ChartDatabase which triggers the migration.
+      final migrated = ChartDatabase(tmpFile);
+
+      // Verify chart survived.
+      final charts = migrated.db.select('SELECT * FROM charts WHERE id = ?', [
+        'chart-1',
+      ]);
+      expect(charts, hasLength(1));
+      expect(charts.first['name'], 'Test');
+
+      // Verify tags survived.
+      final tags = migrated.db.select(
+        'SELECT tag FROM chart_tags WHERE chart_id = ?',
+        ['chart-1'],
+      );
+      expect(tags.map((r) => r['tag']).toList()..sort(), ['famous', 'natal']);
+
+      // Verify collection membership survived.
+      final cols = migrated.db.select(
+        'SELECT collection_id FROM chart_collections WHERE chart_id = ?',
+        ['chart-1'],
+      );
+      expect(cols, hasLength(1));
+      expect(cols.first['collection_id'], 'col-1');
+
+      // Verify content_hash column exists (nullable, so null for migrated rows).
+      expect(charts.first['content_hash'], isNull);
+
+      migrated.close();
+      File(tmpFile).deleteSync();
     });
   });
 }

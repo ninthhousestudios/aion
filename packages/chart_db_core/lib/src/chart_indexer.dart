@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:sqlite3/sqlite3.dart';
+
 import 'chart_doc.dart';
 import 'chart_repository.dart';
 import 'content_hash.dart';
@@ -32,14 +34,18 @@ class IndexResult {
 /// Uses [contentHash] (SHA-256 of raw bytes) to detect changes and skip
 /// unchanged files.
 class ChartIndexer {
-  ChartIndexer(this._repo);
+  ChartIndexer(this._db, this._repo);
 
+  final Database _db;
   final ChartRepository _repo;
 
   /// Full or incremental reindex of [directoryPath].
   ///
   /// Scans all .toml files, compares content_hash against what's stored,
   /// and inserts/updates/deletes as needed. Returns an [IndexResult] summary.
+  ///
+  /// The entire operation runs inside an IMMEDIATE transaction to prevent
+  /// concurrent reindex from creating duplicate source_path rows.
   IndexResult reindex(String directoryPath) {
     final dir = Directory(directoryPath);
     final tomlFiles = dir
@@ -48,6 +54,25 @@ class ChartIndexer {
         .where((f) => f.path.endsWith('.toml'))
         .toList();
 
+    // Read file bytes and compute hashes outside the transaction (I/O heavy).
+    final fileData = <(File, String, String)>[]; // (file, path, hash)
+    for (final file in tomlFiles) {
+      final bytes = file.readAsBytesSync();
+      fileData.add((file, file.path, contentHash(bytes)));
+    }
+
+    _db.execute('BEGIN IMMEDIATE;');
+    try {
+      final result = _reindexInTransaction(fileData);
+      _db.execute('COMMIT;');
+      return result;
+    } catch (e) {
+      _db.execute('ROLLBACK;');
+      rethrow;
+    }
+  }
+
+  IndexResult _reindexInTransaction(List<(File, String, String)> fileData) {
     final indexed = _repo.listIndexed();
     final seenPaths = <String>{};
     var added = 0;
@@ -55,11 +80,8 @@ class ChartIndexer {
     var skipped = 0;
     final errors = <(String, Object)>[];
 
-    for (final file in tomlFiles) {
-      final path = file.path;
+    for (final (file, path, hash) in fileData) {
       seenPaths.add(path);
-      final bytes = file.readAsBytesSync();
-      final hash = contentHash(bytes);
 
       final existing = indexed[path];
       if (existing != null && existing.contentHash == hash) {
@@ -69,6 +91,7 @@ class ChartIndexer {
 
       ChartDoc doc;
       try {
+        final bytes = file.readAsBytesSync();
         doc = TomlChartCodec.decode(utf8.decode(bytes));
       } catch (e) {
         errors.add((path, e));

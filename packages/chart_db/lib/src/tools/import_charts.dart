@@ -125,7 +125,7 @@ void _importFile(
       dstOffset: chartData.dstOffsetHours,
       notes: chartData.notes,
       rodden: chartData.roddenRating,
-      sourcePath: filePath,
+      sourcePath: null,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
