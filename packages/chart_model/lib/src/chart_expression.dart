@@ -28,16 +28,36 @@ class ChartExpression {
     }
     final ascmcRaw = json['ascmc'];
 
+    final planets = planetsRaw
+        .cast<Map<String, dynamic>>()
+        .map(Planet.fromJson)
+        .toList();
+    final houses = housesRaw
+        .cast<Map<String, dynamic>>()
+        .map(House.fromJson)
+        .toList();
+
+    if (houses.length != 12) {
+      throw FormatException('Expected exactly 12 houses, got ${houses.length}');
+    }
+    final houseNumbers = houses.map((h) => h.number).toSet();
+    if (houseNumbers.length != 12 || houseNumbers.any((n) => n < 1 || n > 12)) {
+      throw FormatException(
+        'House numbers must be exactly 1-12 with no duplicates',
+      );
+    }
+
+    final planetIds = <String>{};
+    for (final p in planets) {
+      if (!planetIds.add(p.id)) {
+        throw FormatException('Duplicate planet id "${p.id}"');
+      }
+    }
+
     return ChartExpression(
-      planets: planetsRaw
-          .cast<Map<String, dynamic>>()
-          .map(Planet.fromJson)
-          .toList(),
+      planets: planets,
       ascendant: Ascendant.fromJson(ascendantRaw),
-      houses: housesRaw
-          .cast<Map<String, dynamic>>()
-          .map(House.fromJson)
-          .toList(),
+      houses: houses,
       ascmc: ascmcRaw is Map<String, dynamic> ? AscMc.fromJson(ascmcRaw) : null,
     );
   }
@@ -71,16 +91,26 @@ class Planet {
   });
 
   factory Planet.fromJson(Map<String, dynamic> json) {
+    final signIndex = json['sign_index'] as int;
+    if (signIndex < 0 || signIndex > 11) {
+      throw FormatException('Planet sign_index must be 0-11, got $signIndex');
+    }
+    final nakshatraPada = json['nakshatra_pada'] as int;
+    if (nakshatraPada < 1 || nakshatraPada > 4) {
+      throw FormatException(
+        'Planet nakshatra_pada must be 1-4, got $nakshatraPada',
+      );
+    }
     return Planet(
       id: json['id'] as String,
       name: json['name'] as String,
       longitude: (json['longitude'] as num).toDouble(),
       sign: (json['sign_name'] ?? json['sign']) as String,
-      signIndex: json['sign_index'] as int,
+      signIndex: signIndex,
       degreeInSign: (json['degree_in_sign'] as num).toDouble(),
       retrograde: json['retrograde'] as bool,
       nakshatra: (json['nakshatra_name'] ?? json['nakshatra']) as String,
-      nakshatraPada: json['nakshatra_pada'] as int,
+      nakshatraPada: nakshatraPada,
       house: json['house'] as int,
       dignity: json['dignity'] as String?,
     );
@@ -94,8 +124,14 @@ class Ascendant {
   const Ascendant({required this.signIndex, required this.longitude});
 
   factory Ascendant.fromJson(Map<String, dynamic> json) {
+    final signIndex = json['sign_index'] as int;
+    if (signIndex < 0 || signIndex > 11) {
+      throw FormatException(
+        'Ascendant sign_index must be 0-11, got $signIndex',
+      );
+    }
     return Ascendant(
-      signIndex: json['sign_index'] as int,
+      signIndex: signIndex,
       longitude: (json['longitude'] as num).toDouble(),
     );
   }
@@ -113,9 +149,13 @@ class House {
   });
 
   factory House.fromJson(Map<String, dynamic> json) {
+    final signIndex = json['sign_index'] as int;
+    if (signIndex < 0 || signIndex > 11) {
+      throw FormatException('House sign_index must be 0-11, got $signIndex');
+    }
     return House(
       number: json['number'] as int,
-      signIndex: json['sign_index'] as int,
+      signIndex: signIndex,
       cuspLongitude: (json['cusp_longitude'] as num).toDouble(),
     );
   }

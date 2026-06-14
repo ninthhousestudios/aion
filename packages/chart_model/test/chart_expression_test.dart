@@ -1,6 +1,14 @@
 import 'package:chart_model/chart_model.dart';
 import 'package:test/test.dart';
 
+Map<String, dynamic> _makeHouse(int number, int signIndex) => {
+  'number': number,
+  'sign_index': signIndex,
+  'cusp_longitude': (number - 1) * 30.0,
+};
+
+final _houses12 = List.generate(12, (i) => _makeHouse(i + 1, i));
+
 final _fixtureJson = <String, dynamic>{
   'planets': [
     {
@@ -29,10 +37,24 @@ final _fixtureJson = <String, dynamic>{
     },
   ],
   'ascendant': {'sign_index': 4, 'longitude': 130.0},
-  'houses': [
-    {'number': 1, 'sign_index': 4, 'cusp_longitude': 130.0},
-    {'number': 2, 'sign_index': 5, 'cusp_longitude': 160.0},
-  ],
+  'houses': _houses12,
+};
+
+Map<String, dynamic> _makePlanet(
+  String id, {
+  int signIndex = 0,
+  int nakshatraPada = 1,
+}) => {
+  'id': id,
+  'name': id,
+  'longitude': 0.0,
+  'sign': 'Aries',
+  'sign_index': signIndex,
+  'degree_in_sign': 0.0,
+  'retrograde': false,
+  'nakshatra': 'Ashwini',
+  'nakshatra_pada': nakshatraPada,
+  'house': 1,
 };
 
 void main() {
@@ -60,10 +82,10 @@ void main() {
 
     test('parses houses', () {
       final expr = ChartExpression.fromJson(_fixtureJson);
-      expect(expr.houses, hasLength(2));
+      expect(expr.houses, hasLength(12));
       expect(expr.houses[0].number, 1);
-      expect(expr.houses[0].signIndex, 4);
-      expect(expr.houses[0].cuspLongitude, 130.0);
+      expect(expr.houses[0].signIndex, 0);
+      expect(expr.houses[0].cuspLongitude, 0.0);
     });
 
     test('ascmc is null when absent', () {
@@ -111,6 +133,80 @@ void main() {
         }),
         throwsFormatException,
       );
+    });
+
+    group('domain validation', () {
+      test('throws on fewer than 12 houses', () {
+        final json = {
+          ..._fixtureJson,
+          'houses': [_makeHouse(1, 0)],
+        };
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on more than 12 houses', () {
+        final json = {
+          ..._fixtureJson,
+          'houses': [..._houses12, _makeHouse(13, 0)],
+        };
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on house number outside 1-12', () {
+        final houses = List.generate(12, (i) => _makeHouse(i, i));
+        final json = {..._fixtureJson, 'houses': houses};
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on duplicate house numbers', () {
+        final houses = [
+          for (var i = 1; i <= 11; i++) _makeHouse(i, i - 1),
+          _makeHouse(1, 11),
+        ];
+        final json = {..._fixtureJson, 'houses': houses};
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on planet signIndex outside 0-11', () {
+        final json = {
+          ..._fixtureJson,
+          'planets': [_makePlanet('sun', signIndex: 99)],
+        };
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on planet nakshatraPada outside 1-4', () {
+        final json = {
+          ..._fixtureJson,
+          'planets': [_makePlanet('sun', nakshatraPada: 0)],
+        };
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on ascendant signIndex outside 0-11', () {
+        final json = {
+          ..._fixtureJson,
+          'ascendant': {'sign_index': 12, 'longitude': 0.0},
+        };
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on house signIndex outside 0-11', () {
+        final houses = [
+          for (var i = 1; i <= 11; i++) _makeHouse(i, i - 1),
+          _makeHouse(12, 99),
+        ];
+        final json = {..._fixtureJson, 'houses': houses};
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
+
+      test('throws on duplicate planet IDs', () {
+        final json = {
+          ..._fixtureJson,
+          'planets': [_makePlanet('sun'), _makePlanet('sun')],
+        };
+        expect(() => ChartExpression.fromJson(json), throwsFormatException);
+      });
     });
   });
 
