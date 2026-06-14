@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 import 'package:chart_db_core/chart_db_core.dart';
 import 'package:uuid/uuid.dart';
@@ -185,6 +187,75 @@ void main() {
 
       expect(repo.tagsFor(chartId), isEmpty);
       expect(repo.chartsWithTag('doomed'), isEmpty);
+    });
+  });
+
+  group('sidecar write-through', () {
+    late Directory tmpDir;
+    late CollectionRepository sidecarRepo;
+
+    setUp(() {
+      tmpDir = Directory.systemTemp.createTempSync('col_sidecar_wt_');
+      sidecarRepo = CollectionRepository(chartDb.db, sidecarDir: tmpDir.path);
+    });
+
+    tearDown(() {
+      tmpDir.deleteSync(recursive: true);
+    });
+
+    test('create writes to sidecar', () {
+      final id = sidecarRepo.create('Natal', note: 'personal');
+
+      final sidecar = CollectionSidecar.load(tmpDir.path);
+      expect(sidecar, hasLength(1));
+      expect(sidecar.first.id, id);
+      expect(sidecar.first.name, 'Natal');
+    });
+
+    test('rename updates sidecar', () {
+      final id = sidecarRepo.create('Old');
+      sidecarRepo.rename(id, 'New');
+
+      final sidecar = CollectionSidecar.load(tmpDir.path);
+      expect(sidecar.first.name, 'New');
+    });
+
+    test('delete removes from sidecar', () {
+      final id = sidecarRepo.create('Doomed');
+      sidecarRepo.delete(id);
+
+      expect(CollectionSidecar.load(tmpDir.path), isEmpty);
+    });
+
+    test('addChart with sourcePath writes to sidecar', () {
+      final colId = sidecarRepo.create('Faves');
+      final chartId = _insertChart(chartDb);
+
+      sidecarRepo.addChart(chartId, colId, sourcePath: 'newton.toml');
+
+      final sidecar = CollectionSidecar.load(tmpDir.path);
+      expect(sidecar.first.charts, ['newton.toml']);
+    });
+
+    test('removeChart with sourcePath updates sidecar', () {
+      final colId = sidecarRepo.create('Faves');
+      final chartId = _insertChart(chartDb);
+
+      sidecarRepo.addChart(chartId, colId, sourcePath: 'newton.toml');
+      sidecarRepo.removeChart(chartId, colId, sourcePath: 'newton.toml');
+
+      final sidecar = CollectionSidecar.load(tmpDir.path);
+      expect(sidecar.first.charts, isEmpty);
+    });
+
+    test('addChart without sourcePath does not touch sidecar', () {
+      final colId = sidecarRepo.create('Faves');
+      final chartId = _insertChart(chartDb);
+
+      sidecarRepo.addChart(chartId, colId);
+
+      final sidecar = CollectionSidecar.load(tmpDir.path);
+      expect(sidecar.first.charts, isEmpty);
     });
   });
 }

@@ -3,12 +3,15 @@ import 'dart:io';
 import 'package:toml/toml.dart';
 
 import 'chart_doc.dart';
+import 'collection_repository.dart';
 import 'toml_chart.dart';
 
 class ChartLibrary {
   final String root;
+  final CollectionRepository? _collectionRepo;
 
-  ChartLibrary(this.root) {
+  ChartLibrary(this.root, {CollectionRepository? collectionRepo})
+    : _collectionRepo = collectionRepo {
     Directory(root).createSync(recursive: true);
   }
 
@@ -54,6 +57,29 @@ class ChartLibrary {
     final target = path ?? _generatePath(doc);
     TomlChartCodec.encodeFile(target, doc);
     return target;
+  }
+
+  /// Updates the tags on a chart file and optionally syncs to sqlite.
+  ///
+  /// Reads the existing TOML, replaces the tags, writes back atomically.
+  /// If [collectionRepo] was provided at construction and [chartId] is given,
+  /// the sqlite `chart_tags` table is diff-updated to match.
+  void setTags(String path, List<String> tags, {String? chartId}) {
+    final doc = loadChart(path);
+    final updated = doc.copyWith(tags: tags);
+    saveChart(updated, path: path);
+
+    final repo = _collectionRepo;
+    if (repo != null && chartId != null) {
+      final current = repo.tagsFor(chartId);
+      final desired = tags.toSet();
+      for (final tag in desired.difference(current)) {
+        repo.addTag(chartId, tag);
+      }
+      for (final tag in current.difference(desired)) {
+        repo.removeTag(chartId, tag);
+      }
+    }
   }
 
   static bool _jdMissing(String source) {

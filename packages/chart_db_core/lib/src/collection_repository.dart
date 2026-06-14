@@ -1,6 +1,8 @@
 import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
 
+import 'collection_sidecar.dart';
+
 const _uuid = Uuid();
 
 /// A named collection of charts.
@@ -40,9 +42,11 @@ class CollectionWithCount {
 /// All operations are synchronous (sqlite3 is synchronous). Pass the
 /// underlying [Database] from [ChartDatabase.db].
 class CollectionRepository {
-  CollectionRepository(this._db);
+  CollectionRepository(this._db, {String? sidecarDir})
+    : _sidecarDir = sidecarDir;
 
   final Database _db;
+  final String? _sidecarDir;
 
   // ---------------------------------------------------------------------------
   // Collections
@@ -56,6 +60,12 @@ class CollectionRepository {
       name,
       note,
     ]);
+    final dir = _sidecarDir;
+    if (dir != null) {
+      final cols = CollectionSidecar.load(dir);
+      cols.add(SidecarCollection(id: id, name: name, note: note));
+      CollectionSidecar.save(dir, cols);
+    }
     return id;
   }
 
@@ -84,19 +94,31 @@ class CollectionRepository {
   }
 
   /// Adds a chart to a collection.
-  void addChart(String chartId, String collectionId) {
+  ///
+  /// Pass [sourcePath] to write through to the sidecar file.
+  void addChart(String chartId, String collectionId, {String? sourcePath}) {
     _db.execute(
       'INSERT OR IGNORE INTO chart_collections (chart_id, collection_id) VALUES (?, ?);',
       [chartId, collectionId],
     );
+    final dir = _sidecarDir;
+    if (dir != null && sourcePath != null) {
+      CollectionSidecar.addChart(dir, collectionId, sourcePath);
+    }
   }
 
   /// Removes a chart from a collection.
-  void removeChart(String chartId, String collectionId) {
+  ///
+  /// Pass [sourcePath] to write through to the sidecar file.
+  void removeChart(String chartId, String collectionId, {String? sourcePath}) {
     _db.execute(
       'DELETE FROM chart_collections WHERE chart_id = ? AND collection_id = ?;',
       [chartId, collectionId],
     );
+    final dir = _sidecarDir;
+    if (dir != null && sourcePath != null) {
+      CollectionSidecar.removeChart(dir, collectionId, sourcePath);
+    }
   }
 
   /// Returns the ids of all charts in [collectionId].
@@ -117,11 +139,19 @@ class CollectionRepository {
     if (_db.updatedRows == 0) {
       throw StateError('Collection "$collectionId" not found');
     }
+    final dir = _sidecarDir;
+    if (dir != null) {
+      CollectionSidecar.rename(dir, collectionId, newName);
+    }
   }
 
   /// Deletes a collection. Cascade FK removes chart_collections entries.
   void delete(String collectionId) {
     _db.execute('DELETE FROM collections WHERE id = ?;', [collectionId]);
+    final dir = _sidecarDir;
+    if (dir != null) {
+      CollectionSidecar.delete(dir, collectionId);
+    }
   }
 
   // ---------------------------------------------------------------------------

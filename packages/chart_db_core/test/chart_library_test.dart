@@ -169,6 +169,61 @@ dst_offset = 0.0
     });
   });
 
+  group('setTags', () {
+    test('updates TOML file tags', () {
+      final path = '${tmpDir.path}/tagged.toml';
+      library.saveChart(doc, path: path);
+
+      library.setTags(path, ['natal', 'famous']);
+
+      final reloaded = library.loadChart(path);
+      expect(reloaded.tags, ['natal', 'famous']);
+    });
+
+    test('replaces existing tags in TOML', () {
+      final tagged = doc.copyWith(tags: ['old-tag']);
+      final path = '${tmpDir.path}/tagged.toml';
+      library.saveChart(tagged, path: path);
+
+      library.setTags(path, ['new-tag']);
+
+      final reloaded = library.loadChart(path);
+      expect(reloaded.tags, ['new-tag']);
+    });
+
+    test('syncs tags to sqlite when collectionRepo and chartId provided', () {
+      final chartDb = ChartDatabase();
+      final collectionRepo = CollectionRepository(chartDb.db);
+      final lib = ChartLibrary(tmpDir.path, collectionRepo: collectionRepo);
+
+      final path = '${tmpDir.path}/synced.toml';
+      lib.saveChart(doc, path: path);
+
+      // Insert a chart row so we have an id to reference.
+      final chartId = ChartRepository(chartDb.db).insert(
+        Chart(
+          id: '',
+          jd: doc.jd,
+          lat: doc.lat,
+          lon: doc.lon,
+          name: doc.name,
+          sourcePath: path,
+          contentHash: '',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      lib.setTags(path, ['natal', 'famous'], chartId: chartId);
+      expect(collectionRepo.tagsFor(chartId), {'natal', 'famous'});
+
+      lib.setTags(path, ['famous'], chartId: chartId);
+      expect(collectionRepo.tagsFor(chartId), {'famous'});
+
+      chartDb.close();
+    });
+  });
+
   group('defaultRoot', () {
     test('returns a path under .local/share/aion', () {
       final root = ChartLibrary.defaultRoot();
