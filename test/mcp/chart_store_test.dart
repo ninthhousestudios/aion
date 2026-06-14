@@ -247,6 +247,39 @@ void main() {
     expect(() => store.updateChart('nonexistent', _testDoc), throwsStateError);
   });
 
+  test('updateChart invalidates cached expressions', () async {
+    store.loadChart('chart-1', _testDoc);
+    host.nextResult = _jsonResult(_validExprJson(sunSign: 'Leo'));
+
+    final ref = await store.computeExpression(
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
+    );
+    expect(store.expressionState(ref), isA<ExpressionReady>());
+
+    // Change the chart's moment — cached expression should be invalidated.
+    final updated = _testDoc.copyWith(jd: 2460000.0);
+    store.updateChart('chart-1', updated);
+
+    expect(store.expressionState(ref), isA<ExpressionIdle>());
+
+    // Recomputing should call the plugin again.
+    host.nextResult = _jsonResult(_validExprJson(sunSign: 'Aries'));
+    await store.computeExpression(
+      'chart-1',
+      'drishti',
+      'calculate_chart',
+      _config,
+    );
+    expect(host.callCount, 2);
+    expect(
+      (store.expressionState(ref) as ExpressionReady).data.planets.first.sign,
+      'Aries',
+    );
+  });
+
   test('updateChart emits on watchChart stream', () async {
     store.loadChart('chart-1', _testDoc);
 

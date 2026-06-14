@@ -132,9 +132,13 @@ class TomlChartCodec {
   static ChartDoc decodeFile(String path) =>
       decode(File(path).readAsStringSync());
 
-  /// Encode [doc] and write it to [path].
-  static void encodeFile(String path, ChartDoc doc) =>
-      File(path).writeAsStringSync(encode(doc));
+  /// Encode [doc] and write it to [path] atomically (write-tmp-then-rename).
+  static void encodeFile(String path, ChartDoc doc) {
+    final target = File(path);
+    final tmp = File('$path.tmp');
+    tmp.writeAsStringSync(encode(doc), flush: true);
+    tmp.renameSync(target.path);
+  }
 
   /// Build the advisory `[civil]` table from the canonical jd plus offsets.
   static Map<String, dynamic> _renderCivil(ChartDoc doc) {

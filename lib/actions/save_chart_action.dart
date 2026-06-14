@@ -8,6 +8,6 @@ void saveChartEdit(
   String chartId,
   ChartDoc doc,
 ) {
-  store.updateChart(chartId, doc);
   library.saveChart(doc, path: chartId);
+  store.updateChart(chartId, doc);
 }

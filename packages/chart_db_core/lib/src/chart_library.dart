@@ -13,6 +13,8 @@ class ChartLibrary {
   }
 
   static String defaultRoot() {
+    final override = Platform.environment['AION_CHARTS'];
+    if (override != null && override.isNotEmpty) return override;
     final xdg = Platform.environment['XDG_DATA_HOME'];
     final base = xdg ?? '${Platform.environment['HOME']}/.local/share';
     return '$base/aion/charts';

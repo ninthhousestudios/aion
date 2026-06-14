@@ -31,6 +31,14 @@ class ChartStore {
       throw StateError('Chart $chartId is not loaded');
     }
     subject.add(ChartLoaded(id: chartId, doc: doc));
+    // Invalidate cached expressions — chart data changed, old results are stale.
+    final refs = _expressions.keys
+        .where((ref) => ref.chartId == chartId)
+        .toList();
+    for (final ref in refs) {
+      _expressions[ref]?.add(const ExpressionIdle());
+      _inFlight.remove(ref);
+    }
   }
 
   void unloadChart(String chartId) {
