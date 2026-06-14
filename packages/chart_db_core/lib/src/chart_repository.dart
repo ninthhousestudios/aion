@@ -3,20 +3,6 @@ import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
 
-/// Exception thrown when inserting a chart that duplicates the natural key
-/// (jd, lat, lon) of an existing chart.
-class DuplicateChartException implements Exception {
-  DuplicateChartException(this.existingId);
-
-  /// The id of the chart already stored with the same (jd, lat, lon).
-  final String existingId;
-
-  @override
-  String toString() =>
-      'DuplicateChartException: chart with same (jd, lat, lon) already exists '
-      '(id: $existingId)';
-}
-
 /// Simple data class mirroring the `charts` table.
 class Chart {
   Chart({
@@ -34,6 +20,7 @@ class Chart {
     this.notes,
     this.rodden,
     this.sourcePath,
+    this.contentHash,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -58,6 +45,7 @@ class Chart {
       notes: row['notes'] as String?,
       rodden: row['rodden'] as String?,
       sourcePath: row['source_path'] as String?,
+      contentHash: row['content_hash'] as String?,
       createdAt: DateTime.parse(row['created_at'] as String),
       updatedAt: DateTime.parse(row['updated_at'] as String),
     );
@@ -77,6 +65,7 @@ class Chart {
   final String? notes;
   final String? rodden;
   final String? sourcePath;
+  final String? contentHash;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -96,6 +85,7 @@ class Chart {
     'notes': notes,
     'rodden': rodden,
     'source_path': sourcePath,
+    'content_hash': contentHash,
   };
 }
 
@@ -110,46 +100,32 @@ class ChartRepository {
 
   /// Inserts a chart. Generates a UUID v4 if [chart.id] is empty.
   ///
-  /// Throws [DuplicateChartException] if a chart with the same (jd, lat, lon)
-  /// already exists. FTS is synced automatically via trigger.
+  /// FTS is synced automatically via trigger.
   String insert(Chart chart) {
     final id = chart.id.isEmpty ? _uuid.v4() : chart.id;
-    try {
-      _db.execute(
-        '''INSERT INTO charts
-           (id, jd, lat, lon, alt, name, gender, placename, country,
-            utc_offset, dst_offset, notes, rodden, source_path)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
-        [
-          id,
-          chart.jd,
-          chart.lat,
-          chart.lon,
-          chart.alt,
-          chart.name,
-          chart.gender,
-          chart.placename,
-          chart.country,
-          chart.utcOffset,
-          chart.dstOffset,
-          chart.notes,
-          chart.rodden,
-          chart.sourcePath,
-        ],
-      );
-    } on SqliteException catch (e) {
-      // SQLITE_CONSTRAINT_UNIQUE = 2067
-      if (e.extendedResultCode == 2067) {
-        final existing = _db.select(
-          'SELECT id FROM charts WHERE jd = ? AND lat = ? AND lon = ?;',
-          [chart.jd, chart.lat, chart.lon],
-        );
-        if (existing.isNotEmpty) {
-          throw DuplicateChartException(existing.first['id'] as String);
-        }
-      }
-      rethrow;
-    }
+    _db.execute(
+      '''INSERT INTO charts
+         (id, jd, lat, lon, alt, name, gender, placename, country,
+          utc_offset, dst_offset, notes, rodden, source_path, content_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);''',
+      [
+        id,
+        chart.jd,
+        chart.lat,
+        chart.lon,
+        chart.alt,
+        chart.name,
+        chart.gender,
+        chart.placename,
+        chart.country,
+        chart.utcOffset,
+        chart.dstOffset,
+        chart.notes,
+        chart.rodden,
+        chart.sourcePath,
+        chart.contentHash,
+      ],
+    );
     return id;
   }
 
@@ -287,5 +263,18 @@ class ChartRepository {
 
     final rows = _db.select(sql, params);
     return rows.map(Chart.fromRow).toList();
+  }
+
+  /// Returns all charts with a non-null source_path, keyed by source_path.
+  Map<String, Chart> listIndexed() {
+    final rows = _db.select(
+      'SELECT * FROM charts WHERE source_path IS NOT NULL',
+    );
+    final result = <String, Chart>{};
+    for (final row in rows) {
+      final chart = Chart.fromRow(row);
+      result[chart.sourcePath!] = chart;
+    }
+    return result;
   }
 }

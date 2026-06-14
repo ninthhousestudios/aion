@@ -119,7 +119,7 @@ void main() {
   group('migration versioning', () {
     test('user_version is set after schema creation', () {
       final result = chartDb.db.select('PRAGMA user_version;');
-      expect(result.first['user_version'], equals(1));
+      expect(result.first['user_version'], equals(2));
     });
 
     test('reopening does not re-run schema creation', () {

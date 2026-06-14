@@ -1,6 +1,8 @@
 export 'src/chart_doc.dart';
+export 'src/chart_indexer.dart';
 export 'src/chart_library.dart';
 export 'src/chart_repository.dart';
+export 'src/content_hash.dart';
 export 'src/chart_service.dart';
 export 'src/collection_repository.dart';
 export 'src/config_hash.dart';

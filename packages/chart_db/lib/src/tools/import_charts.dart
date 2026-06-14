@@ -12,7 +12,8 @@ final _inputSchema = JsonObject(
       description: 'Path to a chart file or directory of chart files',
     ),
     'extensions': JsonArray(
-      description: 'File extensions to import (e.g. [".toml", ".json"]). '
+      description:
+          'File extensions to import (e.g. [".toml", ".json"]). '
           'If omitted, all supported extensions are used.',
       items: JsonString(),
     ),
@@ -24,7 +25,8 @@ final _inputSchema = JsonObject(
 void registerImportCharts(McpServer server, ChartRepository chartRepo) {
   server.registerTool(
     'import_charts',
-    description: 'Import chart files from disk into the database. '
+    description:
+        'Import chart files from disk into the database. '
         'Accepts a single file path or a directory path. '
         'Duplicate charts (same jd, lat, lon) are skipped.',
     inputSchema: _inputSchema,
@@ -59,7 +61,8 @@ CallToolResult handleImportCharts(
         return errorResult('Directory not found: $path');
       }
 
-      final exts = extensions ??
+      final exts =
+          extensions ??
           ChartIO.supportedExtensions.map((e) => e.toLowerCase()).toList();
 
       for (final entity in dir.listSync(recursive: false)) {
@@ -76,15 +79,15 @@ CallToolResult handleImportCharts(
 
     return CallToolResult.fromStructuredContent({
       'imported': imported.length,
-      'skipped_duplicates': imported.where((r) => r.skippedDuplicate).length,
       'errors': errors.length,
       'results': imported
-          .map((r) => {
-                'chart_id': r.chartId,
-                'name': r.name,
-                'source': r.sourcePath,
-                if (r.skippedDuplicate) 'skipped_duplicate': true,
-              })
+          .map(
+            (r) => {
+              'chart_id': r.chartId,
+              'name': r.name,
+              'source': r.sourcePath,
+            },
+          )
           .toList(),
       if (errors.isNotEmpty) 'error_details': errors,
     });
@@ -127,21 +130,10 @@ void _importFile(
       updatedAt: DateTime.now(),
     );
 
-    try {
-      final id = chartRepo.insert(chart);
-      imported.add(_ImportResult(
-        chartId: id,
-        name: chart.name,
-        sourcePath: filePath,
-      ));
-    } on DuplicateChartException catch (e) {
-      imported.add(_ImportResult(
-        chartId: e.existingId,
-        name: chart.name,
-        sourcePath: filePath,
-        skippedDuplicate: true,
-      ));
-    }
+    final id = chartRepo.insert(chart);
+    imported.add(
+      _ImportResult(chartId: id, name: chart.name, sourcePath: filePath),
+    );
   } catch (e) {
     errors.add('$filePath: $e');
   }
@@ -152,13 +144,11 @@ class _ImportResult {
     required this.chartId,
     required this.name,
     required this.sourcePath,
-    this.skippedDuplicate = false,
   });
 
   final String chartId;
   final String name;
   final String sourcePath;
-  final bool skippedDuplicate;
 }
 
 String _extension(String path) {

@@ -1,7 +1,7 @@
 import 'package:sqlite3/sqlite3.dart';
 
 /// Current schema version. Bump when migrating.
-const int _schemaVersion = 1;
+const int _schemaVersion = 2;
 
 /// Wraps a raw sqlite3 [Database] with chart-db schema management.
 ///
@@ -43,15 +43,43 @@ class ChartDatabase {
 
     _db.execute('BEGIN;');
     try {
-      _createTables();
-      _createFts();
-      _createFtsTriggers();
+      if (currentVersion == 0) {
+        _createTables();
+        _createFts();
+        _createFtsTriggers();
+      } else {
+        if (currentVersion < 2) _migrateV1ToV2();
+      }
       _db.execute('PRAGMA user_version = $_schemaVersion;');
       _db.execute('COMMIT;');
     } catch (e) {
       _db.execute('ROLLBACK;');
       rethrow;
     }
+  }
+
+  void _migrateV1ToV2() {
+    _db.execute('ALTER TABLE charts RENAME TO charts_old;');
+    _db.execute('DROP TRIGGER IF EXISTS charts_ai;');
+    _db.execute('DROP TRIGGER IF EXISTS charts_ad;');
+    _db.execute('DROP TRIGGER IF EXISTS charts_au;');
+    _db.execute('DROP TABLE IF EXISTS charts_fts;');
+
+    _createTables();
+    _createFts();
+    _createFtsTriggers();
+
+    _db.execute('''
+      INSERT INTO charts (id, jd, lat, lon, alt, name, gender, placename,
+        country, utc_offset, dst_offset, notes, rodden, source_path,
+        created_at, updated_at)
+      SELECT id, jd, lat, lon, alt, name, gender, placename,
+        country, utc_offset, dst_offset, notes, rodden, source_path,
+        created_at, updated_at
+      FROM charts_old;
+    ''');
+    _db.execute('DROP TABLE charts_old;');
+    _db.execute("INSERT INTO charts_fts(charts_fts) VALUES('rebuild');");
   }
 
   void _createTables() {
@@ -71,10 +99,20 @@ class ChartDatabase {
         notes TEXT,
         rodden TEXT,
         source_path TEXT,
+        content_hash TEXT,
         created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-        UNIQUE(jd, lat, lon)
+        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
       );
+    ''');
+
+    _db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_charts_jd_lat_lon
+      ON charts(jd, lat, lon);
+    ''');
+
+    _db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_charts_source_path
+      ON charts(source_path);
     ''');
 
     _db.execute('''

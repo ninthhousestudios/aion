@@ -405,48 +405,21 @@ void main() {
     });
   });
 
-  group('natural key uniqueness', () {
-    test('duplicate (jd, lat, lon) throws DuplicateChartException', () {
-      repo.insert(
+  group('natural key (jd, lat, lon)', () {
+    test('duplicate (jd, lat, lon) is allowed (non-unique index)', () {
+      final id1 = repo.insert(
         _makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278, name: 'First'),
       );
-
-      expect(
-        () => repo.insert(
-          _makeChart(
-            jd: 2451545.0,
-            lat: 51.5074,
-            lon: -0.1278,
-            name: 'Duplicate',
-          ),
-        ),
-        throwsA(isA<DuplicateChartException>()),
+      final id2 = repo.insert(
+        _makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278, name: 'Second'),
       );
-    });
-
-    test('DuplicateChartException contains existing chart id', () {
-      final firstId = repo.insert(
-        _makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278, name: 'First'),
-      );
-
-      try {
-        repo.insert(
-          _makeChart(
-            jd: 2451545.0,
-            lat: 51.5074,
-            lon: -0.1278,
-            name: 'Duplicate',
-          ),
-        );
-        fail('Expected DuplicateChartException');
-      } on DuplicateChartException catch (e) {
-        expect(e.existingId, equals(firstId));
-      }
+      expect(id1, isNot(equals(id2)));
+      expect(repo.get(id1), isNotNull);
+      expect(repo.get(id2), isNotNull);
     });
 
     test('different coordinates are allowed', () {
       repo.insert(_makeChart(jd: 2451545.0, lat: 51.5074, lon: -0.1278));
-      // Same jd, different lat/lon -- should succeed
       final id2 = repo.insert(
         _makeChart(
           jd: 2451545.0,

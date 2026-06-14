@@ -50,7 +50,7 @@ void main() {
     expect(data['imported'], greaterThan(0));
   });
 
-  test('skips duplicates on re-import', () {
+  test('re-import same file creates second entry (duplicates allowed)', () {
     final chartFiles = Directory('/home/josh/charts/mine')
         .listSync()
         .whereType<File>()
@@ -66,7 +66,7 @@ void main() {
     final result = handleImportCharts({'path': path}, repo);
 
     expect(result.isError, isFalse);
-    expect(result.structuredContent!['skipped_duplicates'], 1);
+    expect(result.structuredContent!['imported'], 1);
   });
 
   test('returns error for missing path', () {
