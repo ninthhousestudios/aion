@@ -28,7 +28,7 @@ void registerImportCharts(McpServer server, ChartRepository chartRepo) {
     description:
         'Import chart files from disk into the database. '
         'Accepts a single file path or a directory path. '
-        'Duplicate charts (same jd, lat, lon) are skipped.',
+        'Warns about potential duplicates (same jd, lat, lon) but still imports.',
     inputSchema: _inputSchema,
     callback: (args, extra) => handleImportCharts(args, chartRepo),
   );
@@ -77,8 +77,22 @@ CallToolResult handleImportCharts(
       return errorResult('Path not found: $path');
     }
 
+    final duplicateWarnings = imported
+        .where((r) => r.duplicateOf.isNotEmpty)
+        .map(
+          (r) => {
+            'chart_id': r.chartId,
+            'name': r.name,
+            'duplicate_of': r.duplicateOf
+                .map((d) => {'id': d.id, 'name': d.name})
+                .toList(),
+          },
+        )
+        .toList();
+
     return CallToolResult.fromStructuredContent({
       'imported': imported.length,
+      'duplicates': duplicateWarnings.length,
       'errors': errors.length,
       'results': imported
           .map(
@@ -89,6 +103,7 @@ CallToolResult handleImportCharts(
             },
           )
           .toList(),
+      if (duplicateWarnings.isNotEmpty) 'duplicate_warnings': duplicateWarnings,
       if (errors.isNotEmpty) 'error_details': errors,
     });
   } catch (e) {
@@ -105,13 +120,17 @@ void _importFile(
   try {
     final chartData = ChartIO.read(filePath);
     final jd = dateTimeToJd(chartData.utcDateTime);
+    final lat = chartData.birthLocation.latitude;
+    final lon = chartData.birthLocation.longitude;
     final alt = (chartData.extra['altitude'] as num?)?.toDouble() ?? 0.0;
+
+    final duplicates = chartRepo.findDuplicates(jd, lat, lon);
 
     final chart = Chart(
       id: '',
       jd: jd,
-      lat: chartData.birthLocation.latitude,
-      lon: chartData.birthLocation.longitude,
+      lat: lat,
+      lon: lon,
       alt: alt,
       name: chartData.name,
       gender: chartData.gender?.name,
@@ -132,7 +151,12 @@ void _importFile(
 
     final id = chartRepo.insert(chart);
     imported.add(
-      _ImportResult(chartId: id, name: chart.name, sourcePath: filePath),
+      _ImportResult(
+        chartId: id,
+        name: chart.name,
+        sourcePath: filePath,
+        duplicateOf: duplicates,
+      ),
     );
   } catch (e) {
     errors.add('$filePath: $e');
@@ -144,11 +168,13 @@ class _ImportResult {
     required this.chartId,
     required this.name,
     required this.sourcePath,
+    this.duplicateOf = const [],
   });
 
   final String chartId;
   final String name;
   final String sourcePath;
+  final List<Chart> duplicateOf;
 }
 
 String _extension(String path) {

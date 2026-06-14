@@ -265,6 +265,39 @@ class ChartRepository {
     return rows.map(Chart.fromRow).toList();
   }
 
+  /// Returns charts whose (jd, lat, lon) match within tolerance.
+  ///
+  /// Default tolerances: ~1 second for JD, ~10m for coordinates.
+  /// If [excludeId] is provided, that chart is excluded from results
+  /// (useful when checking before an update).
+  List<Chart> findDuplicates(
+    double jd,
+    double lat,
+    double lon, {
+    double jdTolerance = 1.2e-5,
+    double geoTolerance = 0.0001,
+    String? excludeId,
+  }) {
+    final where = ['ABS(jd - ?) < ?', 'ABS(lat - ?) < ?', 'ABS(lon - ?) < ?'];
+    final params = <Object?>[
+      jd,
+      jdTolerance,
+      lat,
+      geoTolerance,
+      lon,
+      geoTolerance,
+    ];
+
+    if (excludeId != null) {
+      where.add('id != ?');
+      params.add(excludeId);
+    }
+
+    final sql = 'SELECT * FROM charts WHERE ${where.join(' AND ')};';
+    final rows = _db.select(sql, params);
+    return rows.map(Chart.fromRow).toList();
+  }
+
   /// Returns all charts with a non-null source_path, keyed by source_path.
   Map<String, Chart> listIndexed() {
     final rows = _db.select(
