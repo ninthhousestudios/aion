@@ -53,19 +53,21 @@ class CollectionRepository {
   // ---------------------------------------------------------------------------
 
   /// Creates a new collection and returns its id.
+  ///
+  /// Writes to the sidecar first (source of truth), then sqlite.
   String create(String name, {String? note}) {
     final id = _uuid.v4();
-    _db.execute('INSERT INTO collections (id, name, note) VALUES (?, ?, ?);', [
-      id,
-      name,
-      note,
-    ]);
     final dir = _sidecarDir;
     if (dir != null) {
       final cols = CollectionSidecar.load(dir);
       cols.add(SidecarCollection(id: id, name: name, note: note));
       CollectionSidecar.save(dir, cols);
     }
+    _db.execute('INSERT INTO collections (id, name, note) VALUES (?, ?, ?);', [
+      id,
+      name,
+      note,
+    ]);
     return id;
   }
 
@@ -97,28 +99,28 @@ class CollectionRepository {
   ///
   /// Pass [sourcePath] to write through to the sidecar file.
   void addChart(String chartId, String collectionId, {String? sourcePath}) {
-    _db.execute(
-      'INSERT OR IGNORE INTO chart_collections (chart_id, collection_id) VALUES (?, ?);',
-      [chartId, collectionId],
-    );
     final dir = _sidecarDir;
     if (dir != null && sourcePath != null) {
       CollectionSidecar.addChart(dir, collectionId, sourcePath);
     }
+    _db.execute(
+      'INSERT OR IGNORE INTO chart_collections (chart_id, collection_id) VALUES (?, ?);',
+      [chartId, collectionId],
+    );
   }
 
   /// Removes a chart from a collection.
   ///
   /// Pass [sourcePath] to write through to the sidecar file.
   void removeChart(String chartId, String collectionId, {String? sourcePath}) {
-    _db.execute(
-      'DELETE FROM chart_collections WHERE chart_id = ? AND collection_id = ?;',
-      [chartId, collectionId],
-    );
     final dir = _sidecarDir;
     if (dir != null && sourcePath != null) {
       CollectionSidecar.removeChart(dir, collectionId, sourcePath);
     }
+    _db.execute(
+      'DELETE FROM chart_collections WHERE chart_id = ? AND collection_id = ?;',
+      [chartId, collectionId],
+    );
   }
 
   /// Returns the ids of all charts in [collectionId].
@@ -132,6 +134,10 @@ class CollectionRepository {
 
   /// Renames a collection. Throws if [collectionId] does not exist.
   void rename(String collectionId, String newName) {
+    final dir = _sidecarDir;
+    if (dir != null) {
+      CollectionSidecar.rename(dir, collectionId, newName);
+    }
     _db.execute('UPDATE collections SET name = ? WHERE id = ?;', [
       newName,
       collectionId,
@@ -139,19 +145,15 @@ class CollectionRepository {
     if (_db.updatedRows == 0) {
       throw StateError('Collection "$collectionId" not found');
     }
-    final dir = _sidecarDir;
-    if (dir != null) {
-      CollectionSidecar.rename(dir, collectionId, newName);
-    }
   }
 
   /// Deletes a collection. Cascade FK removes chart_collections entries.
   void delete(String collectionId) {
-    _db.execute('DELETE FROM collections WHERE id = ?;', [collectionId]);
     final dir = _sidecarDir;
     if (dir != null) {
       CollectionSidecar.delete(dir, collectionId);
     }
+    _db.execute('DELETE FROM collections WHERE id = ?;', [collectionId]);
   }
 
   // ---------------------------------------------------------------------------

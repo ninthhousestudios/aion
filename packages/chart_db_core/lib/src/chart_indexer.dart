@@ -89,6 +89,7 @@ class ChartIndexer {
 
       final existing = indexed[path];
       if (existing != null && existing.contentHash == hash) {
+        _ensureTags(existing.id, file);
         skipped++;
         continue;
       }
@@ -155,13 +156,23 @@ class ChartIndexer {
           'INSERT INTO collections (id, name, note) VALUES (?, ?, ?);',
           [col.id, col.name, col.note],
         );
+      } else {
+        _db.execute('UPDATE collections SET name = ?, note = ? WHERE id = ?;', [
+          col.name,
+          col.note,
+          col.id,
+        ]);
       }
 
       // Resolve source paths to chart ids and sync membership.
+      // Sidecar may store absolute or relative paths; try both.
       final currentMembers = repo.chartsIn(col.id).toSet();
       final desired = <String>{};
       for (final sourcePath in col.charts) {
-        final chartId = pathToId[sourcePath];
+        var chartId = pathToId[sourcePath];
+        if (chartId == null && !sourcePath.startsWith('/')) {
+          chartId = pathToId['$dirPath/$sourcePath'];
+        }
         if (chartId != null) desired.add(chartId);
       }
 
@@ -177,6 +188,22 @@ class ChartIndexer {
     final sidecarIds = sidecar.map((c) => c.id).toSet();
     for (final id in existingIds.difference(sidecarIds)) {
       repo.delete(id);
+    }
+  }
+
+  /// For skipped (unchanged) charts, ensure tags are present in sqlite.
+  /// Avoids decoding TOML unless tag rows are missing.
+  void _ensureTags(String chartId, File file) {
+    final repo = _collectionRepo;
+    if (repo == null) return;
+    final existing = repo.tagsFor(chartId);
+    if (existing.isNotEmpty) return;
+    // No tags in sqlite — decode TOML to check if it has tags.
+    try {
+      final doc = TomlChartCodec.decode(utf8.decode(file.readAsBytesSync()));
+      _syncTags(chartId, doc.tags);
+    } catch (_) {
+      // Best-effort: if TOML can't be decoded, skip.
     }
   }
 

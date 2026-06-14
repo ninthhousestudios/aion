@@ -234,6 +234,31 @@ void main() {
       );
     });
 
+    test('tags are synced for skipped (unchanged) charts on upgrade', () {
+      final tagged = ChartDoc(
+        jd: newton.jd,
+        lat: newton.lat,
+        lon: newton.lon,
+        name: 'Newton',
+        tags: ['natal', 'famous'],
+      );
+      writeChart('newton.toml', tagged);
+
+      // First reindex without collectionRepo — simulates pre-upgrade indexer.
+      final oldIndexer = ChartIndexer(chartDb.db, repo);
+      oldIndexer.reindex(tmpDir.path);
+      final charts = repo.search(limit: 100);
+      expect(collectionRepo.tagsFor(charts.first.id), isEmpty);
+
+      // Second reindex with collectionRepo — file unchanged, should still sync tags.
+      final result = indexer.reindex(tmpDir.path);
+      expect(result.skipped, 1);
+      expect(
+        collectionRepo.tagsFor(charts.first.id),
+        equals({'famous', 'natal'}),
+      );
+    });
+
     test('untagged charts have no tags', () {
       writeChart('newton.toml', newton);
       indexer.reindex(tmpDir.path);
@@ -326,6 +351,38 @@ void main() {
       ]);
       indexer.reindex(tmpDir.path);
       expect(collectionRepo.chartsIn('col-1'), hasLength(2));
+    });
+
+    test('relative sidecar paths resolve against directory', () {
+      writeChart('newton.toml', newton);
+
+      writeSidecar([
+        SidecarCollection(
+          id: 'col-1',
+          name: 'Relative',
+          charts: ['newton.toml'],
+        ),
+      ]);
+
+      indexer.reindex(tmpDir.path);
+
+      expect(collectionRepo.chartsIn('col-1'), hasLength(1));
+    });
+
+    test('sidecar metadata changes are synced on reindex', () {
+      writeChart('newton.toml', newton);
+
+      writeSidecar([
+        SidecarCollection(id: 'col-1', name: 'Original', note: 'v1'),
+      ]);
+      indexer.reindex(tmpDir.path);
+      expect(collectionRepo.get('col-1')!.name, 'Original');
+
+      writeSidecar([
+        SidecarCollection(id: 'col-1', name: 'Renamed', note: 'v2'),
+      ]);
+      indexer.reindex(tmpDir.path);
+      expect(collectionRepo.get('col-1')!.name, 'Renamed');
     });
   });
 
