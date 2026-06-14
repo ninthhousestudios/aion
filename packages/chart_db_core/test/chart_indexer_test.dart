@@ -243,6 +243,92 @@ void main() {
     });
   });
 
+  group('collection sidecar sync', () {
+    void writeSidecar(List<SidecarCollection> collections) {
+      CollectionSidecar.save(tmpDir.path, collections);
+    }
+
+    test('sidecar collections are synced into sqlite on reindex', () {
+      writeChart('newton.toml', newton);
+      writeChart('einstein.toml', einstein);
+
+      final colId = 'col-1';
+      writeSidecar([
+        SidecarCollection(
+          id: colId,
+          name: 'Scientists',
+          charts: [
+            '${tmpDir.path}/newton.toml',
+            '${tmpDir.path}/einstein.toml',
+          ],
+        ),
+      ]);
+
+      indexer.reindex(tmpDir.path);
+
+      final col = collectionRepo.get(colId);
+      expect(col, isNotNull);
+      expect(col!.name, 'Scientists');
+      expect(collectionRepo.chartsIn(colId), hasLength(2));
+    });
+
+    test('stale source paths in sidecar are skipped', () {
+      writeChart('newton.toml', newton);
+
+      writeSidecar([
+        SidecarCollection(
+          id: 'col-1',
+          name: 'Mixed',
+          charts: ['${tmpDir.path}/newton.toml', '${tmpDir.path}/missing.toml'],
+        ),
+      ]);
+
+      indexer.reindex(tmpDir.path);
+
+      expect(collectionRepo.chartsIn('col-1'), hasLength(1));
+    });
+
+    test('removed sidecar collection is deleted from sqlite', () {
+      writeChart('newton.toml', newton);
+
+      writeSidecar([SidecarCollection(id: 'col-1', name: 'Temp')]);
+      indexer.reindex(tmpDir.path);
+      expect(collectionRepo.get('col-1'), isNotNull);
+
+      writeSidecar([]);
+      indexer.reindex(tmpDir.path);
+      expect(collectionRepo.get('col-1'), isNull);
+    });
+
+    test('membership changes are synced on reindex', () {
+      writeChart('newton.toml', newton);
+      writeChart('einstein.toml', einstein);
+
+      writeSidecar([
+        SidecarCollection(
+          id: 'col-1',
+          name: 'Faves',
+          charts: ['${tmpDir.path}/newton.toml'],
+        ),
+      ]);
+      indexer.reindex(tmpDir.path);
+      expect(collectionRepo.chartsIn('col-1'), hasLength(1));
+
+      writeSidecar([
+        SidecarCollection(
+          id: 'col-1',
+          name: 'Faves',
+          charts: [
+            '${tmpDir.path}/newton.toml',
+            '${tmpDir.path}/einstein.toml',
+          ],
+        ),
+      ]);
+      indexer.reindex(tmpDir.path);
+      expect(collectionRepo.chartsIn('col-1'), hasLength(2));
+    });
+  });
+
   group('duplicate natural keys', () {
     test('two charts with identical (jd, lat, lon) can coexist', () {
       final twin = ChartDoc(

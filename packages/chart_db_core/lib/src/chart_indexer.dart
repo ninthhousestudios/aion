@@ -6,6 +6,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'chart_doc.dart';
 import 'chart_repository.dart';
 import 'collection_repository.dart';
+import 'collection_sidecar.dart';
 import 'content_hash.dart';
 import 'toml_chart.dart';
 
@@ -121,6 +122,11 @@ class ChartIndexer {
       }
     }
 
+    if (_collectionRepo != null && fileData.isNotEmpty) {
+      final dirPath = File(fileData.first.$2).parent.path;
+      _syncCollections(dirPath);
+    }
+
     return IndexResult(
       added: added,
       updated: updated,
@@ -128,6 +134,50 @@ class ChartIndexer {
       skipped: skipped,
       errors: errors,
     );
+  }
+
+  void _syncCollections(String dirPath) {
+    final repo = _collectionRepo!;
+    final sidecar = CollectionSidecar.load(dirPath);
+
+    // Build source_path → chart_id lookup from current index.
+    final indexed = _repo.listIndexed();
+    final pathToId = <String, String>{
+      for (final e in indexed.entries) e.key: e.value.id,
+    };
+
+    // Sync each sidecar collection into sqlite.
+    final existingIds = repo.list().map((c) => c.collection.id).toSet();
+
+    for (final col in sidecar) {
+      if (!existingIds.contains(col.id)) {
+        _db.execute(
+          'INSERT INTO collections (id, name, note) VALUES (?, ?, ?);',
+          [col.id, col.name, col.note],
+        );
+      }
+
+      // Resolve source paths to chart ids and sync membership.
+      final currentMembers = repo.chartsIn(col.id).toSet();
+      final desired = <String>{};
+      for (final sourcePath in col.charts) {
+        final chartId = pathToId[sourcePath];
+        if (chartId != null) desired.add(chartId);
+      }
+
+      for (final chartId in desired.difference(currentMembers)) {
+        repo.addChart(chartId, col.id);
+      }
+      for (final chartId in currentMembers.difference(desired)) {
+        repo.removeChart(chartId, col.id);
+      }
+    }
+
+    // Remove sqlite collections that are no longer in the sidecar.
+    final sidecarIds = sidecar.map((c) => c.id).toSet();
+    for (final id in existingIds.difference(sidecarIds)) {
+      repo.delete(id);
+    }
   }
 
   void _syncTags(String chartId, List<String> tags) {
