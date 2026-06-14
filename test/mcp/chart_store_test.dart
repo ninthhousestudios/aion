@@ -53,7 +53,12 @@ Map<String, dynamic> _validExprJson({String sunSign = 'Leo'}) => {
   ],
   'ascendant': {'sign_index': 4, 'longitude': 130.0},
   'houses': [
-    {'number': 1, 'sign_index': 4, 'cusp_longitude': 130.0},
+    for (var i = 1; i <= 12; i++)
+      {
+        'number': i,
+        'sign_index': (i - 1) % 12,
+        'cusp_longitude': (i - 1) * 30.0,
+      },
   ],
 };
 
