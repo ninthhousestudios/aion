@@ -25,6 +25,14 @@ class ChartStore {
     );
   }
 
+  void updateChart(String chartId, ChartDoc doc) {
+    final subject = _charts[chartId];
+    if (subject == null) {
+      throw StateError('Chart $chartId is not loaded');
+    }
+    subject.add(ChartLoaded(id: chartId, doc: doc));
+  }
+
   void unloadChart(String chartId) {
     _charts.remove(chartId)?.close();
     final refs = _expressions.keys
@@ -156,5 +164,4 @@ class ChartStore {
         ref,
         () => BehaviorSubject.seeded(const ExpressionIdle()),
       );
-
 }

@@ -1,4 +1,5 @@
 export 'src/chart_doc.dart';
+export 'src/chart_library.dart';
 export 'src/chart_repository.dart';
 export 'src/chart_service.dart';
 export 'src/collection_repository.dart';

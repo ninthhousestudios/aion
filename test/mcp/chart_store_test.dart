@@ -37,25 +37,25 @@ const _config = {'preset': 'lahiri'};
 const _configAlt = {'preset': 'ernst'};
 
 Map<String, dynamic> _validExprJson({String sunSign = 'Leo'}) => {
-      'planets': [
-        {
-          'id': 'sun',
-          'name': 'Sun',
-          'longitude': 135.5,
-          'sign': sunSign,
-          'sign_index': 4,
-          'degree_in_sign': 15.5,
-          'retrograde': false,
-          'nakshatra': 'Magha',
-          'nakshatra_pada': 2,
-          'house': 1,
-        },
-      ],
-      'ascendant': {'sign_index': 4, 'longitude': 130.0},
-      'houses': [
-        {'number': 1, 'sign_index': 4, 'cusp_longitude': 130.0},
-      ],
-    };
+  'planets': [
+    {
+      'id': 'sun',
+      'name': 'Sun',
+      'longitude': 135.5,
+      'sign': sunSign,
+      'sign_index': 4,
+      'degree_in_sign': 15.5,
+      'retrograde': false,
+      'nakshatra': 'Magha',
+      'nakshatra_pada': 2,
+      'house': 1,
+    },
+  ],
+  'ascendant': {'sign_index': 4, 'longitude': 130.0},
+  'houses': [
+    {'number': 1, 'sign_index': 4, 'cusp_longitude': 130.0},
+  ],
+};
 
 CallToolResult _jsonResult(Map<String, dynamic> data) =>
     CallToolResult(content: [TextContent(text: json.encode(data))]);
@@ -224,6 +224,38 @@ void main() {
       ),
       throwsStateError,
     );
+  });
+
+  test('updateChart replaces the ChartDoc', () {
+    store.loadChart('chart-1', _testDoc);
+
+    final updated = _testDoc.copyWith(name: 'Updated Name', tags: ['vedic']);
+    store.updateChart('chart-1', updated);
+
+    final state = store.chartState('chart-1') as ChartLoaded;
+    expect(state.doc.name, 'Updated Name');
+    expect(state.doc.tags, ['vedic']);
+    expect(state.doc.jd, _testDoc.jd);
+  });
+
+  test('updateChart throws on unknown chartId', () {
+    expect(() => store.updateChart('nonexistent', _testDoc), throwsStateError);
+  });
+
+  test('updateChart emits on watchChart stream', () async {
+    store.loadChart('chart-1', _testDoc);
+
+    final states = <ChartState>[];
+    final sub = store.watchChart('chart-1').listen(states.add);
+    await Future<void>.delayed(Duration.zero);
+
+    final updated = _testDoc.copyWith(name: 'Streamed');
+    store.updateChart('chart-1', updated);
+    await Future<void>.delayed(Duration.zero);
+
+    await sub.cancel();
+    expect(states.length, greaterThanOrEqualTo(2));
+    expect((states.last as ChartLoaded).doc.name, 'Streamed');
   });
 
   test('loadChart is idempotent', () {
