@@ -5,6 +5,7 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'chart_doc.dart';
 import 'chart_repository.dart';
+import 'collection_repository.dart';
 import 'content_hash.dart';
 import 'toml_chart.dart';
 
@@ -34,10 +35,12 @@ class IndexResult {
 /// Uses [contentHash] (SHA-256 of raw bytes) to detect changes and skip
 /// unchanged files.
 class ChartIndexer {
-  ChartIndexer(this._db, this._repo);
+  ChartIndexer(this._db, this._repo, {CollectionRepository? collectionRepo})
+    : _collectionRepo = collectionRepo;
 
   final Database _db;
   final ChartRepository _repo;
+  final CollectionRepository? _collectionRepo;
 
   /// Full or incremental reindex of [directoryPath].
   ///
@@ -100,10 +103,12 @@ class ChartIndexer {
 
       if (existing != null) {
         _repo.delete(existing.id);
-        _repo.insert(_chartFromDoc(doc, path, hash));
+        final chartId = _repo.insert(_chartFromDoc(doc, path, hash));
+        _syncTags(chartId, doc.tags);
         updated++;
       } else {
-        _repo.insert(_chartFromDoc(doc, path, hash));
+        final chartId = _repo.insert(_chartFromDoc(doc, path, hash));
+        _syncTags(chartId, doc.tags);
         added++;
       }
     }
@@ -123,6 +128,14 @@ class ChartIndexer {
       skipped: skipped,
       errors: errors,
     );
+  }
+
+  void _syncTags(String chartId, List<String> tags) {
+    final repo = _collectionRepo;
+    if (repo == null) return;
+    for (final tag in tags) {
+      repo.addTag(chartId, tag);
+    }
   }
 
   Chart _chartFromDoc(ChartDoc doc, String path, String hash) {

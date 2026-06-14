@@ -7,13 +7,15 @@ void main() {
   late Directory tmpDir;
   late ChartDatabase chartDb;
   late ChartRepository repo;
+  late CollectionRepository collectionRepo;
   late ChartIndexer indexer;
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('chart_indexer_test_');
     chartDb = ChartDatabase();
     repo = ChartRepository(chartDb.db);
-    indexer = ChartIndexer(chartDb.db, repo);
+    collectionRepo = CollectionRepository(chartDb.db);
+    indexer = ChartIndexer(chartDb.db, repo, collectionRepo: collectionRepo);
   });
 
   tearDown(() {
@@ -186,6 +188,58 @@ void main() {
       final chart = repo.search(query: 'Newton').first;
       final bytes = File('${tmpDir.path}/newton.toml').readAsBytesSync();
       expect(chart.contentHash, contentHash(bytes));
+    });
+  });
+
+  group('tag indexing', () {
+    test('tags from TOML are indexed into chart_tags', () {
+      final tagged = ChartDoc(
+        jd: newton.jd,
+        lat: newton.lat,
+        lon: newton.lon,
+        name: 'Tagged Newton',
+        tags: ['natal', 'famous'],
+      );
+      writeChart('tagged.toml', tagged);
+
+      indexer.reindex(tmpDir.path);
+
+      final charts = repo.search(limit: 100);
+      expect(charts, hasLength(1));
+      expect(
+        collectionRepo.tagsFor(charts.first.id),
+        equals({'famous', 'natal'}),
+      );
+    });
+
+    test('tag changes are reflected after reindex', () {
+      final v1 = ChartDoc(
+        jd: newton.jd,
+        lat: newton.lat,
+        lon: newton.lon,
+        name: 'Newton',
+        tags: ['natal', 'famous'],
+      );
+      writeChart('newton.toml', v1);
+      indexer.reindex(tmpDir.path);
+
+      final v2 = v1.copyWith(tags: ['natal', 'scientist']);
+      writeChart('newton.toml', v2);
+      indexer.reindex(tmpDir.path);
+
+      final charts = repo.search(limit: 100);
+      expect(
+        collectionRepo.tagsFor(charts.first.id),
+        equals({'natal', 'scientist'}),
+      );
+    });
+
+    test('untagged charts have no tags', () {
+      writeChart('newton.toml', newton);
+      indexer.reindex(tmpDir.path);
+
+      final charts = repo.search(limit: 100);
+      expect(collectionRepo.tagsFor(charts.first.id), isEmpty);
     });
   });
 

@@ -108,6 +108,17 @@ class CollectionRepository {
     return rows.map((r) => r['chart_id'] as String).toList();
   }
 
+  /// Renames a collection. Throws if [collectionId] does not exist.
+  void rename(String collectionId, String newName) {
+    _db.execute('UPDATE collections SET name = ? WHERE id = ?;', [
+      newName,
+      collectionId,
+    ]);
+    if (_db.updatedRows == 0) {
+      throw StateError('Collection "$collectionId" not found');
+    }
+  }
+
   /// Deletes a collection. Cascade FK removes chart_collections entries.
   void delete(String collectionId) {
     _db.execute('DELETE FROM collections WHERE id = ?;', [collectionId]);

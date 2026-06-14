@@ -119,6 +119,16 @@ void main() {
 
       expect(repo.chartsIn(colId), hasLength(1));
     });
+
+    test('rename updates name', () {
+      final id = repo.create('Old Name');
+      repo.rename(id, 'New Name');
+      expect(repo.get(id)!.name, equals('New Name'));
+    });
+
+    test('rename throws for missing id', () {
+      expect(() => repo.rename('nonexistent', 'X'), throwsStateError);
+    });
   });
 
   group('tags', () {
