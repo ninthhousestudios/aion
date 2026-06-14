@@ -84,7 +84,18 @@ CallToolResult handleImportCharts(
             'chart_id': r.chartId,
             'name': r.name,
             'duplicate_of': r.duplicateOf
-                .map((d) => {'id': d.id, 'name': d.name})
+                .map(
+                  (d) => {
+                    'id': d.id,
+                    'name': d.name,
+                    'jd': d.jd,
+                    'lat': d.lat,
+                    'lon': d.lon,
+                    if (d.placename != null) 'placename': d.placename,
+                    if (d.country != null) 'country': d.country,
+                    if (d.sourcePath != null) 'source_path': d.sourcePath,
+                  },
+                )
                 .toList(),
           },
         )

@@ -278,14 +278,18 @@ class ChartRepository {
     double geoTolerance = 0.0001,
     String? excludeId,
   }) {
-    final where = ['ABS(jd - ?) < ?', 'ABS(lat - ?) < ?', 'ABS(lon - ?) < ?'];
+    final where = [
+      'jd >= ? AND jd <= ?',
+      'lat >= ? AND lat <= ?',
+      'lon >= ? AND lon <= ?',
+    ];
     final params = <Object?>[
-      jd,
-      jdTolerance,
-      lat,
-      geoTolerance,
-      lon,
-      geoTolerance,
+      jd - jdTolerance,
+      jd + jdTolerance,
+      lat - geoTolerance,
+      lat + geoTolerance,
+      lon - geoTolerance,
+      lon + geoTolerance,
     ];
 
     if (excludeId != null) {
