@@ -8,6 +8,7 @@ import '../providers/chart_store_provider.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../theme/aion_theme.dart';
 import '../widgets/title_bar.dart';
+import 'background_layer.dart';
 import 'card_model.dart';
 import 'canvas_card.dart';
 import 'snap_physics.dart';
@@ -221,9 +222,9 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         onTap: () => workspace.selectCard(null),
         child: Stack(
           children: [
+            const BackgroundLayer(),
             Container(
               key: _canvasKey,
-              color: t.canvasBackground,
               child: Listener(
                 behavior: HitTestBehavior.opaque,
                 onPointerDown: _handleWorkspacePointerDown,
