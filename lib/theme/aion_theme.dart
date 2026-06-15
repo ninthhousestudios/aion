@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'theme_preset.dart';
+
 class AionTheme extends ThemeExtension<AionTheme> {
   const AionTheme({
     required this.canvasBackground,
@@ -47,27 +49,35 @@ class AionTheme extends ThemeExtension<AionTheme> {
   final Color statusError;
   final Color statusStopped;
 
-  static const dark = AionTheme(
-    canvasBackground: Color(0xFF0F0F1A),
-    surfaceOverlay: Color(0xFF1E1E2E),
-    surfaceBorder: Colors.white12,
-    cardBorderSelected: Colors.white,
-    cardBorderHovered: Colors.white54,
-    cardBorderIdle: Colors.white24,
-    cardShadow: Color(0x1EFFFFFF),
-    cardLabelColor: Colors.white,
-    cardDimColor: Color(0x78FFFFFF),
-    snapAccent: Color(0xFF6366F1),
-    snapGuideColor: Color(0x556366F1),
-    snapInactiveColor: Colors.white38,
-    chromeButtonHover: Colors.white12,
-    chromeCloseHover: Colors.red,
-    chromeIconColor: Colors.white54,
-    statusConnected: Colors.green,
-    statusStarting: Colors.amber,
-    statusError: Colors.red,
-    statusStopped: Colors.grey,
-  );
+  factory AionTheme.fromPreset(ThemePreset preset) {
+    return AionTheme(
+      canvasBackground: preset.backgroundColor,
+      surfaceOverlay: preset.surfaceCard,
+      surfaceBorder: _withAlpha(preset.textPrimary, 0x1F),
+      cardBorderSelected: preset.surfaceBorderSelected,
+      cardBorderHovered: preset.surfaceBorderHovered,
+      cardBorderIdle: preset.surfaceBorderIdle,
+      cardShadow: _withAlpha(preset.textPrimary, 0x1E),
+      cardLabelColor: preset.textPrimary,
+      cardDimColor: preset.textMuted,
+      snapAccent: preset.accentSeed,
+      snapGuideColor: _withAlpha(preset.accentSeed, 0x55),
+      snapInactiveColor: _withAlpha(preset.textPrimary, 0x61),
+      chromeButtonHover: _withAlpha(preset.textPrimary, 0x1F),
+      chromeCloseHover: const Color(0xFFF44336),
+      chromeIconColor: _withAlpha(preset.textPrimary, 0x8A),
+      statusConnected: const Color(0xFF4CAF50),
+      statusStarting: const Color(0xFFFFC107),
+      statusError: const Color(0xFFF44336),
+      statusStopped: const Color(0xFF9E9E9E),
+    );
+  }
+
+  static Color _withAlpha(Color base, int a) {
+    return Color((a << 24) | (base.toARGB32() & 0x00FFFFFF));
+  }
+
+  static final dark = AionTheme.fromPreset(ThemePreset.dark);
 
   @override
   AionTheme copyWith({

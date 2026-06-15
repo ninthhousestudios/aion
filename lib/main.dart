@@ -8,6 +8,8 @@ import 'canvas/canvas_workspace.dart';
 import 'mcp/plugin_manifest.dart';
 import 'providers/plugin_host_provider.dart';
 import 'theme/aion_theme.dart';
+import 'theme/preset_store.dart';
+import 'theme/theme_preset.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,14 +51,22 @@ class _AionAppState extends ConsumerState<AionApp> {
 
   @override
   Widget build(BuildContext context) {
+    final preset =
+        ref.watch(presetStoreProvider).valueOrNull?.activePreset ??
+        ThemePreset.dark;
+    final aionTheme = AionTheme.fromPreset(preset);
+    final brightness = preset.backgroundColor.computeLuminance() > 0.5
+        ? Brightness.light
+        : Brightness.dark;
+
     return MaterialApp(
       title: 'Aion',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.dark,
+          seedColor: preset.accentSeed,
+          brightness: brightness,
         ),
-        extensions: const [AionTheme.dark],
+        extensions: [aionTheme],
       ),
       home: const Scaffold(body: CanvasWorkspace()),
     );
