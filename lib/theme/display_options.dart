@@ -157,7 +157,10 @@ class DisplayOptions {
     List<String> signNames;
     final signSection = doc['sign_names'] as Map<String, dynamic>?;
     if (signSection != null && signSection['names'] is List) {
-      signNames = (signSection['names'] as List).cast<String>();
+      final raw = (signSection['names'] as List).cast<String>();
+      signNames = (raw.length == 12 && raw.every((n) => n.isNotEmpty))
+          ? raw
+          : _tropicalWesternSigns;
     } else if (signPresetSource != null &&
         signNamePresets.containsKey(signPresetSource)) {
       signNames = signNamePresets[signPresetSource]!;
@@ -210,12 +213,12 @@ class DisplayOptions {
     buf.writeln('[planet_names]');
     for (final id in _defaultPlanetIds) {
       if (planetNames.containsKey(id)) {
-        buf.writeln('$id = "${_esc(planetNames[id]!)}"');
+        buf.writeln('"${_esc(id)}" = "${_esc(planetNames[id]!)}"');
       }
     }
     for (final id in planetNames.keys) {
       if (!_defaultPlanetIds.contains(id)) {
-        buf.writeln('$id = "${_esc(planetNames[id]!)}"');
+        buf.writeln('"${_esc(id)}" = "${_esc(planetNames[id]!)}"');
       }
     }
 

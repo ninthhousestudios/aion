@@ -59,10 +59,23 @@ class PresetStore {
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
-    final slug = ThemePreset.slugify(preset.name);
+    final slug = _uniqueSlug(preset.name, dir.path);
     final file = File('${dir.path}/$slug.toml');
     await file.writeAsString(preset.toToml());
     _userPresets[preset.name] = preset;
+  }
+
+  String _uniqueSlug(String name, String dirPath) {
+    final base = ThemePreset.slugify(name);
+    final existing = _userPresets.values
+        .where((p) => p.name != name)
+        .map((p) => ThemePreset.slugify(p.name))
+        .toSet();
+    if (!existing.contains(base)) return base;
+    for (var i = 2; ; i++) {
+      final candidate = '$base-$i';
+      if (!existing.contains(candidate)) return candidate;
+    }
   }
 
   Future<String> _presetsPath() async {

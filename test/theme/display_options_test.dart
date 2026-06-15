@@ -179,4 +179,51 @@ void main() {
       expect(other, isNot(equals(DisplayOptions.defaultOptions)));
     });
   });
+
+  group('sign name validation', () {
+    test('truncated sign names fall back to defaults', () {
+      const toml = '[sign_names]\nnames = ["Aries", "Taurus"]\n';
+      final parsed = DisplayOptions.fromToml(toml);
+      expect(parsed.signNames, hasLength(12));
+      expect(parsed.signNames.first, 'Aries');
+    });
+
+    test('overlong sign names fall back to defaults', () {
+      final names = List.generate(15, (i) => '"Sign$i"').join(', ');
+      final toml = '[sign_names]\nnames = [$names]\n';
+      final parsed = DisplayOptions.fromToml(toml);
+      expect(parsed.signNames, hasLength(12));
+    });
+
+    test('sign names with empty string fall back to defaults', () {
+      final names = List.generate(
+        12,
+        (i) => i == 5 ? '""' : '"Sign$i"',
+      ).join(', ');
+      final toml = '[sign_names]\nnames = [$names]\n';
+      final parsed = DisplayOptions.fromToml(toml);
+      expect(parsed.signNames, hasLength(12));
+      expect(parsed.signNames[5], isNotEmpty);
+    });
+  });
+
+  group('quoted planet keys', () {
+    test('planet id with dot round-trips', () {
+      const options = DisplayOptions(
+        signNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+        planetNames: {'asteroid.ceres': 'Ceres', 'sun': 'Sun'},
+      );
+      final parsed = DisplayOptions.fromToml(options.toToml());
+      expect(parsed.planetName('asteroid.ceres'), 'Ceres');
+    });
+
+    test('planet id with space round-trips', () {
+      const options = DisplayOptions(
+        signNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+        planetNames: {'black moon': 'Lilith', 'sun': 'Sun'},
+      );
+      final parsed = DisplayOptions.fromToml(options.toToml());
+      expect(parsed.planetName('black moon'), 'Lilith');
+    });
+  });
 }

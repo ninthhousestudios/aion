@@ -167,4 +167,47 @@ void main() {
       expect(loaded, equals(fancy));
     });
   });
+
+  group('slug collision', () {
+    ThemePreset _makePreset(String name) => ThemePreset(
+      name: name,
+      backgroundColor: const Color(0xFF000000),
+      surfaceCard: const Color(0xFF111111),
+      surfacePanel: const Color(0xFF111111),
+      surfaceBorderIdle: const Color(0x33FFFFFF),
+      surfaceBorderHovered: const Color(0x66FFFFFF),
+      surfaceBorderSelected: const Color(0xFFFFFFFF),
+      textPrimary: const Color(0xFFFFFFFF),
+      textSecondary: const Color(0xAAFFFFFF),
+      textMuted: const Color(0x66FFFFFF),
+      accentSeed: const Color(0xFF6366F1),
+      accentLink: const Color(0xFF818CF8),
+    );
+
+    test('two names with same slug get distinct files', () async {
+      await store.saveUserPreset(_makePreset('My Theme'));
+      await store.saveUserPreset(_makePreset('My-Theme'));
+
+      final freshStore = PresetStore(configDir: tmpDir.path);
+      await freshStore.loadUserPresets();
+
+      final names = freshStore.presets
+          .map((p) => p.name)
+          .where((n) => n.contains('Theme'));
+      expect(names, containsAll(['My Theme', 'My-Theme']));
+    });
+
+    test('both presets survive reload', () async {
+      await store.saveUserPreset(_makePreset('My Theme'));
+      await store.saveUserPreset(_makePreset('My-Theme'));
+
+      final freshStore = PresetStore(configDir: tmpDir.path);
+      await freshStore.loadUserPresets();
+
+      final userPresets = freshStore.presets
+          .where((p) => !ThemePreset.builtIn.contains(p))
+          .toList();
+      expect(userPresets, hasLength(2));
+    });
+  });
 }
