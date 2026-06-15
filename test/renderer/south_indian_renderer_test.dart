@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:aion/renderer/chart_renderer.dart';
 import 'package:aion/renderer/south_indian/south_indian_renderer.dart';
+import 'package:aion/theme/display_options.dart';
 import 'package:test/test.dart';
 
 import 'test_expressions.dart';
@@ -12,6 +13,8 @@ const _testColors = RendererColors(
   accent: Color(0xFF6366F1),
   line: Color(0xAAFFFFFF),
 );
+
+const _defaultOpts = DisplayOptions.defaultOptions;
 
 void main() {
   late SouthIndianRenderer renderer;
@@ -39,19 +42,8 @@ void main() {
   });
 
   group('displayOptions', () {
-    test('has show_outer_planets toggle', () {
-      final opt = renderer.displayOptions.firstWhere(
-        (o) => o.key == 'show_outer_planets',
-      );
-      expect(opt.defaultValue, false);
-    });
-
-    test('has glyph_style choice', () {
-      final opt = renderer.displayOptions.firstWhere(
-        (o) => o.key == 'glyph_style',
-      );
-      expect(opt.defaultValue, 'abbreviation');
-      expect(opt.choices, isNotNull);
+    test('has no per-renderer display options', () {
+      expect(renderer.displayOptions, isEmpty);
     });
   });
 
@@ -61,6 +53,7 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       expect(painter, isA<SouthIndianPainter>());
     });
@@ -70,6 +63,7 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -82,6 +76,7 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -94,6 +89,26 @@ void main() {
         expressions: const [],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
+      );
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      painter.paint(canvas, const Size(400, 400));
+      recorder.endRecording();
+    });
+
+    test('paints with glyph display options', () {
+      final glyphOpts = DisplayOptions(
+        signNames: _defaultOpts.signNames,
+        planetNames: _defaultOpts.planetNames,
+        useSignGlyphs: true,
+        usePlanetGlyphs: true,
+      );
+      final painter = renderer.createPainter(
+        expressions: const [testExpression],
+        displayConfig: const {},
+        colors: _testColors,
+        displayOpts: glyphOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -107,15 +122,14 @@ void main() {
                 expressions: const [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as SouthIndianPainter;
-      // Paint first to set up geometry
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
       painter.paint(canvas, const Size(400, 400));
       recorder.endRecording();
 
-      // Center of the 4×4 grid (cells 1,1 to 2,2)
       final centerHit = painter.hitTestChart(const Offset(200, 200));
       expect(centerHit, isNull);
     });
@@ -126,6 +140,7 @@ void main() {
                 expressions: const [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as SouthIndianPainter;
       final recorder = PictureRecorder();
@@ -145,6 +160,7 @@ void main() {
                 expressions: [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as SouthIndianPainter;
       final p2 =
@@ -152,6 +168,7 @@ void main() {
                 expressions: [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as SouthIndianPainter;
       expect(p1.shouldRepaint(p2), isTrue);
@@ -165,12 +182,14 @@ void main() {
                 expressions: data,
                 displayConfig: config,
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as SouthIndianPainter;
       final p2 = SouthIndianPainter(
         expressions: data,
         displayConfig: config,
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       expect(p1.shouldRepaint(p2), isFalse);
     });

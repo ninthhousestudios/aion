@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:aion/renderer/chart_renderer.dart';
 import 'package:aion/renderer/data_table/data_table_renderer.dart';
+import 'package:aion/theme/display_options.dart';
 import 'package:test/test.dart';
 
 import 'test_expressions.dart';
@@ -12,6 +13,8 @@ const _testColors = RendererColors(
   accent: Color(0xFF6366F1),
   line: Color(0xAAFFFFFF),
 );
+
+const _defaultOpts = DisplayOptions.defaultOptions;
 
 void main() {
   late DataTableRenderer renderer;
@@ -39,14 +42,6 @@ void main() {
   });
 
   group('displayOptions', () {
-    test('has show_outer_planets toggle', () {
-      final opt = renderer.displayOptions.firstWhere(
-        (o) => o.key == 'show_outer_planets',
-      );
-      expect(opt.defaultValue, false);
-      expect(opt.type, DisplayOptionType.toggle);
-    });
-
     test('has show_house_cusps toggle', () {
       final opt = renderer.displayOptions.firstWhere(
         (o) => o.key == 'show_house_cusps',
@@ -62,6 +57,7 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       expect(painter, isA<DataTablePainter>());
     });
@@ -71,6 +67,7 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -83,6 +80,7 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -95,6 +93,7 @@ void main() {
         expressions: const [],
         displayConfig: const {},
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -107,6 +106,26 @@ void main() {
         expressions: const [testExpression],
         displayConfig: const {'show_house_cusps': true},
         colors: _testColors,
+        displayOpts: _defaultOpts,
+      );
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      painter.paint(canvas, const Size(800, 600));
+      recorder.endRecording();
+    });
+
+    test('paints with glyph display options', () {
+      final glyphOpts = DisplayOptions(
+        signNames: _defaultOpts.signNames,
+        planetNames: _defaultOpts.planetNames,
+        useSignGlyphs: true,
+        usePlanetGlyphs: true,
+      );
+      final painter = renderer.createPainter(
+        expressions: const [testExpression],
+        displayConfig: const {},
+        colors: _testColors,
+        displayOpts: glyphOpts,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -120,6 +139,7 @@ void main() {
                 expressions: const [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as DataTablePainter;
       final recorder = PictureRecorder();
@@ -141,6 +161,7 @@ void main() {
                 expressions: const [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as DataTablePainter;
       final recorder = PictureRecorder();
@@ -158,6 +179,7 @@ void main() {
                 expressions: [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as DataTablePainter;
       final p2 =
@@ -165,6 +187,7 @@ void main() {
                 expressions: [testExpression],
                 displayConfig: const {},
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as DataTablePainter;
       expect(p1.shouldRepaint(p2), isTrue);
@@ -178,12 +201,14 @@ void main() {
                 expressions: data,
                 displayConfig: config,
                 colors: _testColors,
+                displayOpts: _defaultOpts,
               )
               as DataTablePainter;
       final p2 = DataTablePainter(
         expressions: data,
         displayConfig: config,
         colors: _testColors,
+        displayOpts: _defaultOpts,
       );
       expect(p1.shouldRepaint(p2), isFalse);
     });

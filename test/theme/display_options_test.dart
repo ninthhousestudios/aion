@@ -207,6 +207,75 @@ void main() {
     });
   });
 
+  group('signDisplay', () {
+    test('returns name when useSignGlyphs is false', () {
+      expect(DisplayOptions.defaultOptions.signDisplay(0), 'Aries');
+      expect(DisplayOptions.defaultOptions.signDisplay(11), 'Pisces');
+    });
+
+    test('returns glyph when useSignGlyphs is true', () {
+      final opts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        useSignGlyphs: true,
+      );
+      expect(opts.signDisplay(0), '♈');
+      expect(opts.signDisplay(11), '♓');
+    });
+
+    test('returns ? for out-of-bounds even with glyphs', () {
+      final opts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        useSignGlyphs: true,
+      );
+      expect(opts.signDisplay(-1), '?');
+      expect(opts.signDisplay(12), '?');
+    });
+  });
+
+  group('planetDisplay', () {
+    test('returns name when usePlanetGlyphs is false', () {
+      expect(DisplayOptions.defaultOptions.planetDisplay('sun'), 'Sun');
+      expect(DisplayOptions.defaultOptions.planetDisplay('moon'), 'Moon');
+    });
+
+    test('returns glyph when usePlanetGlyphs is true', () {
+      final opts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        usePlanetGlyphs: true,
+      );
+      expect(opts.planetDisplay('sun'), '☉');
+      expect(opts.planetDisplay('moon'), '☽');
+      expect(opts.planetDisplay('saturn'), '♄');
+    });
+
+    test('falls back to name for unknown id with glyphs on', () {
+      final opts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        usePlanetGlyphs: true,
+      );
+      expect(opts.planetDisplay('ceres'), 'ceres');
+    });
+  });
+
+  group('isOuterPlanet', () {
+    test('identifies outer planets', () {
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('uranus'), isTrue);
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('neptune'), isTrue);
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('pluto'), isTrue);
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('chiron'), isTrue);
+    });
+
+    test('does not flag inner planets', () {
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('sun'), isFalse);
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('mars'), isFalse);
+      expect(DisplayOptions.defaultOptions.isOuterPlanet('saturn'), isFalse);
+    });
+  });
+
   group('quoted planet keys', () {
     test('planet id with dot round-trips', () {
       const options = DisplayOptions(

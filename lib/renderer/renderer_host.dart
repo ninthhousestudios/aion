@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/aion_theme.dart';
+import '../theme/display_options.dart';
 import 'chart_renderer.dart';
 
 class RendererHost extends StatefulWidget {
@@ -11,11 +12,13 @@ class RendererHost extends StatefulWidget {
     required this.renderer,
     required this.expressionData,
     this.displayConfig = const {},
+    required this.displayOpts,
   });
 
   final ChartRenderer renderer;
   final List<ChartExpression> expressionData;
   final Map<String, dynamic> displayConfig;
+  final DisplayOptions displayOpts;
 
   @override
   State<RendererHost> createState() => _RendererHostState();
@@ -41,6 +44,7 @@ class _RendererHostState extends State<RendererHost> {
       expressions: widget.expressionData,
       displayConfig: _resolveConfig(),
       colors: colors,
+      displayOpts: widget.displayOpts,
     );
   }
 
@@ -61,7 +65,8 @@ class _RendererHostState extends State<RendererHost> {
     super.didUpdateWidget(old);
     if (widget.expressionData != old.expressionData ||
         widget.displayConfig != old.displayConfig ||
-        widget.renderer != old.renderer) {
+        widget.renderer != old.renderer ||
+        widget.displayOpts != old.displayOpts) {
       if (_lastColors != null) _rebuildPainter(_lastColors!);
     }
   }
@@ -103,15 +108,17 @@ class _RendererHostState extends State<RendererHost> {
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(child: chart),
-        if (_hitResult case PlanetHit hit) _PlanetPopup(hit: hit),
+        if (_hitResult case PlanetHit hit)
+          _PlanetPopup(hit: hit, displayOpts: widget.displayOpts),
       ],
     );
   }
 }
 
 class _PlanetPopup extends StatelessWidget {
-  const _PlanetPopup({required this.hit});
+  const _PlanetPopup({required this.hit, required this.displayOpts});
   final PlanetHit hit;
+  final DisplayOptions displayOpts;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +126,8 @@ class _PlanetPopup extends StatelessWidget {
     final p = hit.planet;
     final retro = p.retrograde ? ' (R)' : '';
     final degreeStr = '${p.degreeInSign.toStringAsFixed(1)}°';
+    final name = displayOpts.planetDisplay(p.id);
+    final sign = displayOpts.signDisplay(p.signIndex);
 
     return Positioned(
       left: hit.bounds.right + 8,
@@ -131,7 +140,7 @@ class _PlanetPopup extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
-          '${p.name} $degreeStr ${p.sign}$retro'.trim(),
+          '$name $degreeStr $sign$retro'.trim(),
           style: TextStyle(color: t.cardLabelColor, fontSize: 12),
         ),
       ),

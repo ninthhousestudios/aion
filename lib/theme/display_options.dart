@@ -29,6 +29,39 @@ class DisplayOptions {
     planetPresetSource: 'tropical-western',
   );
 
+  static const outerPlanetIds = {'uranus', 'neptune', 'pluto', 'chiron'};
+
+  static const signGlyphs = [
+    '♈',
+    '♉',
+    '♊',
+    '♋',
+    '♌',
+    '♍',
+    '♎',
+    '♏',
+    '♐',
+    '♑',
+    '♒',
+    '♓',
+  ];
+
+  static const planetGlyphs = <String, String>{
+    'sun': '☉',
+    'moon': '☽',
+    'mercury': '☿',
+    'venus': '♀',
+    'mars': '♂',
+    'jupiter': '♃',
+    'saturn': '♄',
+    'rahu': '☊',
+    'ketu': '☋',
+    'uranus': '♅',
+    'neptune': '♆',
+    'pluto': '♇',
+    'chiron': '⚷',
+  };
+
   String signName(int index) {
     if (index < 0 || index >= signNames.length) return '?';
     return signNames[index];
@@ -37,6 +70,23 @@ class DisplayOptions {
   String planetName(String id) {
     return planetNames[id] ?? id;
   }
+
+  String signDisplay(int index) {
+    if (useSignGlyphs && index >= 0 && index < signGlyphs.length) {
+      return signGlyphs[index];
+    }
+    return signName(index);
+  }
+
+  String planetDisplay(String id) {
+    if (usePlanetGlyphs) {
+      final glyph = planetGlyphs[id];
+      if (glyph != null) return glyph;
+    }
+    return planetName(id);
+  }
+
+  bool isOuterPlanet(String id) => outerPlanetIds.contains(id);
 
   // -- Sign name presets ---------------------------------------------------
 

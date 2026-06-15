@@ -1,6 +1,8 @@
 import 'package:chart_model/chart_model.dart';
 import 'package:flutter/rendering.dart';
 
+import '../theme/display_options.dart';
+
 class RendererMeta {
   final String id;
   final String displayName;
@@ -90,5 +92,6 @@ abstract class ChartRenderer {
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
+    required DisplayOptions displayOpts,
   });
 }

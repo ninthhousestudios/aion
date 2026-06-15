@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:chart_model/chart_model.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../theme/display_options.dart';
 import '../chart_renderer.dart';
 
 class DataTableRenderer extends ChartRenderer {
@@ -15,13 +16,6 @@ class DataTableRenderer extends ChartRenderer {
 
   @override
   List<DisplayOption> get displayOptions => const [
-    DisplayOption(
-      key: 'show_outer_planets',
-      label: 'Outer planets',
-      group: 'Planets',
-      type: DisplayOptionType.toggle,
-      defaultValue: false,
-    ),
     DisplayOption(
       key: 'show_house_cusps',
       label: 'House cusps',
@@ -36,10 +30,12 @@ class DataTableRenderer extends ChartRenderer {
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
+    required DisplayOptions displayOpts,
   }) => DataTablePainter(
     expressions: expressions,
     displayConfig: displayConfig,
     colors: colors,
+    displayOpts: displayOpts,
   );
 }
 
@@ -48,28 +44,13 @@ class DataTablePainter extends ChartPainter {
     required this.expressions,
     required this.displayConfig,
     required this.colors,
+    required this.displayOpts,
   });
 
   final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
   final RendererColors colors;
-
-  static const _outerPlanets = {'uranus', 'neptune', 'pluto'};
-
-  static const _signAbbr = [
-    'Ari',
-    'Tau',
-    'Gem',
-    'Can',
-    'Leo',
-    'Vir',
-    'Lib',
-    'Sco',
-    'Sag',
-    'Cap',
-    'Aqu',
-    'Pis',
-  ];
+  final DisplayOptions displayOpts;
 
   static const _headers = [
     'Planet',
@@ -88,11 +69,10 @@ class DataTablePainter extends ChartPainter {
     final expr = expressions.firstOrNull;
     if (expr == null) return;
 
-    final showOuter = displayConfig['show_outer_planets'] == true;
     final showCusps = displayConfig['show_house_cusps'] == true;
-    final planets = showOuter
+    final planets = displayOpts.showOuterPlanets
         ? expr.planets
-        : expr.planets.where((p) => !_outerPlanets.contains(p.id)).toList();
+        : expr.planets.where((p) => !displayOpts.isOuterPlanet(p.id)).toList();
 
     final cuspCount = showCusps ? expr.houses.length : 0;
     final totalRows = 1 + planets.length + (showCusps ? 1 + cuspCount : 0);
@@ -143,7 +123,8 @@ class DataTablePainter extends ChartPainter {
       final rowRect = ui.Rect.fromLTWH(0, y, size.width, rowH);
       _rowHits.add((rowRect, planet));
 
-      final name = planet.retrograde ? '${planet.name} (R)' : planet.name;
+      final pName = displayOpts.planetDisplay(planet.id);
+      final name = planet.retrograde ? '$pName (R)' : pName;
       _drawCell(
         canvas,
         name,
@@ -154,10 +135,7 @@ class DataTablePainter extends ChartPainter {
         textColor,
       );
 
-      final sign =
-          (planet.signIndex >= 0 && planet.signIndex < _signAbbr.length)
-          ? _signAbbr[planet.signIndex]
-          : planet.sign;
+      final sign = displayOpts.signDisplay(planet.signIndex);
       _drawCell(
         canvas,
         '${planet.degreeInSign.toStringAsFixed(1)}° $sign',
@@ -266,10 +244,7 @@ class DataTablePainter extends ChartPainter {
           fontSize,
           textColor,
         );
-        final sign =
-            (house.signIndex >= 0 && house.signIndex < _signAbbr.length)
-            ? _signAbbr[house.signIndex]
-            : '?';
+        final sign = displayOpts.signDisplay(house.signIndex);
         _drawCell(
           canvas,
           sign,
@@ -325,5 +300,6 @@ class DataTablePainter extends ChartPainter {
   bool shouldRepaint(covariant DataTablePainter oldDelegate) =>
       !identical(expressions, oldDelegate.expressions) ||
       !identical(displayConfig, oldDelegate.displayConfig) ||
-      !identical(colors, oldDelegate.colors);
+      !identical(colors, oldDelegate.colors) ||
+      displayOpts != oldDelegate.displayOpts;
 }

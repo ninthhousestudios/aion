@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:chart_model/chart_model.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../theme/display_options.dart';
 import '../chart_renderer.dart';
 
 class SouthIndianRenderer extends ChartRenderer {
@@ -15,36 +16,19 @@ class SouthIndianRenderer extends ChartRenderer {
   );
 
   @override
-  List<DisplayOption> get displayOptions => const [
-    DisplayOption(
-      key: 'show_outer_planets',
-      label: 'Outer planets',
-      group: 'Planets',
-      type: DisplayOptionType.toggle,
-      defaultValue: false,
-    ),
-    DisplayOption(
-      key: 'glyph_style',
-      label: 'Glyph style',
-      group: 'Display',
-      type: DisplayOptionType.choice,
-      defaultValue: 'abbreviation',
-      choices: [
-        DisplayChoice(value: 'abbreviation', label: 'Abbreviation (Su, Mo)'),
-        DisplayChoice(value: 'symbol', label: 'Symbol'),
-      ],
-    ),
-  ];
+  List<DisplayOption> get displayOptions => const [];
 
   @override
   ChartPainter createPainter({
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
+    required DisplayOptions displayOpts,
   }) => SouthIndianPainter(
     expressions: expressions,
     displayConfig: displayConfig,
     colors: colors,
+    displayOpts: displayOpts,
   );
 }
 
@@ -65,11 +49,13 @@ class SouthIndianPainter extends ChartPainter {
     required this.expressions,
     required this.displayConfig,
     required this.colors,
+    required this.displayOpts,
   });
 
   final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
   final RendererColors colors;
+  final DisplayOptions displayOpts;
 
   // Sign index (0=Aries) → grid column, row in a 4×4 grid.
   // The 12 outer cells map to zodiac signs; center 2×2 is unused.
@@ -86,36 +72,6 @@ class SouthIndianPainter extends ChartPainter {
     9: (0, 2),
     10: (0, 1),
     11: (0, 0),
-  };
-
-  static const _signAbbreviations = [
-    'Ar',
-    'Ta',
-    'Ge',
-    'Cn',
-    'Le',
-    'Vi',
-    'Li',
-    'Sc',
-    'Sg',
-    'Cp',
-    'Aq',
-    'Pi',
-  ];
-
-  static const _planetAbbreviations = {
-    'sun': 'Su',
-    'moon': 'Mo',
-    'mars': 'Ma',
-    'mercury': 'Me',
-    'jupiter': 'Ju',
-    'venus': 'Ve',
-    'saturn': 'Sa',
-    'rahu': 'Ra',
-    'ketu': 'Ke',
-    'uranus': 'Ur',
-    'neptune': 'Ne',
-    'pluto': 'Pl',
   };
 
   final _placedGlyphs = <_PlacedGlyph>[];
@@ -194,12 +150,10 @@ class SouthIndianPainter extends ChartPainter {
         _cellW,
         _cellH,
       );
-      _drawSignLabel(
-        canvas,
-        cellRect,
-        _signAbbreviations[signIndex],
-        signFontSize,
-      );
+      final signLabel = displayOpts.useSignGlyphs
+          ? displayOpts.signDisplay(signIndex)
+          : displayOpts.signName(signIndex).substring(0, 2);
+      _drawSignLabel(canvas, cellRect, signLabel, signFontSize);
     }
 
     final expr = expressions.firstOrNull;
@@ -237,6 +191,10 @@ class SouthIndianPainter extends ChartPainter {
     final planetsBySign = <int, List<Planet>>{};
     for (final planet in expr.planets) {
       if (!_signToCell.containsKey(planet.signIndex)) continue;
+      if (!displayOpts.showOuterPlanets &&
+          displayOpts.isOuterPlanet(planet.id)) {
+        continue;
+      }
       planetsBySign.putIfAbsent(planet.signIndex, () => []).add(planet);
     }
 
@@ -250,10 +208,8 @@ class SouthIndianPainter extends ChartPainter {
 
       for (var i = 0; i < planetsInCell.length; i++) {
         final planet = planetsInCell[i];
-        final abbr =
-            _planetAbbreviations[planet.id] ??
-            planet.id.substring(0, 2).capitalize();
-        final label = planet.retrograde ? '$abbr(R)' : abbr;
+        final display = displayOpts.planetDisplay(planet.id);
+        final label = planet.retrograde ? '$display(R)' : display;
 
         final x = cellX + _cellW * 0.15;
         final y = cellY + _cellH * 0.25 + (i * planetFontSize * 1.3);
@@ -358,10 +314,6 @@ class SouthIndianPainter extends ChartPainter {
   bool shouldRepaint(covariant SouthIndianPainter oldDelegate) =>
       !identical(expressions, oldDelegate.expressions) ||
       !identical(displayConfig, oldDelegate.displayConfig) ||
-      !identical(colors, oldDelegate.colors);
-}
-
-extension on String {
-  String capitalize() =>
-      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+      !identical(colors, oldDelegate.colors) ||
+      displayOpts != oldDelegate.displayOpts;
 }

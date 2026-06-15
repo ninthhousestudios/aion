@@ -5,6 +5,8 @@ import '../mcp/expression_state.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../renderer/renderer_host.dart';
 import '../theme/aion_theme.dart';
+import '../theme/display_options.dart';
+import '../theme/display_options_store.dart';
 import 'card_model.dart';
 
 enum ResizeCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -78,6 +80,8 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
 
   Widget _buildRenderer(CardModel m, AionTheme t) {
     final registry = ref.watch(rendererRegistryProvider);
+    final displayStore = ref.watch(displayOptionsProvider).valueOrNull;
+    final displayOpts = displayStore?.options ?? DisplayOptions.defaultOptions;
     final renderer = registry.get(m.rendererType!);
     if (renderer == null) {
       return Center(
@@ -92,6 +96,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         renderer: renderer,
         expressionData: const [],
         displayConfig: m.displayConfig,
+        displayOpts: displayOpts,
       );
     }
     final exprRef = m.expressions.first;
@@ -117,6 +122,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
             renderer: renderer,
             expressionData: [data],
             displayConfig: m.displayConfig,
+            displayOpts: displayOpts,
           ),
           _ => const SizedBox.shrink(),
         };
