@@ -247,7 +247,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         onTap: () => workspace.selectCard(null),
         child: Stack(
           children: [
-            const BackgroundLayer(),
+            const Positioned.fill(child: BackgroundLayer()),
             Container(
               key: _canvasKey,
               child: Listener(
