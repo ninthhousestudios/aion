@@ -15,6 +15,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
     required this.cardShadow,
     required this.cardLabelColor,
     required this.cardDimColor,
+    required this.cardOpacity,
     required this.statusStripHeight,
     required this.snapAccent,
     required this.snapGuideColor,
@@ -39,6 +40,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
   final Color cardLabelColor;
   final Color cardDimColor;
 
+  final double cardOpacity;
   final double statusStripHeight;
 
   final Color snapAccent;
@@ -65,6 +67,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       cardShadow: _withAlpha(preset.textPrimary, 0x1E),
       cardLabelColor: preset.textPrimary,
       cardDimColor: preset.textMuted,
+      cardOpacity: preset.cardOpacity,
       statusStripHeight: preset.statusStripHeight,
       snapAccent: preset.accentSeed,
       snapGuideColor: _withAlpha(preset.accentSeed, 0x55),
@@ -96,6 +99,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
     Color? cardShadow,
     Color? cardLabelColor,
     Color? cardDimColor,
+    double? cardOpacity,
     double? statusStripHeight,
     Color? snapAccent,
     Color? snapGuideColor,
@@ -118,6 +122,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       cardShadow: cardShadow ?? this.cardShadow,
       cardLabelColor: cardLabelColor ?? this.cardLabelColor,
       cardDimColor: cardDimColor ?? this.cardDimColor,
+      cardOpacity: cardOpacity ?? this.cardOpacity,
       statusStripHeight: statusStripHeight ?? this.statusStripHeight,
       snapAccent: snapAccent ?? this.snapAccent,
       snapGuideColor: snapGuideColor ?? this.snapGuideColor,
@@ -157,6 +162,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       cardShadow: Color.lerp(cardShadow, other.cardShadow, t)!,
       cardLabelColor: Color.lerp(cardLabelColor, other.cardLabelColor, t)!,
       cardDimColor: Color.lerp(cardDimColor, other.cardDimColor, t)!,
+      cardOpacity: lerpDouble(cardOpacity, other.cardOpacity, t)!,
       statusStripHeight: lerpDouble(
         statusStripHeight,
         other.statusStripHeight,
