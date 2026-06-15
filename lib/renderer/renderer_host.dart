@@ -33,17 +33,27 @@ class _RendererHostState extends State<RendererHost> {
     return resolved;
   }
 
-  void _rebuildPainter() {
+  RendererColors? _lastColors;
+
+  void _rebuildPainter(RendererColors colors) {
+    _lastColors = colors;
     _painter = widget.renderer.createPainter(
       expressions: widget.expressionData,
       displayConfig: _resolveConfig(),
+      colors: colors,
     );
   }
+
+  RendererColors _colorsFromTheme(AionTheme t) => RendererColors(
+    text: t.cardLabelColor,
+    dim: t.cardDimColor,
+    accent: t.snapAccent,
+    line: t.cardDimColor,
+  );
 
   @override
   void initState() {
     super.initState();
-    _rebuildPainter();
   }
 
   @override
@@ -52,7 +62,7 @@ class _RendererHostState extends State<RendererHost> {
     if (widget.expressionData != old.expressionData ||
         widget.displayConfig != old.displayConfig ||
         widget.renderer != old.renderer) {
-      _rebuildPainter();
+      if (_lastColors != null) _rebuildPainter(_lastColors!);
     }
   }
 
@@ -66,6 +76,15 @@ class _RendererHostState extends State<RendererHost> {
 
   @override
   Widget build(BuildContext context) {
+    final t = Theme.of(context).extension<AionTheme>()!;
+    final colors = _colorsFromTheme(t);
+    if (_lastColors == null ||
+        colors.text != _lastColors!.text ||
+        colors.dim != _lastColors!.dim ||
+        colors.accent != _lastColors!.accent ||
+        colors.line != _lastColors!.line) {
+      _rebuildPainter(colors);
+    }
     final aspect = widget.renderer.meta.preferredAspectRatio;
 
     Widget chart = MouseRegion(

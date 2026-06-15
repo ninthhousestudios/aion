@@ -68,6 +68,20 @@ abstract class ChartPainter extends CustomPainter {
   ChartHitResult? hitTestChart(Offset localPosition);
 }
 
+class RendererColors {
+  final Color text;
+  final Color dim;
+  final Color accent;
+  final Color line;
+
+  const RendererColors({
+    required this.text,
+    required this.dim,
+    required this.accent,
+    required this.line,
+  });
+}
+
 abstract class ChartRenderer {
   RendererMeta get meta;
   List<DisplayOption> get displayOptions;
@@ -75,5 +89,6 @@ abstract class ChartRenderer {
   ChartPainter createPainter({
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
+    required RendererColors colors,
   });
 }

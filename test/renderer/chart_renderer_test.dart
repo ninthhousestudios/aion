@@ -61,7 +61,18 @@ void main() {
       const hit = PlanetHit(
         planetId: 'sun',
         bounds: Rect.fromLTWH(10, 20, 30, 15),
-        planet: Planet(id: 'sun', name: 'Sun', longitude: 135.5, sign: 'Leo', signIndex: 4, degreeInSign: 15.5, retrograde: false, nakshatra: 'Magha', nakshatraPada: 2, house: 1),
+        planet: Planet(
+          id: 'sun',
+          name: 'Sun',
+          longitude: 135.5,
+          sign: 'Leo',
+          signIndex: 4,
+          degreeInSign: 15.5,
+          retrograde: false,
+          nakshatra: 'Magha',
+          nakshatraPada: 2,
+          house: 1,
+        ),
       );
       expect(hit.planetId, 'sun');
       expect(hit.bounds, const Rect.fromLTWH(10, 20, 30, 15));
@@ -80,7 +91,18 @@ void main() {
       const ChartHitResult result = PlanetHit(
         planetId: 'moon',
         bounds: Rect.fromLTWH(0, 0, 10, 10),
-        planet: Planet(id: 'moon', name: 'Moon', longitude: 45.2, sign: 'Taurus', signIndex: 1, degreeInSign: 15.2, retrograde: false, nakshatra: 'Rohini', nakshatraPada: 3, house: 10),
+        planet: Planet(
+          id: 'moon',
+          name: 'Moon',
+          longitude: 45.2,
+          sign: 'Taurus',
+          signIndex: 1,
+          degreeInSign: 15.2,
+          retrograde: false,
+          nakshatra: 'Rohini',
+          nakshatraPada: 3,
+          house: 10,
+        ),
       );
       final matched = switch (result) {
         PlanetHit(planetId: final id) => 'planet:$id',
@@ -140,5 +162,6 @@ class _UniversalRenderer extends ChartRenderer {
   ChartPainter createPainter({
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
+    required RendererColors colors,
   }) => throw UnimplementedError();
 }

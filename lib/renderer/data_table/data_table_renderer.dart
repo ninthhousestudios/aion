@@ -35,15 +35,24 @@ class DataTableRenderer extends ChartRenderer {
   ChartPainter createPainter({
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
-  }) =>
-      DataTablePainter(expressions: expressions, displayConfig: displayConfig);
+    required RendererColors colors,
+  }) => DataTablePainter(
+    expressions: expressions,
+    displayConfig: displayConfig,
+    colors: colors,
+  );
 }
 
 class DataTablePainter extends ChartPainter {
-  DataTablePainter({required this.expressions, required this.displayConfig});
+  DataTablePainter({
+    required this.expressions,
+    required this.displayConfig,
+    required this.colors,
+  });
 
   final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
+  final RendererColors colors;
 
   static const _outerPlanets = {'uranus', 'neptune', 'pluto'};
 
@@ -99,11 +108,11 @@ class DataTablePainter extends ChartPainter {
     }
 
     final linePaint = Paint()
-      ..color = const ui.Color(0x44FFFFFF)
+      ..color = colors.line
       ..strokeWidth = 1.0;
-    const headerColor = ui.Color(0xFF6366F1);
-    const textColor = ui.Color(0xFFFFFFFF);
-    const dimColor = ui.Color(0x88FFFFFF);
+    final headerColor = colors.accent;
+    final textColor = colors.text;
+    final dimColor = colors.dim;
 
     var y = pad;
 
@@ -315,5 +324,6 @@ class DataTablePainter extends ChartPainter {
   @override
   bool shouldRepaint(covariant DataTablePainter oldDelegate) =>
       !identical(expressions, oldDelegate.expressions) ||
-      !identical(displayConfig, oldDelegate.displayConfig);
+      !identical(displayConfig, oldDelegate.displayConfig) ||
+      !identical(colors, oldDelegate.colors);
 }

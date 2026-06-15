@@ -6,6 +6,13 @@ import 'package:test/test.dart';
 
 import 'test_expressions.dart';
 
+const _testColors = RendererColors(
+  text: Color(0xFFFFFFFF),
+  dim: Color(0x88FFFFFF),
+  accent: Color(0xFF6366F1),
+  line: Color(0xAAFFFFFF),
+);
+
 void main() {
   late SouthIndianRenderer renderer;
 
@@ -53,6 +60,7 @@ void main() {
       final painter = renderer.createPainter(
         expressions: const [testExpression],
         displayConfig: const {},
+        colors: _testColors,
       );
       expect(painter, isA<SouthIndianPainter>());
     });
@@ -61,6 +69,7 @@ void main() {
       final painter = renderer.createPainter(
         expressions: const [testExpression],
         displayConfig: const {},
+        colors: _testColors,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -72,6 +81,7 @@ void main() {
       final painter = renderer.createPainter(
         expressions: const [testExpression],
         displayConfig: const {},
+        colors: _testColors,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -83,6 +93,7 @@ void main() {
       final painter = renderer.createPainter(
         expressions: const [],
         displayConfig: const {},
+        colors: _testColors,
       );
       final recorder = PictureRecorder();
       final canvas = Canvas(recorder);
@@ -95,6 +106,7 @@ void main() {
           renderer.createPainter(
                 expressions: const [testExpression],
                 displayConfig: const {},
+                colors: _testColors,
               )
               as SouthIndianPainter;
       // Paint first to set up geometry
@@ -113,6 +125,7 @@ void main() {
           renderer.createPainter(
                 expressions: const [testExpression],
                 displayConfig: const {},
+                colors: _testColors,
               )
               as SouthIndianPainter;
       final recorder = PictureRecorder();
@@ -131,12 +144,14 @@ void main() {
           renderer.createPainter(
                 expressions: [testExpression],
                 displayConfig: const {},
+                colors: _testColors,
               )
               as SouthIndianPainter;
       final p2 =
           renderer.createPainter(
                 expressions: [testExpression],
                 displayConfig: const {},
+                colors: _testColors,
               )
               as SouthIndianPainter;
       expect(p1.shouldRepaint(p2), isTrue);
@@ -146,9 +161,17 @@ void main() {
       const data = [testExpression];
       const config = <String, dynamic>{};
       final p1 =
-          renderer.createPainter(expressions: data, displayConfig: config)
+          renderer.createPainter(
+                expressions: data,
+                displayConfig: config,
+                colors: _testColors,
+              )
               as SouthIndianPainter;
-      final p2 = SouthIndianPainter(expressions: data, displayConfig: config);
+      final p2 = SouthIndianPainter(
+        expressions: data,
+        displayConfig: config,
+        colors: _testColors,
+      );
       expect(p1.shouldRepaint(p2), isFalse);
     });
   });

@@ -40,9 +40,11 @@ class SouthIndianRenderer extends ChartRenderer {
   ChartPainter createPainter({
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
+    required RendererColors colors,
   }) => SouthIndianPainter(
     expressions: expressions,
     displayConfig: displayConfig,
+    colors: colors,
   );
 }
 
@@ -59,10 +61,15 @@ class _PlacedGlyph {
 }
 
 class SouthIndianPainter extends ChartPainter {
-  SouthIndianPainter({required this.expressions, required this.displayConfig});
+  SouthIndianPainter({
+    required this.expressions,
+    required this.displayConfig,
+    required this.colors,
+  });
 
   final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
+  final RendererColors colors;
 
   // Sign index (0=Aries) → grid column, row in a 4×4 grid.
   // The 12 outer cells map to zodiac signs; center 2×2 is unused.
@@ -123,7 +130,7 @@ class SouthIndianPainter extends ChartPainter {
     final lineWidth = (_cellH * 0.008).clamp(0.5, 3.0);
 
     final linePaint = Paint()
-      ..color = const ui.Color(0xAAFFFFFF)
+      ..color = colors.line
       ..strokeWidth = lineWidth
       ..style = PaintingStyle.stroke;
 
@@ -208,7 +215,7 @@ class SouthIndianPainter extends ChartPainter {
         'Asc',
         ui.Offset(col * _cellW + _cellW * 0.05, row * _cellH + _cellH * 0.55),
         ascFontSize,
-        const ui.Color(0xFF6366F1),
+        colors.accent,
       );
     }
 
@@ -220,12 +227,9 @@ class SouthIndianPainter extends ChartPainter {
       _drawText(
         canvas,
         '${house.number}',
-        ui.Offset(
-          hCol * _cellW + _cellW * 0.75,
-          hRow * _cellH + _cellH * 0.75,
-        ),
+        ui.Offset(hCol * _cellW + _cellW * 0.75, hRow * _cellH + _cellH * 0.75),
         cuspFontSize,
-        const ui.Color(0x66FFFFFF),
+        colors.dim,
       );
     }
 
@@ -261,7 +265,7 @@ class SouthIndianPainter extends ChartPainter {
           label,
           ui.Offset(x, y),
           planetFontSize,
-          const ui.Color(0xFFFFFFFF),
+          colors.text,
         );
 
         _placedGlyphs.add(
@@ -285,7 +289,7 @@ class SouthIndianPainter extends ChartPainter {
         cellRect.top + cellRect.height * 0.05,
       ),
       fontSize,
-      const ui.Color(0x88FFFFFF),
+      colors.dim,
     );
   }
 
@@ -353,7 +357,8 @@ class SouthIndianPainter extends ChartPainter {
   @override
   bool shouldRepaint(covariant SouthIndianPainter oldDelegate) =>
       !identical(expressions, oldDelegate.expressions) ||
-      !identical(displayConfig, oldDelegate.displayConfig);
+      !identical(displayConfig, oldDelegate.displayConfig) ||
+      !identical(colors, oldDelegate.colors);
 }
 
 extension on String {
