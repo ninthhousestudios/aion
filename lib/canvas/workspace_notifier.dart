@@ -164,6 +164,16 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(guides: const []);
   }
 
+  void cycleChartAccent(String chartId) {
+    final current = state.chartAccents[chartId];
+    if (current == null) return;
+    final idx = _palette.indexOf(current);
+    final next = _palette[(idx + 1) % _palette.length];
+    state = state.copyWith(
+      chartAccents: {...state.chartAccents, chartId: next},
+    );
+  }
+
   void toggleSnap() {
     state = state.copyWith(snapEnabled: !state.snapEnabled, guides: const []);
   }
@@ -225,11 +235,9 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     String? rendererType,
     double? preferredAspectRatio,
   }) {
-    final color = _palette[current.cardCounter % _palette.length];
     final card = CardModel(
       id: 'card_${current.cardCounter}',
       label: label,
-      color: color,
       position: position,
       size: size,
       expressions: expressions,
@@ -238,10 +246,23 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       zOrder: current.nextZ,
     );
 
+    var chartAccents = current.chartAccents;
+    var accentCounter = current.accentCounter;
+    final chartId = expressions.firstOrNull?.chartId;
+    if (chartId != null && !chartAccents.containsKey(chartId)) {
+      chartAccents = {
+        ...chartAccents,
+        chartId: _palette[accentCounter % _palette.length],
+      };
+      accentCounter++;
+    }
+
     return current.copyWith(
       cards: [...current.cards, card],
       nextZ: current.nextZ + 1,
       cardCounter: current.cardCounter + 1,
+      chartAccents: chartAccents,
+      accentCounter: accentCounter,
     );
   }
 

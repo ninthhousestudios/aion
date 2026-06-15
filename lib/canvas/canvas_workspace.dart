@@ -7,6 +7,7 @@ import '../actions/load_chart_action.dart';
 import '../providers/chart_store_provider.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../theme/aion_theme.dart';
+import '../theme/preset_store.dart';
 import '../widgets/title_bar.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
@@ -37,6 +38,8 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   void _showContextMenu(Offset globalPos, CardModel? card) async {
     final t = Theme.of(context).extension<AionTheme>()!;
+    final hasAccent =
+        card != null && ref.read(workspaceProvider).accentForCard(card) != null;
     final result = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -50,6 +53,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         if (card != null) ...[
           const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
           const PopupMenuItem(value: 'delete', child: Text('Delete')),
+          if (hasAccent)
+            const PopupMenuItem(
+              value: 'cycle_color',
+              child: Text('Cycle Color'),
+            ),
           const PopupMenuDivider(),
         ],
         const PopupMenuItem(value: 'add', child: Text('Add Card')),
@@ -68,6 +76,9 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         workspace.duplicateCard(card!.id);
       case 'delete':
         workspace.deleteCard(card!.id);
+      case 'cycle_color':
+        final chartId = card!.expressions.first.chartId;
+        workspace.cycleChartAccent(chartId);
       case 'add':
         final viewportLocal = _globalToViewport(globalPos);
         final local = _viewportToWorkspace(viewportLocal);
@@ -137,7 +148,21 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   void _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return;
+    if (event.logicalKey == LogicalKeyboardKey.keyT) {
+      _cyclePreset();
+      return;
+    }
     ref.read(workspaceProvider.notifier).handleKey(event.logicalKey);
+  }
+
+  void _cyclePreset() {
+    final notifier = ref.read(presetStoreProvider.notifier);
+    final store = ref.read(presetStoreProvider).valueOrNull;
+    if (store == null) return;
+    final names = store.presets.map((p) => p.name).toList();
+    final current = names.indexOf(store.activePresetName);
+    final next = (current + 1) % names.length;
+    notifier.setActive(names[next]);
   }
 
   void _handleWorkspacePointerDown(PointerDownEvent event) {
@@ -257,6 +282,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                                 model: card,
                                 chartStore: ref.read(chartStoreProvider),
                                 selected: card.id == workspaceState.selectedId,
+                                accentColor: workspaceState.accentForCard(card),
                                 onSelect: () => workspace.selectCard(card.id),
                                 onResizeUpdate: (delta, corner) =>
                                     workspace.resizeCard(

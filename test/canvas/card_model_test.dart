@@ -11,7 +11,7 @@ CardModel _card({List<ExpressionRef> expressions = const []}) {
   return CardModel(
     id: 'c1',
     label: 'Test',
-    color: const Color(0xFF000000),
+
     position: Offset.zero,
     size: const Size(200, 150),
     expressions: expressions,
@@ -82,7 +82,7 @@ void main() {
     final card = CardModel(
       id: 'c1',
       label: 'Test',
-      color: const Color(0xFF000000),
+
       position: Offset.zero,
       size: const Size(200, 150),
       rendererType: 'south_indian',
@@ -101,7 +101,7 @@ void main() {
     final card = CardModel(
       id: 'c1',
       label: 'Test',
-      color: const Color(0xFF000000),
+
       position: Offset.zero,
       size: const Size(200, 150),
       rendererType: 'south_indian',
@@ -114,7 +114,7 @@ void main() {
     final card = CardModel(
       id: 'c1',
       label: 'Test',
-      color: const Color(0xFF000000),
+
       position: Offset.zero,
       size: const Size(200, 150),
       displayConfig: const {'show_outer_planets': true},

@@ -15,6 +15,7 @@ class CanvasCard extends ConsumerStatefulWidget {
     required this.model,
     required this.chartStore,
     required this.selected,
+    this.accentColor,
     required this.onSelect,
     required this.onResizeUpdate,
     required this.onResizeEnd,
@@ -24,6 +25,7 @@ class CanvasCard extends ConsumerStatefulWidget {
   final CardModel model;
   final ChartStore chartStore;
   final bool selected;
+  final Color? accentColor;
   final VoidCallback onSelect;
   final void Function(Offset delta, ResizeCorner corner) onResizeUpdate;
   final VoidCallback onResizeEnd;
@@ -143,7 +145,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
           width: m.size.width,
           height: m.size.height,
           decoration: BoxDecoration(
-            color: m.color.withAlpha(200),
+            color: t.surfaceOverlay,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: borderColor,
@@ -156,6 +158,27 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
           ),
           child: Stack(
             children: [
+              if (widget.accentColor != null)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: t.statusStripHeight,
+                    decoration: BoxDecoration(
+                      color: widget.accentColor!.withValues(alpha: 0.3),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: widget.accentColor!.withValues(alpha: 0.5),
+                          width: 0.5,
+                        ),
+                      ),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(7),
+                      ),
+                    ),
+                  ),
+                ),
               if (m.rendererType != null)
                 Padding(
                   padding: const EdgeInsets.all(4),
