@@ -14,6 +14,7 @@ class CardModel {
     this.rendererType,
     this.displayConfig = const {},
     this.preferredAspectRatio,
+    this.opacityOverride,
   });
 
   final String id;
@@ -26,6 +27,7 @@ class CardModel {
   final String? rendererType;
   final Map<String, dynamic> displayConfig;
   final double? preferredAspectRatio;
+  final double? opacityOverride;
 
   Rect get rect => position & size;
 
@@ -42,6 +44,7 @@ class CardModel {
     Object? rendererType = _unset,
     Map<String, dynamic>? displayConfig,
     Object? preferredAspectRatio = _unset,
+    Object? opacityOverride = _unset,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -58,6 +61,9 @@ class CardModel {
       preferredAspectRatio: identical(preferredAspectRatio, _unset)
           ? this.preferredAspectRatio
           : preferredAspectRatio as double?,
+      opacityOverride: identical(opacityOverride, _unset)
+          ? this.opacityOverride
+          : opacityOverride as double?,
     );
   }
 }

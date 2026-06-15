@@ -174,6 +174,14 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     );
   }
 
+  void setCardOpacity(String id, double? opacity) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(
+      cards: _replaceCard(card.copyWith(opacityOverride: opacity)),
+    );
+  }
+
   void toggleSnap() {
     state = state.copyWith(snapEnabled: !state.snapEnabled, guides: const []);
   }

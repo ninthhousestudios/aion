@@ -145,7 +145,9 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
           width: m.size.width,
           height: m.size.height,
           decoration: BoxDecoration(
-            color: t.surfaceOverlay.withValues(alpha: t.cardOpacity),
+            color: t.surfaceOverlay.withValues(
+              alpha: widget.model.opacityOverride ?? t.cardOpacity,
+            ),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: borderColor,
