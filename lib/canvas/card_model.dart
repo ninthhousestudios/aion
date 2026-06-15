@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import '../mcp/expression_ref.dart';
+import '../theme/card_display_overrides.dart';
 
 class CardModel {
   const CardModel({
@@ -15,6 +16,7 @@ class CardModel {
     this.displayConfig = const {},
     this.preferredAspectRatio,
     this.opacityOverride,
+    this.displayOverrides = CardDisplayOverrides.empty,
   });
 
   final String id;
@@ -28,6 +30,7 @@ class CardModel {
   final Map<String, dynamic> displayConfig;
   final double? preferredAspectRatio;
   final double? opacityOverride;
+  final CardDisplayOverrides displayOverrides;
 
   Rect get rect => position & size;
 
@@ -45,6 +48,7 @@ class CardModel {
     Map<String, dynamic>? displayConfig,
     Object? preferredAspectRatio = _unset,
     Object? opacityOverride = _unset,
+    CardDisplayOverrides? displayOverrides,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -64,6 +68,7 @@ class CardModel {
       opacityOverride: identical(opacityOverride, _unset)
           ? this.opacityOverride
           : opacityOverride as double?,
+      displayOverrides: displayOverrides ?? this.displayOverrides,
     );
   }
 }
