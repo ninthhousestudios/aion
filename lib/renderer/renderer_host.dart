@@ -1,6 +1,7 @@
 import 'package:chart_model/chart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/aion_theme.dart';
 import '../theme/display_options.dart';
@@ -108,6 +109,17 @@ class _RendererHostState extends State<RendererHost> {
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(child: chart),
+        for (final glyph in _painter.glyphPlacements)
+          Positioned(
+            left: glyph.bounds.left,
+            top: glyph.bounds.top,
+            width: glyph.bounds.width,
+            height: glyph.bounds.height,
+            child: SvgPicture.asset(
+              glyph.assetPath,
+              colorFilter: ColorFilter.mode(glyph.color, BlendMode.srcIn),
+            ),
+          ),
         if (_hitResult case PlanetHit hit)
           _PlanetPopup(hit: hit, displayOpts: widget.displayOpts),
       ],

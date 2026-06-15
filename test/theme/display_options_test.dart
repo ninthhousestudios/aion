@@ -208,56 +208,81 @@ void main() {
   });
 
   group('signDisplay', () {
-    test('returns name when useSignGlyphs is false', () {
+    test('returns name regardless of glyph toggle', () {
       expect(DisplayOptions.defaultOptions.signDisplay(0), 'Aries');
       expect(DisplayOptions.defaultOptions.signDisplay(11), 'Pisces');
-    });
-
-    test('returns glyph when useSignGlyphs is true', () {
-      final opts = DisplayOptions(
+      final glyphOpts = DisplayOptions(
         signNames: DisplayOptions.defaultOptions.signNames,
         planetNames: DisplayOptions.defaultOptions.planetNames,
         useSignGlyphs: true,
       );
-      expect(opts.signDisplay(0), '♈');
-      expect(opts.signDisplay(11), '♓');
-    });
-
-    test('returns ? for out-of-bounds even with glyphs', () {
-      final opts = DisplayOptions(
-        signNames: DisplayOptions.defaultOptions.signNames,
-        planetNames: DisplayOptions.defaultOptions.planetNames,
-        useSignGlyphs: true,
-      );
-      expect(opts.signDisplay(-1), '?');
-      expect(opts.signDisplay(12), '?');
+      expect(glyphOpts.signDisplay(0), 'Aries');
     });
   });
 
   group('planetDisplay', () {
-    test('returns name when usePlanetGlyphs is false', () {
+    test('returns name regardless of glyph toggle', () {
       expect(DisplayOptions.defaultOptions.planetDisplay('sun'), 'Sun');
-      expect(DisplayOptions.defaultOptions.planetDisplay('moon'), 'Moon');
+      final glyphOpts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        usePlanetGlyphs: true,
+      );
+      expect(glyphOpts.planetDisplay('sun'), 'Sun');
+    });
+  });
+
+  group('signGlyphPath', () {
+    test('returns null when useSignGlyphs is false', () {
+      expect(DisplayOptions.defaultOptions.signGlyphPath(0), isNull);
     });
 
-    test('returns glyph when usePlanetGlyphs is true', () {
+    test('returns asset path when useSignGlyphs is true', () {
+      final opts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        useSignGlyphs: true,
+      );
+      expect(opts.signGlyphPath(0), 'assets/glyphs/zodiac/aries.svg');
+      expect(opts.signGlyphPath(11), 'assets/glyphs/zodiac/pisces.svg');
+    });
+
+    test('returns null for out-of-bounds even with glyphs on', () {
+      final opts = DisplayOptions(
+        signNames: DisplayOptions.defaultOptions.signNames,
+        planetNames: DisplayOptions.defaultOptions.planetNames,
+        useSignGlyphs: true,
+      );
+      expect(opts.signGlyphPath(-1), isNull);
+      expect(opts.signGlyphPath(12), isNull);
+    });
+  });
+
+  group('planetGlyphPath', () {
+    test('returns null when usePlanetGlyphs is false', () {
+      expect(DisplayOptions.defaultOptions.planetGlyphPath('sun'), isNull);
+    });
+
+    test('returns asset path when usePlanetGlyphs is true', () {
       final opts = DisplayOptions(
         signNames: DisplayOptions.defaultOptions.signNames,
         planetNames: DisplayOptions.defaultOptions.planetNames,
         usePlanetGlyphs: true,
       );
-      expect(opts.planetDisplay('sun'), '☉');
-      expect(opts.planetDisplay('moon'), '☽');
-      expect(opts.planetDisplay('saturn'), '♄');
+      expect(opts.planetGlyphPath('sun'), 'assets/glyphs/planets/sun.svg');
+      expect(
+        opts.planetGlyphPath('saturn'),
+        'assets/glyphs/planets/saturn.svg',
+      );
     });
 
-    test('falls back to name for unknown id with glyphs on', () {
+    test('returns null for unknown id with glyphs on', () {
       final opts = DisplayOptions(
         signNames: DisplayOptions.defaultOptions.signNames,
         planetNames: DisplayOptions.defaultOptions.planetNames,
         usePlanetGlyphs: true,
       );
-      expect(opts.planetDisplay('ceres'), 'ceres');
+      expect(opts.planetGlyphPath('ceres'), isNull);
     });
   });
 

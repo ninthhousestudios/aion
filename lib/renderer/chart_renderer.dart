@@ -66,8 +66,21 @@ class HouseHit extends ChartHitResult {
   const HouseHit({required this.houseNumber, required super.bounds});
 }
 
+class GlyphPlacement {
+  final String assetPath;
+  final Rect bounds;
+  final Color color;
+
+  const GlyphPlacement({
+    required this.assetPath,
+    required this.bounds,
+    required this.color,
+  });
+}
+
 abstract class ChartPainter extends CustomPainter {
   ChartHitResult? hitTestChart(Offset localPosition);
+  List<GlyphPlacement> get glyphPlacements => const [];
 }
 
 class RendererColors {

@@ -31,35 +31,35 @@ class DisplayOptions {
 
   static const outerPlanetIds = {'uranus', 'neptune', 'pluto', 'chiron'};
 
-  static const signGlyphs = [
-    '♈',
-    '♉',
-    '♊',
-    '♋',
-    '♌',
-    '♍',
-    '♎',
-    '♏',
-    '♐',
-    '♑',
-    '♒',
-    '♓',
+  static const signGlyphPaths = [
+    'assets/glyphs/zodiac/aries.svg',
+    'assets/glyphs/zodiac/taurus.svg',
+    'assets/glyphs/zodiac/gemini.svg',
+    'assets/glyphs/zodiac/cancer.svg',
+    'assets/glyphs/zodiac/leo.svg',
+    'assets/glyphs/zodiac/virgo.svg',
+    'assets/glyphs/zodiac/libra.svg',
+    'assets/glyphs/zodiac/scorpio.svg',
+    'assets/glyphs/zodiac/sagittarius.svg',
+    'assets/glyphs/zodiac/capricorn.svg',
+    'assets/glyphs/zodiac/aquarius.svg',
+    'assets/glyphs/zodiac/pisces.svg',
   ];
 
-  static const planetGlyphs = <String, String>{
-    'sun': '☉',
-    'moon': '☽',
-    'mercury': '☿',
-    'venus': '♀',
-    'mars': '♂',
-    'jupiter': '♃',
-    'saturn': '♄',
-    'rahu': '☊',
-    'ketu': '☋',
-    'uranus': '♅',
-    'neptune': '♆',
-    'pluto': '♇',
-    'chiron': '⚷',
+  static const planetGlyphPaths = <String, String>{
+    'sun': 'assets/glyphs/planets/sun.svg',
+    'moon': 'assets/glyphs/planets/moon.svg',
+    'mercury': 'assets/glyphs/planets/mercury.svg',
+    'venus': 'assets/glyphs/planets/venus.svg',
+    'mars': 'assets/glyphs/planets/mars.svg',
+    'jupiter': 'assets/glyphs/planets/jupiter.svg',
+    'saturn': 'assets/glyphs/planets/saturn.svg',
+    'rahu': 'assets/glyphs/planets/rahu.svg',
+    'ketu': 'assets/glyphs/planets/ketu.svg',
+    'uranus': 'assets/glyphs/planets/uranus.svg',
+    'neptune': 'assets/glyphs/planets/neptune.svg',
+    'pluto': 'assets/glyphs/planets/pluto.svg',
+    'chiron': 'assets/glyphs/planets/chiron.svg',
   };
 
   String signName(int index) {
@@ -71,19 +71,20 @@ class DisplayOptions {
     return planetNames[id] ?? id;
   }
 
-  String signDisplay(int index) {
-    if (useSignGlyphs && index >= 0 && index < signGlyphs.length) {
-      return signGlyphs[index];
+  String signDisplay(int index) => signName(index);
+
+  String planetDisplay(String id) => planetName(id);
+
+  String? signGlyphPath(int index) {
+    if (!useSignGlyphs || index < 0 || index >= signGlyphPaths.length) {
+      return null;
     }
-    return signName(index);
+    return signGlyphPaths[index];
   }
 
-  String planetDisplay(String id) {
-    if (usePlanetGlyphs) {
-      final glyph = planetGlyphs[id];
-      if (glyph != null) return glyph;
-    }
-    return planetName(id);
+  String? planetGlyphPath(String id) {
+    if (!usePlanetGlyphs) return null;
+    return planetGlyphPaths[id];
   }
 
   bool isOuterPlanet(String id) => outerPlanetIds.contains(id);

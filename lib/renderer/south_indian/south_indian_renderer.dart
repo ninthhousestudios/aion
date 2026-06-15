@@ -75,12 +75,17 @@ class SouthIndianPainter extends ChartPainter {
   };
 
   final _placedGlyphs = <_PlacedGlyph>[];
+  final _glyphPlacements = <GlyphPlacement>[];
   double _cellW = 0;
   double _cellH = 0;
 
   @override
+  List<GlyphPlacement> get glyphPlacements => _glyphPlacements;
+
+  @override
   void paint(Canvas canvas, ui.Size size) {
     _placedGlyphs.clear();
+    _glyphPlacements.clear();
     _cellW = size.width / 4;
     _cellH = size.height / 4;
     final lineWidth = (_cellH * 0.008).clamp(0.5, 3.0);
@@ -141,6 +146,7 @@ class SouthIndianPainter extends ChartPainter {
 
     // Sign labels in each cell
     final signFontSize = (_cellH * 0.12).clamp(8.0, 14.0);
+    final signGlyphSize = signFontSize * 1.2;
     for (final entry in _signToCell.entries) {
       final signIndex = entry.key;
       final (col, row) = entry.value;
@@ -150,10 +156,24 @@ class SouthIndianPainter extends ChartPainter {
         _cellW,
         _cellH,
       );
-      final signLabel = displayOpts.useSignGlyphs
-          ? displayOpts.signDisplay(signIndex)
-          : displayOpts.signName(signIndex).substring(0, 2);
-      _drawSignLabel(canvas, cellRect, signLabel, signFontSize);
+      final glyphPath = displayOpts.signGlyphPath(signIndex);
+      if (glyphPath != null) {
+        _glyphPlacements.add(
+          GlyphPlacement(
+            assetPath: glyphPath,
+            bounds: ui.Rect.fromLTWH(
+              cellRect.left + cellRect.width * 0.05,
+              cellRect.top + cellRect.height * 0.05,
+              signGlyphSize,
+              signGlyphSize,
+            ),
+            color: colors.dim,
+          ),
+        );
+      } else {
+        final signLabel = displayOpts.signName(signIndex).substring(0, 2);
+        _drawSignLabel(canvas, cellRect, signLabel, signFontSize);
+      }
     }
 
     final expr = expressions.firstOrNull;
@@ -206,26 +226,53 @@ class SouthIndianPainter extends ChartPainter {
       final cellY = row * _cellH;
       final planetsInCell = entry.value;
 
+      final planetGlyphSize = planetFontSize * 1.2;
+      final step = displayOpts.usePlanetGlyphs
+          ? planetGlyphSize * 1.1
+          : planetFontSize * 1.3;
+
       for (var i = 0; i < planetsInCell.length; i++) {
         final planet = planetsInCell[i];
-        final display = displayOpts.planetDisplay(planet.id);
-        final label = planet.retrograde ? '$display(R)' : display;
 
         final x = cellX + _cellW * 0.15;
-        final y = cellY + _cellH * 0.25 + (i * planetFontSize * 1.3);
+        final y = cellY + _cellH * 0.25 + (i * step);
 
         if (y + planetFontSize > cellY + _cellH) break;
 
-        final textBounds = _drawText(
-          canvas,
-          label,
-          ui.Offset(x, y),
-          planetFontSize,
-          colors.text,
-        );
+        final glyphPath = displayOpts.planetGlyphPath(planet.id);
+        final ui.Rect placedBounds;
+        if (glyphPath != null) {
+          placedBounds = ui.Rect.fromLTWH(
+            x,
+            y,
+            planetGlyphSize,
+            planetGlyphSize,
+          );
+          _glyphPlacements.add(
+            GlyphPlacement(
+              assetPath: glyphPath,
+              bounds: placedBounds,
+              color: colors.text,
+            ),
+          );
+        } else {
+          final display = displayOpts.planetDisplay(planet.id);
+          final label = planet.retrograde ? '$display(R)' : display;
+          placedBounds = _drawText(
+            canvas,
+            label,
+            ui.Offset(x, y),
+            planetFontSize,
+            colors.text,
+          );
+        }
 
         _placedGlyphs.add(
-          _PlacedGlyph(planetId: planet.id, bounds: textBounds, planet: planet),
+          _PlacedGlyph(
+            planetId: planet.id,
+            bounds: placedBounds,
+            planet: planet,
+          ),
         );
       }
     }

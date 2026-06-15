@@ -52,6 +52,11 @@ class DataTablePainter extends ChartPainter {
   final RendererColors colors;
   final DisplayOptions displayOpts;
 
+  final _glyphPlacements = <GlyphPlacement>[];
+
+  @override
+  List<GlyphPlacement> get glyphPlacements => _glyphPlacements;
+
   static const _headers = [
     'Planet',
     'Longitude',
@@ -66,6 +71,7 @@ class DataTablePainter extends ChartPainter {
   @override
   void paint(Canvas canvas, ui.Size size) {
     _rowHits.clear();
+    _glyphPlacements.clear();
     final expr = expressions.firstOrNull;
     if (expr == null) return;
 
@@ -77,6 +83,7 @@ class DataTablePainter extends ChartPainter {
     final cuspCount = showCusps ? expr.houses.length : 0;
     final totalRows = 1 + planets.length + (showCusps ? 1 + cuspCount : 0);
     final fontSize = (size.height / (totalRows + 1.5)).clamp(9.0, 16.0);
+    final glyphSize = fontSize * 1.1;
     final rowH = fontSize * 1.6;
     final pad = size.width * 0.03;
 
@@ -123,28 +130,76 @@ class DataTablePainter extends ChartPainter {
       final rowRect = ui.Rect.fromLTWH(0, y, size.width, rowH);
       _rowHits.add((rowRect, planet));
 
-      final pName = displayOpts.planetDisplay(planet.id);
-      final name = planet.retrograde ? '$pName (R)' : pName;
-      _drawCell(
-        canvas,
-        name,
-        colX[0],
-        y,
-        size.width * _colFractions[0],
-        fontSize,
-        textColor,
-      );
+      final planetGlyph = displayOpts.planetGlyphPath(planet.id);
+      if (planetGlyph != null) {
+        _glyphPlacements.add(
+          GlyphPlacement(
+            assetPath: planetGlyph,
+            bounds: ui.Rect.fromLTWH(colX[0], y, glyphSize, glyphSize),
+            color: textColor,
+          ),
+        );
+        if (planet.retrograde) {
+          _drawCell(
+            canvas,
+            '(R)',
+            colX[0] + glyphSize + 2,
+            y,
+            size.width * _colFractions[0] - glyphSize - 2,
+            fontSize,
+            dimColor,
+          );
+        }
+      } else {
+        final pName = displayOpts.planetDisplay(planet.id);
+        final name = planet.retrograde ? '$pName (R)' : pName;
+        _drawCell(
+          canvas,
+          name,
+          colX[0],
+          y,
+          size.width * _colFractions[0],
+          fontSize,
+          textColor,
+        );
+      }
 
-      final sign = displayOpts.signDisplay(planet.signIndex);
-      _drawCell(
-        canvas,
-        '${planet.degreeInSign.toStringAsFixed(1)}° $sign',
-        colX[1],
-        y,
-        size.width * _colFractions[1],
-        fontSize,
-        textColor,
-      );
+      final signGlyph = displayOpts.signGlyphPath(planet.signIndex);
+      final degreeText = '${planet.degreeInSign.toStringAsFixed(1)}°';
+      if (signGlyph != null) {
+        _drawCell(
+          canvas,
+          '$degreeText ',
+          colX[1],
+          y,
+          size.width * _colFractions[1],
+          fontSize,
+          textColor,
+        );
+        _glyphPlacements.add(
+          GlyphPlacement(
+            assetPath: signGlyph,
+            bounds: ui.Rect.fromLTWH(
+              colX[1] + (degreeText.length + 1) * fontSize * 0.6,
+              y,
+              glyphSize,
+              glyphSize,
+            ),
+            color: textColor,
+          ),
+        );
+      } else {
+        final sign = displayOpts.signDisplay(planet.signIndex);
+        _drawCell(
+          canvas,
+          '$degreeText $sign',
+          colX[1],
+          y,
+          size.width * _colFractions[1],
+          fontSize,
+          textColor,
+        );
+      }
 
       _drawCell(
         canvas,
@@ -244,16 +299,27 @@ class DataTablePainter extends ChartPainter {
           fontSize,
           textColor,
         );
-        final sign = displayOpts.signDisplay(house.signIndex);
-        _drawCell(
-          canvas,
-          sign,
-          colX[2],
-          y,
-          size.width * 0.15,
-          fontSize,
-          dimColor,
-        );
+        final houseSignGlyph = displayOpts.signGlyphPath(house.signIndex);
+        if (houseSignGlyph != null) {
+          _glyphPlacements.add(
+            GlyphPlacement(
+              assetPath: houseSignGlyph,
+              bounds: ui.Rect.fromLTWH(colX[2], y, glyphSize, glyphSize),
+              color: dimColor,
+            ),
+          );
+        } else {
+          final sign = displayOpts.signDisplay(house.signIndex);
+          _drawCell(
+            canvas,
+            sign,
+            colX[2],
+            y,
+            size.width * 0.15,
+            fontSize,
+            dimColor,
+          );
+        }
         y += rowH;
       }
     }
