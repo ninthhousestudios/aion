@@ -6,7 +6,7 @@ import '../providers/renderer_registry_provider.dart';
 import '../renderer/renderer_host.dart';
 import '../theme/aion_theme.dart';
 import '../theme/display_options.dart';
-import '../theme/display_options_store.dart';
+import '../theme/theme_resolver.dart';
 import 'card_model.dart';
 
 enum ResizeCorner { topLeft, topRight, bottomLeft, bottomRight }
@@ -78,10 +78,8 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
     );
   }
 
-  Widget _buildRenderer(CardModel m, AionTheme t) {
+  Widget _buildRenderer(CardModel m, AionTheme t, DisplayOptions displayOpts) {
     final registry = ref.watch(rendererRegistryProvider);
-    final displayStore = ref.watch(displayOptionsProvider).valueOrNull;
-    final displayOpts = displayStore?.options ?? DisplayOptions.defaultOptions;
     final renderer = registry.get(m.rendererType!);
     if (renderer == null) {
       return Center(
@@ -134,6 +132,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).extension<AionTheme>()!;
     final m = widget.model;
+    final resolved = ref.watch(themeResolverProvider).resolve(m);
     final borderColor = widget.selected
         ? t.cardBorderSelected
         : _hovered
@@ -151,9 +150,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
           width: m.size.width,
           height: m.size.height,
           decoration: BoxDecoration(
-            color: t.surfaceOverlay.withValues(
-              alpha: widget.model.opacityOverride ?? t.cardOpacity,
-            ),
+            color: t.surfaceOverlay.withValues(alpha: resolved.cardOpacity),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: borderColor,
@@ -190,7 +187,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
               if (m.rendererType != null)
                 Padding(
                   padding: const EdgeInsets.all(4),
-                  child: _buildRenderer(m, t),
+                  child: _buildRenderer(m, t, resolved.displayOptions),
                 )
               else
                 Padding(
