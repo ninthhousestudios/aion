@@ -1,4 +1,6 @@
 import 'package:aion/canvas/workspace_notifier.dart';
+import 'package:aion/mcp/expression_ref.dart';
+import 'package:aion/theme/card_display_overrides.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,6 +109,104 @@ void main() {
     notifier.handleKey(LogicalKeyboardKey.delete);
     expect(container.read(workspaceProvider).cardById('card_1'), isNull);
     expect(container.read(workspaceProvider).selectedId, isNull);
+  });
+
+  group('setCardRenderer', () {
+    test('changes renderer and clears displayConfig', () {
+      final container = createContainer();
+      final notifier = container.read(workspaceProvider.notifier);
+      final ref = const ExpressionRef(chartId: 'chart1', configHash: 'h1');
+      notifier.addCard(
+        const Offset(0, 0),
+        const Size(500, 500),
+        'Test',
+        expressions: [ref],
+        rendererType: 'south_indian',
+        preferredAspectRatio: 1.0,
+      );
+
+      notifier.setCardRenderer(
+        'card_0',
+        'data_table',
+        preferredAspectRatio: null,
+      );
+      final card = container.read(workspaceProvider).cardById('card_0')!;
+
+      expect(card.rendererType, 'data_table');
+      expect(card.displayConfig, isEmpty);
+      expect(card.preferredAspectRatio, isNull);
+      expect(card.expressions, [ref]);
+    });
+  });
+
+  group('updateCardDisplayOverrides', () {
+    test('applies overrides to card', () {
+      final container = createContainer();
+      seedCards(container);
+      final notifier = container.read(workspaceProvider.notifier);
+
+      notifier.updateCardDisplayOverrides(
+        'card_0',
+        const CardDisplayOverrides(useSignGlyphs: true),
+      );
+      final card = container.read(workspaceProvider).cardById('card_0')!;
+
+      expect(card.displayOverrides.useSignGlyphs, true);
+      expect(card.displayOverrides.usePlanetGlyphs, isNull);
+    });
+
+    test('does not affect other cards', () {
+      final container = createContainer();
+      seedCards(container);
+      final notifier = container.read(workspaceProvider.notifier);
+
+      notifier.updateCardDisplayOverrides(
+        'card_0',
+        const CardDisplayOverrides(showOuterPlanets: false),
+      );
+      final other = container.read(workspaceProvider).cardById('card_1')!;
+
+      expect(other.displayOverrides.isEmpty, isTrue);
+    });
+  });
+
+  group('resetCardSize', () {
+    test('changes size and preserves position', () {
+      final container = createContainer();
+      seedCards(container);
+      final notifier = container.read(workspaceProvider.notifier);
+      final original = container.read(workspaceProvider).cardById('card_0')!;
+
+      notifier.resetCardSize('card_0', const Size(500, 500));
+      final card = container.read(workspaceProvider).cardById('card_0')!;
+
+      expect(card.size, const Size(500, 500));
+      expect(card.position, original.position);
+    });
+  });
+
+  group('duplicateCard preserves display state', () {
+    test('copies displayConfig and displayOverrides', () {
+      final container = createContainer();
+      final notifier = container.read(workspaceProvider.notifier);
+      notifier.addCard(
+        const Offset(0, 0),
+        const Size(500, 400),
+        'Source',
+        rendererType: 'data_table',
+      );
+
+      notifier.updateCardDisplayOverrides(
+        'card_0',
+        const CardDisplayOverrides(useSignGlyphs: true),
+      );
+
+      notifier.duplicateCard('card_0');
+      final copy = container.read(workspaceProvider).cardById('card_1')!;
+
+      expect(copy.displayOverrides.useSignGlyphs, true);
+      expect(copy.rendererType, 'data_table');
+    });
   });
 
   test('snap toggle clears active guides', () {

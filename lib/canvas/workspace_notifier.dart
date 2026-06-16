@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 
 import '../mcp/expression_ref.dart';
+import '../theme/card_display_overrides.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'canvas_card.dart';
@@ -60,6 +61,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       expressions: card.expressions,
       rendererType: card.rendererType,
       preferredAspectRatio: card.preferredAspectRatio,
+      displayConfig: card.displayConfig,
+      displayOverrides: card.displayOverrides,
     );
   }
 
@@ -182,6 +185,38 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     );
   }
 
+  void setCardRenderer(
+    String id,
+    String rendererType, {
+    double? preferredAspectRatio,
+  }) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(
+      cards: _replaceCard(
+        card.copyWith(
+          rendererType: rendererType,
+          displayConfig: const {},
+          preferredAspectRatio: preferredAspectRatio,
+        ),
+      ),
+    );
+  }
+
+  void updateCardDisplayOverrides(String id, CardDisplayOverrides overrides) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(
+      cards: _replaceCard(card.copyWith(displayOverrides: overrides)),
+    );
+  }
+
+  void resetCardSize(String id, Size size) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(cards: _replaceCard(card.copyWith(size: size)));
+  }
+
   void toggleSnap() {
     state = state.copyWith(snapEnabled: !state.snapEnabled, guides: const []);
   }
@@ -242,6 +277,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     List<ExpressionRef> expressions = const [],
     String? rendererType,
     double? preferredAspectRatio,
+    Map<String, dynamic> displayConfig = const {},
+    CardDisplayOverrides displayOverrides = CardDisplayOverrides.empty,
   }) {
     final card = CardModel(
       id: 'card_${current.cardCounter}',
@@ -251,6 +288,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       expressions: expressions,
       rendererType: rendererType,
       preferredAspectRatio: preferredAspectRatio,
+      displayConfig: displayConfig,
+      displayOverrides: displayOverrides,
       zOrder: current.nextZ,
     );
 

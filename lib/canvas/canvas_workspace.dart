@@ -8,6 +8,7 @@ import '../providers/chart_store_provider.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../theme/aion_theme.dart';
 import '../theme/preset_store.dart';
+import '../theme/theme_resolver.dart';
 import '../widgets/title_bar.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
@@ -38,8 +39,16 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   void _showContextMenu(Offset globalPos, CardModel? card) async {
     final t = Theme.of(context).extension<AionTheme>()!;
+    final registry = ref.read(rendererRegistryProvider);
+    final renderers = registry.all;
+    final hasExpressions = card != null && card.expressions.isNotEmpty;
     final hasAccent =
         card != null && ref.read(workspaceProvider).accentForCard(card) != null;
+
+    final effectiveDisplay = card != null
+        ? ref.read(themeResolverProvider).resolve(card).displayOptions
+        : null;
+
     final result = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -51,44 +60,147 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
       color: t.surfaceOverlay,
       items: [
         if (card != null) ...[
+          // Section 1: Open for this Chart
+          if (hasExpressions) ...[
+            for (final r in renderers)
+              PopupMenuItem(
+                value: 'open_as:${r.meta.id}',
+                child: Text('Open as ${r.meta.displayName}'),
+              ),
+            const PopupMenuDivider(),
+          ],
+
+          // Section 2: Switch Renderer
+          if (hasExpressions) ...[
+            for (final r in renderers)
+              CheckedPopupMenuItem(
+                value: 'switch_to:${r.meta.id}',
+                checked: r.meta.id == card.rendererType,
+                child: Text(r.meta.displayName),
+              ),
+            const PopupMenuDivider(),
+          ],
+
+          // Section 3: Display
+          CheckedPopupMenuItem(
+            value: 'toggle:useSignGlyphs',
+            checked: effectiveDisplay?.useSignGlyphs ?? false,
+            child: const Text('Sign Glyphs'),
+          ),
+          CheckedPopupMenuItem(
+            value: 'toggle:usePlanetGlyphs',
+            checked: effectiveDisplay?.usePlanetGlyphs ?? false,
+            child: const Text('Planet Glyphs'),
+          ),
+          CheckedPopupMenuItem(
+            value: 'toggle:showOuterPlanets',
+            checked: effectiveDisplay?.showOuterPlanets ?? true,
+            child: const Text('Outer Planets'),
+          ),
+          const PopupMenuDivider(),
+
+          // Section 4: Card
           const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
+          const PopupMenuItem(value: 'reset_size', child: Text('Reset Size')),
           const PopupMenuItem(value: 'delete', child: Text('Delete')),
           if (hasAccent)
             const PopupMenuItem(
               value: 'cycle_color',
               child: Text('Cycle Color'),
             ),
-          const PopupMenuDivider(),
+        ] else ...[
+          // Background context menu (no card)
+          const PopupMenuItem(value: 'add', child: Text('Add Card')),
+          for (final r in renderers)
+            PopupMenuItem(
+              value: 'open_chart:${r.meta.id}',
+              child: Text('Open ${r.meta.displayName}…'),
+            ),
         ],
-        const PopupMenuItem(value: 'add', child: Text('Add Card')),
-        const PopupMenuItem(value: 'open_chart', child: Text('Open Chart…')),
-        const PopupMenuItem(
-          value: 'open_data_table',
-          child: Text('Open Data Table…'),
-        ),
       ],
     );
     if (result == null) return;
 
     final workspace = ref.read(workspaceProvider.notifier);
-    switch (result) {
-      case 'duplicate':
-        workspace.duplicateCard(card!.id);
-      case 'delete':
-        workspace.deleteCard(card!.id);
-      case 'cycle_color':
-        final chartId = card!.expressions.first.chartId;
-        workspace.cycleChartAccent(chartId);
-      case 'add':
-        final viewportLocal = _globalToViewport(globalPos);
-        final local = _viewportToWorkspace(viewportLocal);
-        final counter = ref.read(workspaceProvider).cardCounter;
-        workspace.addCard(local, const Size(240, 160), 'Card $counter');
-      case 'open_chart':
-        await _openChartAs(globalPos, 'south_indian');
-      case 'open_data_table':
-        await _openChartAs(globalPos, 'data_table');
+
+    if (result.startsWith('open_as:')) {
+      _openSiblingCard(card!, result.substring('open_as:'.length));
+    } else if (result.startsWith('switch_to:')) {
+      final rendererId = result.substring('switch_to:'.length);
+      if (rendererId != card!.rendererType) {
+        final renderer = registry.get(rendererId);
+        workspace.setCardRenderer(
+          card.id,
+          rendererId,
+          preferredAspectRatio: renderer?.meta.preferredAspectRatio,
+        );
+      }
+    } else if (result.startsWith('toggle:')) {
+      final field = result.substring('toggle:'.length);
+      final overrides = card!.displayOverrides;
+      final effective = ref
+          .read(themeResolverProvider)
+          .resolve(card)
+          .displayOptions;
+      switch (field) {
+        case 'useSignGlyphs':
+          workspace.updateCardDisplayOverrides(
+            card.id,
+            overrides.copyWith(useSignGlyphs: !effective.useSignGlyphs),
+          );
+        case 'usePlanetGlyphs':
+          workspace.updateCardDisplayOverrides(
+            card.id,
+            overrides.copyWith(usePlanetGlyphs: !effective.usePlanetGlyphs),
+          );
+        case 'showOuterPlanets':
+          workspace.updateCardDisplayOverrides(
+            card.id,
+            overrides.copyWith(showOuterPlanets: !effective.showOuterPlanets),
+          );
+      }
+    } else if (result.startsWith('open_chart:')) {
+      await _openChartAs(globalPos, result.substring('open_chart:'.length));
+    } else {
+      switch (result) {
+        case 'duplicate':
+          workspace.duplicateCard(card!.id);
+        case 'delete':
+          workspace.deleteCard(card!.id);
+        case 'cycle_color':
+          workspace.cycleChartAccent(card!.expressions.first.chartId);
+        case 'reset_size':
+          final renderer = card!.rendererType != null
+              ? registry.get(card.rendererType!)
+              : null;
+          final ar = renderer?.meta.preferredAspectRatio;
+          final size = ar != null ? const Size(500, 500) : const Size(500, 400);
+          workspace.resetCardSize(card.id, size);
+        case 'add':
+          final viewportLocal = _globalToViewport(globalPos);
+          final local = _viewportToWorkspace(viewportLocal);
+          final counter = ref.read(workspaceProvider).cardCounter;
+          workspace.addCard(local, const Size(240, 160), 'Card $counter');
+      }
     }
+  }
+
+  void _openSiblingCard(CardModel source, String rendererId) {
+    final registry = ref.read(rendererRegistryProvider);
+    final renderer = registry.get(rendererId);
+    final ar = renderer?.meta.preferredAspectRatio;
+    final size = ar != null ? const Size(500, 500) : const Size(500, 400);
+
+    ref
+        .read(workspaceProvider.notifier)
+        .addCard(
+          source.position + const Offset(30, 30),
+          size,
+          source.label,
+          expressions: source.expressions,
+          rendererType: rendererId,
+          preferredAspectRatio: ar,
+        );
   }
 
   Future<void> _openChartAs(Offset globalPos, String rendererType) async {
