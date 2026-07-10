@@ -136,3 +136,59 @@ kind = "no_cycles"
 scope = "lib/providers/"
 name = "providers-no-cycles"
 severity = "blocking"
+
+# ═══════════════════════════════════════════════════════════════════
+# Checkpoint: aion/81 — workspace model PRD landing (2026-07-10)
+# ═══════════════════════════════════════════════════════════════════
+
+# --- Cycle prevention for emergent hubs ---
+
+[[constraint]]
+kind = "no_cycles"
+scope = "lib/theme/"
+name = "theme-no-cycles"
+severity = "blocking"
+provenance = "checkpoint:aion/81"
+
+[[constraint]]
+kind = "no_cycles"
+scope = "lib/canvas/"
+name = "canvas-no-cycles"
+severity = "blocking"
+provenance = "checkpoint:aion/81"
+
+[[constraint]]
+kind = "no_cycles"
+scope = "lib/renderer/"
+name = "renderer-no-cycles"
+severity = "blocking"
+provenance = "checkpoint:aion/81"
+
+# --- Language catalog: coding_discipline [enforced] ---
+# Tree-sitter-dart grammar node names need validation before these go live.
+# Catalog queries (vidhi/language-rules/dart.toml) failed parse against the
+# actual grammar. Uncomment and fix queries when grammar is investigated.
+#
+# TRIGGER: tree-sitter-dart grammar investigation
+# no-dynamic-type: forbidden_pattern, advisory, scope lib/
+#   Detects `dynamic` type usage. Catalog query:
+#   '(type_identifier) @m (#eq? @m "dynamic") @match'
+#
+# no-bang-null-assertion: forbidden_pattern, advisory, scope lib/
+#   Detects `!` null assertions. Catalog query:
+#   '(postfix_expression operator: "!") @match'
+
+# --- Deferred: workspace model (aion/~4) ---
+# Paths TBD — bind when trigger task lands and actual directory is known.
+
+# TRIGGER: aion/63 (ChartSlot model)
+# slot-model-no-canvas: forbidden_dep from <slot-path> to lib/canvas/**
+# slot-model-no-renderer: forbidden_dep from <slot-path> to lib/renderer/**
+# Rationale: ChartSlot is session-state data (like ExpressionRef), not
+# presentation. Renderers receive slot context through RendererHost.
+
+# TRIGGER: aion/65 (ActionRegistry)
+# registry-no-canvas: forbidden_dep from <registry-path> to lib/canvas/**
+# registry-no-renderer: forbidden_dep from <registry-path> to lib/renderer/**
+# Rationale: Registry is a coordination layer consumed by rail/palette/menus.
+# References RendererMeta for the view catalog but not renderer implementations.
