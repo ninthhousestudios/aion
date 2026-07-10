@@ -165,18 +165,24 @@ severity = "blocking"
 provenance = "checkpoint:aion/81"
 
 # --- Language catalog: coding_discipline [enforced] ---
-# Tree-sitter-dart grammar node names need validation before these go live.
-# Catalog queries (vidhi/language-rules/dart.toml) failed parse against the
-# actual grammar. Uncomment and fix queries when grammar is investigated.
-#
-# TRIGGER: tree-sitter-dart grammar investigation
-# no-dynamic-type: forbidden_pattern, advisory, scope lib/
-#   Detects `dynamic` type usage. Catalog query:
-#   '(type_identifier) @m (#eq? @m "dynamic") @match'
-#
-# no-bang-null-assertion: forbidden_pattern, advisory, scope lib/
-#   Detects `!` null assertions. Catalog query:
-#   '(postfix_expression operator: "!") @match'
+
+[[constraint]]
+kind = "forbidden_pattern"
+name = "no-dynamic-type"
+language = "dart"
+query = '((type_identifier) @match (#eq? @match "dynamic"))'
+scope = "lib/"
+severity = "advisory"
+provenance = "checkpoint:aion/81"
+
+[[constraint]]
+kind = "forbidden_pattern"
+name = "no-bang-null-assertion"
+language = "dart"
+query = '(null_assertion_expression) @match'
+scope = "lib/"
+severity = "advisory"
+provenance = "checkpoint:aion/81"
 
 # --- Deferred: workspace model (aion/~4) ---
 # Paths TBD — bind when trigger task lands and actual directory is known.

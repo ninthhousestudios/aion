@@ -40,7 +40,10 @@ Maintained by `vidhi-sutra-tend` at review checkpoints.
 
 ### Language rules (coding_discipline)
 
-None live yet — see deferred.
+| Name | Kind | Severity | Scope | Added |
+|---|---|---|---|---|
+| `no-dynamic-type` | forbidden_pattern | advisory | lib/ | checkpoint:aion/81 (fired aion/82) |
+| `no-bang-null-assertion` | forbidden_pattern | advisory | lib/ | checkpoint:aion/81 (fired aion/82) |
 
 ## Deferred constraints
 
@@ -50,8 +53,8 @@ None live yet — see deferred.
 | `slot-model-no-renderer` | forbidden_dep | aion/63 lands | pending | Renderers receive slot context through RendererHost. Path TBD. |
 | `registry-no-canvas` | forbidden_dep | aion/65 lands | pending | ActionRegistry is a coordination layer, not a canvas component. Path TBD. |
 | `registry-no-renderer` | forbidden_dep | aion/65 lands | pending | Registry references RendererMeta, not renderer implementations. Path TBD. |
-| `no-dynamic-type` | forbidden_pattern | tree-sitter-dart grammar validated | pending | Coding discipline [enforced]. Catalog query failed parse — grammar node names need investigation. |
-| `no-bang-null-assertion` | forbidden_pattern | tree-sitter-dart grammar validated | pending | Coding discipline [enforced]. Catalog query failed parse — grammar node names need investigation. |
+| `no-dynamic-type` | forbidden_pattern | tree-sitter-dart grammar validated | **fired** | Grammar fixed (aion/82): `((type_identifier) @match (#eq? @match "dynamic"))`. Moved to live. |
+| `no-bang-null-assertion` | forbidden_pattern | tree-sitter-dart grammar validated | **fired** | Grammar fixed (aion/82): node is `null_assertion_expression`, not `postfix_expression`. Moved to live. |
 
 ## Maintenance log
 
