@@ -13,6 +13,7 @@
 migrate_working_dir/
 doc/handoff.md
 .codex/
+assets/
 
 # IntelliJ related
 *.iml

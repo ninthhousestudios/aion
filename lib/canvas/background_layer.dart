@@ -36,8 +36,19 @@ class _ImageBackground extends StatelessWidget {
   final String imagePath;
   final Color fallbackColor;
 
+  bool get _isAsset => imagePath.startsWith('assets/');
+
   @override
   Widget build(BuildContext context) {
+    if (_isAsset) {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, _, _) => ColoredBox(color: fallbackColor),
+      );
+    }
     return Image.file(
       File(imagePath),
       fit: BoxFit.cover,

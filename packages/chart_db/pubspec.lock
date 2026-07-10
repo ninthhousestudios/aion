@@ -48,6 +48,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  chart_model:
+    dependency: transitive
+    description:
+      path: "../chart_model"
+      relative: true
+    source: path
+    version: "0.1.0"
   charts_dart:
     dependency: "direct main"
     description:

@@ -87,20 +87,20 @@ persistent storage and organization.
 - toml schema: what metadata fields needed beyond birth data?
 - sqlite from dart/flutter — ffi bindings, packages
 
-## phase 5 — chitta + smriti (memory and library)
+## phase 5 — chitta + kosha (memory and library)
 
 aion is an astrologer's operating system, not just a chart calculator.
 this phase brings in the two memory/perception subsystems shared with manas.
 
 - bundle `chitta-server` as a plugin (rust binary, stdio transport,
   `$AION_DATA/chitta.db`)
-- bundle `smriti-server` as a plugin pointed at the user's library directory
+- bundle `kosha-server` as a plugin pointed at the user's library directory
 - aion notebook ui: write notes, browse by tag/topic/client/chart
 - voice capture → verbatim transcript → chitta memory (single research note
   or session). local stt (whisper.cpp candidate)
 - tag conventions: `chart:<uuid>`, `client:<id>`, `book:<id>`, `paper:<doi>`,
   `role:example|counter|fits`, `topic:<slug>`
-- citation flow: smriti finds passage → user pins → chitta memory created
+- citation flow: kosha finds passage → user pins → chitta memory created
   with `book:<id>` tag and `metadata.page`
 - chart-detail side panel: "research notes referencing this chart" via
   tag-filtered chitta search
@@ -115,9 +115,9 @@ bge-m3 for v1)
 - voice capture pipeline: which local stt model? push-to-talk vs continuous?
   buffering, interruption handling, edit-after-the-fact ux
 - pdf/epub text extraction libraries with stable per-page anchors
-- smriti scoping: how does the user designate the library dir, exclude
+- kosha scoping: how does the user designate the library dir, exclude
   patterns, multi-folder support
-- citation ux: how does the user pin a smriti search result into a chitta note
+- citation ux: how does the user pin a kosha search result into a chitta note
 - chitta multi-profile ux: scopes (per-client / per-research-line) without
   exposing the word "profile"
 

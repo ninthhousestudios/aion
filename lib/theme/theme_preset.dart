@@ -80,6 +80,7 @@ class ThemePreset {
     name: 'immersive',
     backgroundType: BackgroundType.image,
     backgroundColor: Color(0xFF0A0A14),
+    backgroundImagePath: 'assets/backgrounds/hero-dawn-temple_seed4830.png',
     surfaceCard: Color(0xFF1A1A2E),
     surfacePanel: Color(0xFF12121F),
     surfaceBorderIdle: Color(0x33FFFFFF),
