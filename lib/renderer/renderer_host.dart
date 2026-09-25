@@ -7,6 +7,19 @@ import '../theme/aion_theme.dart';
 import '../theme/display_options.dart';
 import 'chart_renderer.dart';
 
+/// Content equality for expression lists: same length and identical elements.
+///
+/// Callers routinely allocate a fresh list around the same expression
+/// (`[data]`), so list identity is not a useful change signal.
+bool expressionListsEqual(List<ChartExpression> a, List<ChartExpression> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!identical(a[i], b[i])) return false;
+  }
+  return true;
+}
+
 class RendererHost extends StatefulWidget {
   const RendererHost({
     super.key,
@@ -38,9 +51,17 @@ class _RendererHostState extends State<RendererHost> {
   }
 
   RendererColors? _lastColors;
+  List<ChartExpression>? _lastExpressionData;
+  Map<String, dynamic>? _lastDisplayConfig;
+  ChartRenderer? _lastRenderer;
+  DisplayOptions? _lastDisplayOpts;
 
   void _rebuildPainter(RendererColors colors) {
     _lastColors = colors;
+    _lastExpressionData = widget.expressionData;
+    _lastDisplayConfig = widget.displayConfig;
+    _lastRenderer = widget.renderer;
+    _lastDisplayOpts = widget.displayOpts;
     _painter = widget.renderer.createPainter(
       expressions: widget.expressionData,
       displayConfig: _resolveConfig(),
@@ -56,20 +77,18 @@ class _RendererHostState extends State<RendererHost> {
     line: t.cardDimColor,
   );
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didUpdateWidget(RendererHost old) {
-    super.didUpdateWidget(old);
-    if (widget.expressionData != old.expressionData ||
-        widget.displayConfig != old.displayConfig ||
-        widget.renderer != old.renderer ||
-        widget.displayOpts != old.displayOpts) {
-      if (_lastColors != null) _rebuildPainter(_lastColors!);
-    }
+  bool _inputsChanged(RendererColors colors) {
+    final last = _lastColors;
+    final lastData = _lastExpressionData;
+    if (last == null || lastData == null) return true;
+    return colors.text != last.text ||
+        colors.dim != last.dim ||
+        colors.accent != last.accent ||
+        colors.line != last.line ||
+        !expressionListsEqual(widget.expressionData, lastData) ||
+        widget.displayConfig != _lastDisplayConfig ||
+        widget.renderer != _lastRenderer ||
+        widget.displayOpts != _lastDisplayOpts;
   }
 
   void _onHover(PointerHoverEvent event) {
@@ -84,13 +103,10 @@ class _RendererHostState extends State<RendererHost> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).extension<AionTheme>()!;
     final colors = _colorsFromTheme(t);
-    if (_lastColors == null ||
-        colors.text != _lastColors!.text ||
-        colors.dim != _lastColors!.dim ||
-        colors.accent != _lastColors!.accent ||
-        colors.line != _lastColors!.line) {
-      _rebuildPainter(colors);
-    }
+    // Single change check, run on every build: covers theme changes and
+    // widget updates alike, so no update can be missed between
+    // didUpdateWidget and build.
+    if (_inputsChanged(colors)) _rebuildPainter(colors);
     final aspect = widget.renderer.meta.preferredAspectRatio;
 
     Widget chart = MouseRegion(

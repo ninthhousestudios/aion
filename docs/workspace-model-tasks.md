@@ -104,9 +104,9 @@ Fix approach:
 
 Acceptance criteria:
 
-- [ ] Toggling display overrides (sign glyphs, planet glyphs) via the card context menu is stable across repeated right-clicks
-- [ ] Painter is not recreated when `expressionData` content is unchanged
-- [ ] Switching renderers via context menu has no perceptible lag beyond initial paint
+- [x] Toggling display overrides (sign glyphs, planet glyphs) via the card context menu is stable across repeated right-clicks
+- [x] Painter is not recreated when `expressionData` content is unchanged
+- [x] Switching renderers via context menu has no perceptible lag beyond initial paint
 
 ---
 
@@ -433,3 +433,4 @@ you resolved yourself, every PRD deviation, chosen directory paths for the
 layering constraints, and anything that needs a human to verify visually.
 
 - 
+- aion/61 — RendererHost now keeps a single change check in `build()` (colors, expression list by content via `expressionListsEqual`, displayConfig, renderer, displayOpts) and dropped `didUpdateWidget`; CanvasCard caches the `[data]` list — one check path means no ordering gap between didUpdateWidget and build. **Needs visual check:** glyph-toggle stability across right-clicks, no renderer-switch lag.

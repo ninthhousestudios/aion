@@ -1,3 +1,4 @@
+import 'package:chart_model/chart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../mcp/chart_store.dart';
@@ -39,6 +40,16 @@ class CanvasCard extends ConsumerStatefulWidget {
 
 class _CanvasCardState extends ConsumerState<CanvasCard> {
   bool _hovered = false;
+  List<ChartExpression> _dataList = const [];
+
+  /// Returns the same list instance while [data] is unchanged, so the
+  /// renderer host doesn't see a "new" expression list on every rebuild.
+  List<ChartExpression> _wrap(ChartExpression data) {
+    if (_dataList.length != 1 || !identical(_dataList.first, data)) {
+      _dataList = List.unmodifiable([data]);
+    }
+    return _dataList;
+  }
 
   static const double _gripSize = 14;
 
@@ -118,7 +129,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
           ),
           ExpressionReady(:final data) => RendererHost(
             renderer: renderer,
-            expressionData: [data],
+            expressionData: _wrap(data),
             displayConfig: m.displayConfig,
             displayOpts: displayOpts,
           ),
