@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sutra-guard"
+            "command": "if command -v sutra-guard >/dev/null 2>&1; then sutra-guard; fi"
           }
         ]
       }

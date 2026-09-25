@@ -58,9 +58,11 @@ packages:
   charts_dart:
     dependency: "direct main"
     description:
-      path: "../../../charts_dart"
-      relative: true
-    source: path
+      path: "."
+      ref: a39846ced365cfed88b0ebf55a458b610835874a
+      resolved-ref: a39846ced365cfed88b0ebf55a458b610835874a
+      url: "https://github.com/ninthhousestudios/charts_dart.git"
+    source: git
     version: "1.0.0"
   cli_config:
     dependency: transitive

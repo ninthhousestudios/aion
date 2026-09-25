@@ -10,7 +10,9 @@ dependencies:
   chart_db_core:
     path: ../chart_db_core
   charts_dart:
-    path: ../../../charts_dart
+    git:
+      url: https://github.com/ninthhousestudios/charts_dart.git
+      ref: a39846ced365cfed88b0ebf55a458b610835874a
   mcp_dart:
     git:
       url: https://github.com/ninthhousestudios/mcp_dart.git
