@@ -38,8 +38,6 @@ void main() {
       snapEnabled: true,
       nextZ: 2,
       cardCounter: 2,
-      chartAccents: const {},
-      accentCounter: 0,
     );
 
     expect(state.cardById('a'), equals(card));
@@ -53,8 +51,6 @@ void main() {
       snapEnabled: true,
       nextZ: 1,
       cardCounter: 1,
-      chartAccents: const {},
-      accentCounter: 0,
     );
 
     expect(state.cardById('z'), isNull);
@@ -68,8 +64,6 @@ void main() {
       snapEnabled: true,
       nextZ: 1,
       cardCounter: 1,
-      chartAccents: const {},
-      accentCounter: 0,
     );
 
     expect(() => state.cards.add(_card('b')), throwsUnsupportedError);
@@ -87,8 +81,6 @@ void main() {
       snapEnabled: true,
       nextZ: 4,
       cardCounter: 3,
-      chartAccents: const {},
-      accentCounter: 0,
     );
 
     final sorted = state.sortedCards;
@@ -103,8 +95,6 @@ void main() {
       snapEnabled: false,
       nextZ: 5,
       cardCounter: 3,
-      chartAccents: const {},
-      accentCounter: 0,
     );
 
     final copy = state.copyWith(snapEnabled: true);
@@ -125,8 +115,6 @@ void main() {
       snapEnabled: true,
       nextZ: 1,
       cardCounter: 1,
-      chartAccents: const {},
-      accentCounter: 0,
     );
 
     final updated = state.copyWith(

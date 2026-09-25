@@ -27,6 +27,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
     required this.statusStarting,
     required this.statusError,
     required this.statusStopped,
+    this.slotPalette = defaultSlotPalette,
   });
 
   final Color canvasBackground;
@@ -55,6 +56,27 @@ class AionTheme extends ThemeExtension<AionTheme> {
   final Color statusStarting;
   final Color statusError;
   final Color statusStopped;
+
+  /// Chart slot colors, indexed by `ChartSlot.colorIndex` (wrapping). The
+  /// card status strip shows the color of the card's slot.
+  final List<Color> slotPalette;
+
+  static const defaultSlotPalette = [
+    Color(0xFF6366F1),
+    Color(0xFFF59E0B),
+    Color(0xFF14B8A6),
+    Color(0xFFEC4899),
+    Color(0xFF3B82F6),
+    Color(0xFFEF4444),
+    Color(0xFF10B981),
+    Color(0xFF8B5CF6),
+  ];
+
+  /// Palette color for a slot's [colorIndex] (wraps; never throws).
+  Color slotColor(int colorIndex) {
+    final palette = slotPalette.isEmpty ? defaultSlotPalette : slotPalette;
+    return palette[colorIndex % palette.length];
+  }
 
   factory AionTheme.fromPreset(ThemePreset preset) {
     return AionTheme(
@@ -111,6 +133,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
     Color? statusStarting,
     Color? statusError,
     Color? statusStopped,
+    List<Color>? slotPalette,
   }) {
     return AionTheme(
       canvasBackground: canvasBackground ?? this.canvasBackground,
@@ -134,6 +157,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       statusStarting: statusStarting ?? this.statusStarting,
       statusError: statusError ?? this.statusError,
       statusStopped: statusStopped ?? this.statusStopped,
+      slotPalette: slotPalette ?? this.slotPalette,
     );
   }
 
@@ -190,6 +214,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       statusStarting: Color.lerp(statusStarting, other.statusStarting, t)!,
       statusError: Color.lerp(statusError, other.statusError, t)!,
       statusStopped: Color.lerp(statusStopped, other.statusStopped, t)!,
+      slotPalette: t < 0.5 ? slotPalette : other.slotPalette,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../providers/chart_store_provider.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../slots/card_binding.dart';
 import '../slots/chart_slot.dart';
+import '../slots/expression_resolution.dart';
 import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import '../theme/preset_store.dart';
@@ -18,7 +19,6 @@ import 'card_model.dart';
 import 'canvas_card.dart';
 import 'snap_physics.dart';
 import 'workspace_notifier.dart';
-import 'workspace_state.dart';
 
 class CanvasWorkspace extends ConsumerStatefulWidget {
   const CanvasWorkspace({super.key});
@@ -46,8 +46,12 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     final registry = ref.read(rendererRegistryProvider);
     final renderers = registry.all;
     final hasExpressions = card != null && card.binding != null;
-    final hasAccent =
-        card != null && ref.read(workspaceProvider).accentForCard(card) != null;
+    final slots = ref.read(slotsProvider);
+    final binding = card?.binding;
+    final canPin =
+        card != null &&
+        pinnedBindingFor(binding, slots, configOverride: card.configOverride) !=
+            null;
 
     final effectiveDisplay = card != null
         ? ref.read(themeResolverProvider).resolve(card).displayOptions
@@ -107,11 +111,25 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
           const PopupMenuItem(value: 'reset_size', child: Text('Reset Size')),
           const PopupMenuItem(value: 'delete', child: Text('Delete')),
-          if (hasAccent)
+          if (binding is SlotBinding)
             const PopupMenuItem(
               value: 'cycle_color',
-              child: Text('Cycle Color'),
+              child: Text('Cycle Slot Color'),
             ),
+
+          // Section 5: Slot binding
+          if (binding != null) ...[
+            const PopupMenuDivider(),
+            for (final slot in slots.slots)
+              CheckedPopupMenuItem(
+                value: 'bind_slot:${slot.id}',
+                checked: binding is SlotBinding && binding.slotId == slot.id,
+                child: Text(slotMenuLabel(slot)),
+              ),
+            if (canPin) const PopupMenuItem(value: 'pin', child: Text('Pin')),
+            if (binding is PinnedBinding)
+              const PopupMenuItem(value: 'unpin', child: Text('Unpin')),
+          ],
         ] else ...[
           // Background context menu (no card)
           const PopupMenuItem(value: 'add', child: Text('Add Card')),
@@ -163,6 +181,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
             overrides.copyWith(showOuterPlanets: !effective.showOuterPlanets),
           );
       }
+    } else if (result.startsWith('bind_slot:')) {
+      workspace.setCardBinding(
+        card!.id,
+        SlotBinding(result.substring('bind_slot:'.length)),
+      );
     } else if (result.startsWith('open_chart:')) {
       await _openChartAs(globalPos, result.substring('open_chart:'.length));
     } else {
@@ -172,9 +195,24 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         case 'delete':
           workspace.deleteCard(card!.id);
         case 'cycle_color':
-          if (WorkspaceState.accentKey(card!) case final key?) {
-            workspace.cycleChartAccent(key);
+          if (card!.binding case SlotBinding(:final slotId)) {
+            final slot = ref.read(slotsProvider).slotOrDefault(slotId);
+            ref
+                .read(slotsProvider.notifier)
+                .setColorIndex(slot.id, slot.colorIndex + 1);
           }
+        case 'pin':
+          final pinned = pinnedBindingFor(
+            card!.binding,
+            ref.read(slotsProvider),
+            configOverride: card.configOverride,
+          );
+          if (pinned != null) workspace.pinCard(card.id, pinned);
+        case 'unpin':
+          workspace.setCardBinding(
+            card!.id,
+            SlotBinding(ref.read(slotsProvider).activeSlotId),
+          );
         case 'reset_size':
           final renderer = card!.rendererType != null
               ? registry.get(card.rendererType!)
@@ -409,7 +447,6 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                                 model: card,
                                 chartStore: ref.read(chartStoreProvider),
                                 selected: card.id == workspaceState.selectedId,
-                                accentColor: workspaceState.accentForCard(card),
                                 onSelect: () => workspace.selectCard(card.id),
                                 onResizeUpdate: (delta, corner) =>
                                     workspace.resizeCard(

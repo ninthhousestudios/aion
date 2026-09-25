@@ -1,6 +1,3 @@
-import 'dart:ui';
-
-import '../slots/card_binding.dart';
 import 'card_model.dart';
 import 'snap_physics.dart';
 
@@ -12,11 +9,8 @@ class WorkspaceState {
     required this.snapEnabled,
     required this.nextZ,
     required this.cardCounter,
-    required Map<String, Color> chartAccents,
-    required this.accentCounter,
   }) : cards = List.unmodifiable(cards),
-       guides = List.unmodifiable(guides),
-       chartAccents = Map.unmodifiable(chartAccents);
+       guides = List.unmodifiable(guides);
 
   WorkspaceState.initial()
     : cards = const [],
@@ -24,9 +18,7 @@ class WorkspaceState {
       guides = const [],
       snapEnabled = false,
       nextZ = 0,
-      cardCounter = 0,
-      chartAccents = const {},
-      accentCounter = 0;
+      cardCounter = 0;
 
   final List<CardModel> cards;
   final String? selectedId;
@@ -34,21 +26,6 @@ class WorkspaceState {
   final bool snapEnabled;
   final int nextZ;
   final int cardCounter;
-  final Map<String, Color> chartAccents;
-  final int accentCounter;
-
-  Color? accentForCard(CardModel card) {
-    final key = accentKey(card);
-    if (key == null) return null;
-    return chartAccents[key];
-  }
-
-  /// Accent grouping key: the pinned chart, or the bound slot.
-  static String? accentKey(CardModel card) => switch (card.binding) {
-    PinnedBinding(:final chartId) => chartId,
-    SlotBinding(:final slotId) => 'slot:$slotId',
-    null => null,
-  };
 
   List<CardModel> get sortedCards {
     return List<CardModel>.from(cards)
@@ -71,8 +48,6 @@ class WorkspaceState {
     bool? snapEnabled,
     int? nextZ,
     int? cardCounter,
-    Map<String, Color>? chartAccents,
-    int? accentCounter,
   }) {
     return WorkspaceState(
       cards: cards ?? this.cards,
@@ -83,8 +58,6 @@ class WorkspaceState {
       snapEnabled: snapEnabled ?? this.snapEnabled,
       nextZ: nextZ ?? this.nextZ,
       cardCounter: cardCounter ?? this.cardCounter,
-      chartAccents: chartAccents ?? this.chartAccents,
-      accentCounter: accentCounter ?? this.accentCounter,
     );
   }
 }

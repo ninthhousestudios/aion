@@ -148,10 +148,10 @@ context menu gains a bind-to-slot submenu and pin/unpin. The settings card
 
 Acceptance criteria:
 
-- [ ] Card status strip painted with slot color, resolved via the `ThemeResolver` path
-- [ ] Pin indicator on pinned cards
-- [ ] Card context menu: bind-to-slot submenu + pin/unpin actions
-- [ ] Slot recolor/relabel reflects immediately on bound cards
+- [x] Card status strip painted with slot color, resolved via the `ThemeResolver` path
+- [x] Pin indicator on pinned cards
+- [x] Card context menu: bind-to-slot submenu + pin/unpin actions
+- [x] Slot recolor/relabel reflects immediately on bound cards
 
 ### aion/65 — ActionRegistry + alias table; ContextMenuService becomes a consumer
 
@@ -438,3 +438,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/63 — `CardModel.expressions: List<ExpressionRef>` replaced by `binding: CardBinding?` + `configOverride`. A card now has exactly one binding (PRD's sealed type); the old multi-expression 'synastry card' shape is dropped until a synastry renderer exists. Tests in `test/canvas/card_model_test.dart`, `workspace_state_test.dart`, `workspace_notifier_test.dart`, `workspace_accent_test.dart` were migrated from `expressions` to `binding` (behavior they test changed shape, not intent).
 - aion/63 — Configs are canonicalized (keys sorted, sets→sorted lists) before hashing so equal configs share one `ExpressionRef`; `ChartStore` is unchanged. Cards resolve their binding in `CanvasCard` on every build (watching `slotsProvider`) and `ensureExpression` triggers compute via a microtask only when the resolved ref is idle — so a slot change recomputes exactly its bound cards and pinned cards are untouched. Opening a chart from the canvas menu loads it into the active slot and adds a slot-bound card.
 - aion/63 — Default slot config is `{}` (drishti's defaults), matching the previous `bindChartToCard` default.
+- aion/64 — Per-chart accents (`WorkspaceState.chartAccents`, `cycleChartAccent`, hardcoded palette in WorkspaceNotifier) removed; the palette moved to `AionTheme.slotPalette` and the strip is resolved by `ThemeResolver.stripFor(card, slots)`. `test/canvas/workspace_accent_test.dart` deleted (the per-chart accent behavior it tested no longer exists; replaced by `test/slots/slot_strip_test.dart`). 'Cycle Color' in the card menu now recolors the card's slot.
+- aion/64 — Card menu uses a flat 'slot binding' section (one checked item per slot) rather than a nested submenu: `showMenu` has no submenu support and the flat list keeps one-right-click access. Unpin rebinds to the *active* slot (PRD's PinnedBinding carries no origin slot). Pinned cards show a neutral (`cardDimColor`) strip plus a pin icon. **Needs visual check:** strip color, pin icon placement, immediate recolor on bound cards.

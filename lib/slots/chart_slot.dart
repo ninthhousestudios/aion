@@ -70,3 +70,12 @@ class ChartSlot {
     );
   }
 }
+
+/// Menu/list label for a slot: "Slot A · Client — Ravi".
+String slotMenuLabel(ChartSlot slot) {
+  final name = slot.label == slot.id
+      ? 'Slot ${slot.id}'
+      : 'Slot ${slot.id} · ${slot.label}';
+  final chart = slot.chartName;
+  return chart == null ? name : '$name — $chart';
+}

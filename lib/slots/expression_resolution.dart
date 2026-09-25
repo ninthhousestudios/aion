@@ -108,3 +108,25 @@ void ensureExpression(ChartStore store, ResolvedExpression resolved) {
         .ignore();
   });
 }
+
+/// The binding that pins a slot-bound card to what it currently shows: the
+/// slot's chart with the card's effective config. Null when the card isn't
+/// slot-bound or its slot is empty.
+PinnedBinding? pinnedBindingFor(
+  CardBinding? binding,
+  SlotState slots, {
+  ExpressionConfig? configOverride,
+}) {
+  if (binding is! SlotBinding) return null;
+  final resolved = resolveCardExpression(
+    binding,
+    slots,
+    configOverride: configOverride,
+  );
+  if (resolved == null) return null;
+  return PinnedBinding(
+    chartId: resolved.chartId,
+    chartName: slots.slotOrDefault(binding.slotId).chartName,
+    config: resolved.config,
+  );
+}

@@ -15,17 +15,6 @@ final workspaceProvider = NotifierProvider<WorkspaceNotifier, WorkspaceState>(
 );
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
-  static const _palette = [
-    Color(0xFF6366F1),
-    Color(0xFF8B5CF6),
-    Color(0xFFEC4899),
-    Color(0xFF14B8A6),
-    Color(0xFFF59E0B),
-    Color(0xFF3B82F6),
-    Color(0xFFEF4444),
-    Color(0xFF10B981),
-  ];
-
   @override
   WorkspaceState build() {
     return WorkspaceState.initial();
@@ -171,16 +160,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(guides: const []);
   }
 
-  void cycleChartAccent(String chartId) {
-    final current = state.chartAccents[chartId];
-    if (current == null) return;
-    final idx = _palette.indexOf(current);
-    final next = _palette[(idx + 1) % _palette.length];
-    state = state.copyWith(
-      chartAccents: {...state.chartAccents, chartId: next},
-    );
-  }
-
   void setCardOpacity(String id, double? opacity) {
     final card = state.cardById(id);
     if (card == null) return;
@@ -220,6 +199,16 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     if (card == null) return;
     state = state.copyWith(
       cards: _replaceCard(card.copyWith(binding: binding)),
+    );
+  }
+
+  /// Pins a card: it keeps [pinned]'s chart + config and stops following
+  /// its slot. The override is folded into the pinned config.
+  void pinCard(String id, PinnedBinding pinned) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(
+      cards: _replaceCard(card.copyWith(binding: pinned, configOverride: null)),
     );
   }
 
@@ -315,23 +304,10 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       zOrder: current.nextZ,
     );
 
-    var chartAccents = current.chartAccents;
-    var accentCounter = current.accentCounter;
-    final chartId = WorkspaceState.accentKey(card);
-    if (chartId != null && !chartAccents.containsKey(chartId)) {
-      chartAccents = {
-        ...chartAccents,
-        chartId: _palette[accentCounter % _palette.length],
-      };
-      accentCounter++;
-    }
-
     return current.copyWith(
       cards: [...current.cards, card],
       nextZ: current.nextZ + 1,
       cardCounter: current.cardCounter + 1,
-      chartAccents: chartAccents,
-      accentCounter: accentCounter,
     );
   }
 
