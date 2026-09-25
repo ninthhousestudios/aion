@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../actions/bind_chart_action.dart';
-import '../actions/load_chart_action.dart';
+import '../commands/action_menu.dart';
+import '../commands/app_action.dart';
+import '../providers/action_registry_provider.dart';
 import '../providers/chart_store_provider.dart';
 import '../providers/renderer_registry_provider.dart';
-import '../slots/card_binding.dart';
-import '../slots/chart_slot.dart';
-import '../slots/expression_resolution.dart';
 import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import '../theme/preset_store.dart';
-import '../theme/theme_resolver.dart';
 import '../widgets/title_bar.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
+import 'canvas_actions.dart';
 import 'canvas_card.dart';
 import 'snap_physics.dart';
 import 'workspace_notifier.dart';
@@ -43,19 +41,21 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   void _showContextMenu(Offset globalPos, CardModel? card) async {
     final t = Theme.of(context).extension<AionTheme>()!;
-    final registry = ref.read(rendererRegistryProvider);
-    final renderers = registry.all;
-    final hasExpressions = card != null && card.binding != null;
-    final slots = ref.read(slotsProvider);
-    final binding = card?.binding;
-    final canPin =
-        card != null &&
-        pinnedBindingFor(binding, slots, configOverride: card.configOverride) !=
-            null;
-
-    final effectiveDisplay = card != null
-        ? ref.read(themeResolverProvider).resolve(card).displayOptions
-        : null;
+    final registry = ref.read(actionRegistryProvider);
+    final renderers = [
+      for (final r in ref.read(rendererRegistryProvider).all) r.meta,
+    ];
+    final actionCtx = ActionContext(
+      cardId: card?.id,
+      position: _viewportToWorkspace(_globalToViewport(globalPos)),
+      viewportSize: _canvasSize(),
+      onError: (message) {
+        if (mounted) _showError(context, message);
+      },
+    );
+    final layout = card != null
+        ? cardMenuIds(renderers, ref.read(slotsProvider).slots)
+        : canvasMenuIds(renderers);
 
     final result = await showMenu<String>(
       context: context,
@@ -66,226 +66,15 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         globalPos.dy,
       ),
       color: t.surfaceOverlay,
-      items: [
-        if (card != null) ...[
-          // Section 1: Open for this Chart
-          if (hasExpressions) ...[
-            for (final r in renderers)
-              PopupMenuItem(
-                value: 'open_as:${r.meta.id}',
-                child: Text('Open as ${r.meta.displayName}'),
-              ),
-            const PopupMenuDivider(),
-          ],
-
-          // Section 2: Switch Renderer
-          if (hasExpressions) ...[
-            for (final r in renderers)
-              CheckedPopupMenuItem(
-                value: 'switch_to:${r.meta.id}',
-                checked: r.meta.id == card.rendererType,
-                child: Text(r.meta.displayName),
-              ),
-            const PopupMenuDivider(),
-          ],
-
-          // Section 3: Display
-          CheckedPopupMenuItem(
-            value: 'toggle:useSignGlyphs',
-            checked: effectiveDisplay?.useSignGlyphs ?? false,
-            child: const Text('Sign Glyphs'),
-          ),
-          CheckedPopupMenuItem(
-            value: 'toggle:usePlanetGlyphs',
-            checked: effectiveDisplay?.usePlanetGlyphs ?? false,
-            child: const Text('Planet Glyphs'),
-          ),
-          CheckedPopupMenuItem(
-            value: 'toggle:showOuterPlanets',
-            checked: effectiveDisplay?.showOuterPlanets ?? true,
-            child: const Text('Outer Planets'),
-          ),
-          const PopupMenuDivider(),
-
-          // Section 4: Card
-          const PopupMenuItem(value: 'duplicate', child: Text('Duplicate')),
-          const PopupMenuItem(value: 'reset_size', child: Text('Reset Size')),
-          const PopupMenuItem(value: 'delete', child: Text('Delete')),
-          if (binding is SlotBinding)
-            const PopupMenuItem(
-              value: 'cycle_color',
-              child: Text('Cycle Slot Color'),
-            ),
-
-          // Section 5: Slot binding
-          if (binding != null) ...[
-            const PopupMenuDivider(),
-            for (final slot in slots.slots)
-              CheckedPopupMenuItem(
-                value: 'bind_slot:${slot.id}',
-                checked: binding is SlotBinding && binding.slotId == slot.id,
-                child: Text(slotMenuLabel(slot)),
-              ),
-            if (canPin) const PopupMenuItem(value: 'pin', child: Text('Pin')),
-            if (binding is PinnedBinding)
-              const PopupMenuItem(value: 'unpin', child: Text('Unpin')),
-          ],
-        ] else ...[
-          // Background context menu (no card)
-          const PopupMenuItem(value: 'add', child: Text('Add Card')),
-          for (final r in renderers)
-            PopupMenuItem(
-              value: 'open_chart:${r.meta.id}',
-              child: Text('Open ${r.meta.displayName}…'),
-            ),
-        ],
-      ],
+      items: popupEntries(resolveMenu(layout, registry, actionCtx), actionCtx),
     );
-    if (result == null) return;
-
-    final workspace = ref.read(workspaceProvider.notifier);
-
-    if (result.startsWith('open_as:')) {
-      _openSiblingCard(card!, result.substring('open_as:'.length));
-    } else if (result.startsWith('switch_to:')) {
-      final rendererId = result.substring('switch_to:'.length);
-      if (rendererId != card!.rendererType) {
-        final renderer = registry.get(rendererId);
-        workspace.setCardRenderer(
-          card.id,
-          rendererId,
-          preferredAspectRatio: renderer?.meta.preferredAspectRatio,
-        );
-      }
-    } else if (result.startsWith('toggle:')) {
-      final field = result.substring('toggle:'.length);
-      final overrides = card!.displayOverrides;
-      final effective = ref
-          .read(themeResolverProvider)
-          .resolve(card)
-          .displayOptions;
-      switch (field) {
-        case 'useSignGlyphs':
-          workspace.updateCardDisplayOverrides(
-            card.id,
-            overrides.copyWith(useSignGlyphs: !effective.useSignGlyphs),
-          );
-        case 'usePlanetGlyphs':
-          workspace.updateCardDisplayOverrides(
-            card.id,
-            overrides.copyWith(usePlanetGlyphs: !effective.usePlanetGlyphs),
-          );
-        case 'showOuterPlanets':
-          workspace.updateCardDisplayOverrides(
-            card.id,
-            overrides.copyWith(showOuterPlanets: !effective.showOuterPlanets),
-          );
-      }
-    } else if (result.startsWith('bind_slot:')) {
-      workspace.setCardBinding(
-        card!.id,
-        SlotBinding(result.substring('bind_slot:'.length)),
-      );
-    } else if (result.startsWith('open_chart:')) {
-      await _openChartAs(globalPos, result.substring('open_chart:'.length));
-    } else {
-      switch (result) {
-        case 'duplicate':
-          workspace.duplicateCard(card!.id);
-        case 'delete':
-          workspace.deleteCard(card!.id);
-        case 'cycle_color':
-          if (card!.binding case SlotBinding(:final slotId)) {
-            final slot = ref.read(slotsProvider).slotOrDefault(slotId);
-            ref
-                .read(slotsProvider.notifier)
-                .setColorIndex(slot.id, slot.colorIndex + 1);
-          }
-        case 'pin':
-          final pinned = pinnedBindingFor(
-            card!.binding,
-            ref.read(slotsProvider),
-            configOverride: card.configOverride,
-          );
-          if (pinned != null) workspace.pinCard(card.id, pinned);
-        case 'unpin':
-          workspace.setCardBinding(
-            card!.id,
-            SlotBinding(ref.read(slotsProvider).activeSlotId),
-          );
-        case 'reset_size':
-          final renderer = card!.rendererType != null
-              ? registry.get(card.rendererType!)
-              : null;
-          final ar = renderer?.meta.preferredAspectRatio;
-          final size = ar != null ? const Size(500, 500) : const Size(500, 400);
-          workspace.resetCardSize(card.id, size);
-        case 'add':
-          final viewportLocal = _globalToViewport(globalPos);
-          final local = _viewportToWorkspace(viewportLocal);
-          final counter = ref.read(workspaceProvider).cardCounter;
-          workspace.addCard(local, const Size(240, 160), 'Card $counter');
-      }
-    }
+    if (result == null || !mounted) return;
+    await ref.read(actionRegistryProvider).execute(result, actionCtx);
   }
 
-  void _openSiblingCard(CardModel source, String rendererId) {
-    final registry = ref.read(rendererRegistryProvider);
-    final renderer = registry.get(rendererId);
-    final ar = renderer?.meta.preferredAspectRatio;
-    final size = ar != null ? const Size(500, 500) : const Size(500, 400);
-
-    ref
-        .read(workspaceProvider.notifier)
-        .addCard(
-          source.position + const Offset(30, 30),
-          size,
-          source.label,
-          binding: source.binding,
-          configOverride: source.configOverride,
-          rendererType: rendererId,
-          preferredAspectRatio: ar,
-        );
-  }
-
-  Future<void> _openChartAs(Offset globalPos, String rendererType) async {
-    final loadResult = await loadChartFromFile(ref.read(chartStoreProvider));
-    if (!mounted) return;
-    if (loadResult is ChartLoadCancelled) return;
-    final slots = ref.read(slotsProvider);
-    final slot = slots.activeSlot;
-    final result = await bindChartToCard(
-      ref.read(chartStoreProvider),
-      loadResult,
-      config: canonicalConfig(slot.config),
-      rendererType: rendererType,
-    );
-    if (!mounted) return;
-    switch (result) {
-      case ChartBound(:final chartName, :final expressionRef):
-        // Opening a chart with no slot targeted loads it into the active
-        // slot: every card bound to that slot follows.
-        ref
-            .read(slotsProvider.notifier)
-            .setChart(slot.id, expressionRef.chartId, chartName: chartName);
-        final renderer = ref.read(rendererRegistryProvider).get(rendererType);
-        final ar = renderer?.meta.preferredAspectRatio;
-        final size = ar != null ? const Size(500, 500) : const Size(500, 400);
-        final viewportLocal = _globalToViewport(globalPos);
-        final local = _viewportToWorkspace(viewportLocal);
-        ref
-            .read(workspaceProvider.notifier)
-            .addCard(
-              local,
-              size,
-              chartName,
-              binding: SlotBinding(slot.id),
-              rendererType: rendererType,
-              preferredAspectRatio: ar,
-            );
-      case BindFailed(:final message):
-        _showError(context, message);
-    }
+  Size _canvasSize() {
+    final box = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    return box?.size ?? Size.zero;
   }
 
   void _showError(BuildContext context, String message) {

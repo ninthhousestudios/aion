@@ -174,11 +174,11 @@ becomes a registry consumer.
 
 Acceptance criteria:
 
-- [ ] `ActionRegistry` model with enablement + execute; generation from renderer registry, slot ops, workspace ops, toggles
-- [ ] Domain alias table (d1–d60, dashas) attached to renderer meta
-- [ ] Fuzzy matcher with ranking; unit tests for alias and fuzzy hits
-- [ ] Card and canvas context menus consume the registry; existing menu behavior preserved
-- [ ] Registry directory respects the layering constraint; path recorded in the log
+- [x] `ActionRegistry` model with enablement + execute; generation from renderer registry, slot ops, workspace ops, toggles
+- [x] Domain alias table (d1–d60, dashas) attached to renderer meta
+- [x] Fuzzy matcher with ranking; unit tests for alias and fuzzy hits
+- [x] Card and canvas context menus consume the registry; existing menu behavior preserved
+- [x] Registry directory respects the layering constraint; path recorded in the log
 
 ### aion/53 — Expression config dialog
 
@@ -440,3 +440,6 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/63 — Default slot config is `{}` (drishti's defaults), matching the previous `bindChartToCard` default.
 - aion/64 — Per-chart accents (`WorkspaceState.chartAccents`, `cycleChartAccent`, hardcoded palette in WorkspaceNotifier) removed; the palette moved to `AionTheme.slotPalette` and the strip is resolved by `ThemeResolver.stripFor(card, slots)`. `test/canvas/workspace_accent_test.dart` deleted (the per-chart accent behavior it tested no longer exists; replaced by `test/slots/slot_strip_test.dart`). 'Cycle Color' in the card menu now recolors the card's slot.
 - aion/64 — Card menu uses a flat 'slot binding' section (one checked item per slot) rather than a nested submenu: `showMenu` has no submenu support and the flat list keeps one-right-click access. Unpin rebinds to the *active* slot (PRD's PinnedBinding carries no origin slot). Pinned cards show a neutral (`cardDimColor`) strip plus a pin icon. **Needs visual check:** strip color, pin icon placement, immediate recolor on bound cards.
+- aion/65 — Registry lives in `lib/commands/` (`app_action.dart`, `action_registry.dart`, `action_matcher.dart`, `view_actions.dart`, `action_menu.dart`); it imports only `lib/renderer/chart_renderer.dart` (for `RendererMeta`) — no `lib/canvas/`, no renderer implementations. Bind the layering rule to `lib/commands/**`. No metadata move was needed. The concrete canvas/card/slot actions are built in `lib/canvas/canvas_actions.dart` (they need the workspace notifier) and assembled by `actionRegistryProvider` in `lib/providers/`.
+- aion/65 — `RendererMeta` gained `category` (default 'Charts') and `aliases`; the domain alias table (d1–d60 vargas, dasha abbreviations) is `lib/renderer/renderer_aliases.dart`. Category names are plain strings shared with `ActionCategory` so `lib/renderer` does not import `lib/commands`.
+- aion/65 — Workspace ops in the registry at this point: Add Card, Snap to Edges; save/switch/edit-mode/arrange actions are added by aion/70–73. Menu layouts are id lists (`cardMenuIds`, `canvasMenuIds`); disabled actions are hidden rather than greyed, matching the old conditional menu sections. The menus are otherwise unchanged apart from the slot section added in aion/64. The old inline `_openSiblingCard`/`_openChartAs` moved into registry actions. **Needs visual check:** card/canvas menus look and behave as before.

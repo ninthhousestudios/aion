@@ -9,11 +9,19 @@ class RendererMeta {
   final List<String> systems;
   final double? preferredAspectRatio;
 
+  /// View-catalog category: one of 'Charts', 'Vargas', 'Tables', 'Time'.
+  final String category;
+
+  /// Search aliases for the palette — see `renderer_aliases.dart`.
+  final List<String> aliases;
+
   const RendererMeta({
     required this.id,
     required this.displayName,
     required this.systems,
     this.preferredAspectRatio,
+    this.category = 'Charts',
+    this.aliases = const [],
   });
 }
 

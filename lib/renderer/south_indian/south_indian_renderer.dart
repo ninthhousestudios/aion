@@ -5,14 +5,16 @@ import 'package:flutter/rendering.dart';
 
 import '../../theme/display_options.dart';
 import '../chart_renderer.dart';
+import '../renderer_aliases.dart';
 
 class SouthIndianRenderer extends ChartRenderer {
   @override
-  RendererMeta get meta => const RendererMeta(
+  RendererMeta get meta => RendererMeta(
     id: 'south_indian',
     displayName: 'South Indian Grid',
-    systems: ['vedic'],
+    systems: const ['vedic'],
     preferredAspectRatio: 1.0,
+    aliases: [...vargaAliases('d1'), 'si', 'south', 'grid'],
   );
 
   @override

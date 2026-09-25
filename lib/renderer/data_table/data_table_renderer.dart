@@ -12,6 +12,8 @@ class DataTableRenderer extends ChartRenderer {
     id: 'data_table',
     displayName: 'Data Table',
     systems: [],
+    category: 'Tables',
+    aliases: ['table', 'planets', 'positions', 'longitudes', 'dt'],
   );
 
   @override
