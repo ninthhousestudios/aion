@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../commands/action_menu.dart';
+import '../config/config_editor.dart';
 import '../commands/app_action.dart';
 import '../providers/action_registry_provider.dart';
 import '../providers/chart_store_provider.dart';
@@ -52,6 +53,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
       onError: (message) {
         if (mounted) _showError(context, message);
       },
+      editConfig: (request) => _editConfig(request, anchor: globalPos),
     );
     final layout = card != null
         ? cardMenuIds(renderers, ref.read(slotsProvider).slots)
@@ -70,6 +72,17 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     );
     if (result == null || !mounted) return;
     await ref.read(actionRegistryProvider).execute(result, actionCtx);
+  }
+
+  void _editConfig(ConfigEditRequest request, {Offset? anchor}) {
+    if (!mounted) return;
+    showConfigDialog(
+      context,
+      title: request.title,
+      initial: request.initial,
+      onChanged: request.onChanged,
+      anchor: anchor,
+    );
   }
 
   Size _canvasSize() {

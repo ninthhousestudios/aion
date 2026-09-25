@@ -13,6 +13,7 @@ class ActionContext {
     this.position,
     this.viewportSize,
     this.onError,
+    this.editConfig,
   });
 
   /// Target card for card-scoped actions.
@@ -26,6 +27,23 @@ class ActionContext {
 
   /// Reports a user-facing failure (e.g. a chart failed to load).
   final void Function(String message)? onError;
+
+  /// Opens the expression config editor. Supplied by UI surfaces; actions
+  /// that edit config are no-ops without it.
+  final void Function(ConfigEditRequest request)? editConfig;
+}
+
+/// A request to edit an expression config interactively.
+class ConfigEditRequest {
+  const ConfigEditRequest({
+    required this.title,
+    required this.initial,
+    required this.onChanged,
+  });
+
+  final String title;
+  final Map<String, Object> initial;
+  final void Function(Map<String, Object> config) onChanged;
 }
 
 bool _always(ActionContext _) => true;

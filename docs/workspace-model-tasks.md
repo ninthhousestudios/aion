@@ -193,14 +193,14 @@ expression config any more; slot config replaces it.
 
 Acceptance criteria:
 
-- [ ] Dialog renders collapsible sections from `ConfigDimension` groups
-- [ ] Collapsed sections show dimension name + current value
-- [ ] Expanded sections show the full option list appropriate to the type
-- [ ] SweConfig vs CalcConfig indicator visible on sections
-- [ ] Dialog anchors near the source card when opened from the context menu
-- [ ] Dialog can be embedded (not only shown as a modal)
-- [ ] Changing a value calls back with the updated config
-- [ ] Card context menu entry opens it as a per-card override editor
+- [x] Dialog renders collapsible sections from `ConfigDimension` groups
+- [x] Collapsed sections show dimension name + current value
+- [x] Expanded sections show the full option list appropriate to the type
+- [x] SweConfig vs CalcConfig indicator visible on sections
+- [x] Dialog anchors near the source card when opened from the context menu
+- [x] Dialog can be embedded (not only shown as a modal)
+- [x] Changing a value calls back with the updated config
+- [x] Card context menu entry opens it as a per-card override editor
 
 ---
 
@@ -443,3 +443,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/65 — Registry lives in `lib/commands/` (`app_action.dart`, `action_registry.dart`, `action_matcher.dart`, `view_actions.dart`, `action_menu.dart`); it imports only `lib/renderer/chart_renderer.dart` (for `RendererMeta`) — no `lib/canvas/`, no renderer implementations. Bind the layering rule to `lib/commands/**`. No metadata move was needed. The concrete canvas/card/slot actions are built in `lib/canvas/canvas_actions.dart` (they need the workspace notifier) and assembled by `actionRegistryProvider` in `lib/providers/`.
 - aion/65 — `RendererMeta` gained `category` (default 'Charts') and `aliases`; the domain alias table (d1–d60 vargas, dasha abbreviations) is `lib/renderer/renderer_aliases.dart`. Category names are plain strings shared with `ActionCategory` so `lib/renderer` does not import `lib/commands`.
 - aion/65 — Workspace ops in the registry at this point: Add Card, Snap to Edges; save/switch/edit-mode/arrange actions are added by aion/70–73. Menu layouts are id lists (`cardMenuIds`, `canvasMenuIds`); disabled actions are hidden rather than greyed, matching the old conditional menu sections. The menus are otherwise unchanged apart from the slot section added in aion/64. The old inline `_openSiblingCard`/`_openChartAs` moved into registry actions. **Needs visual check:** card/canvas menus look and behave as before.
+- aion/53 — Editor is `ConfigEditor` (embeddable) + `showConfigDialog` in `lib/config/config_editor.dart`; pure helpers in `lib/config/config_values.dart`. Configs store only non-default values (untouched = `{}`), multi-selects as sorted JSON lists. Cost mapping: `ConfigCost.expensive` → 'SweConfig' badge, `cheap` → 'CalcConfig', mixed sections → 'Swe + Calc' (the tracker didn't define the mapping; expensive dimensions are the ephemeris-level ones). Changes apply live on every edit (no OK/Cancel).
+- aion/53 — Surfaces open the dialog through `ActionContext.editConfig` (a callback the UI supplies), so registry actions stay free of `BuildContext`. Card menu gained 'Expression Config…' and 'Clear Config Override'; slot config is `slot.config.<id>`. **Unverified assumption:** dimension keys (`signAyanamsa`, `houseSystem`, …) are passed to drishti's `calculate_chart` as-is — needs checking against the drishti tool schema. **Needs visual check:** dialog anchoring near the card, section collapse/expand, dropdown/switch/chip controls.

@@ -29,6 +29,8 @@ Offset cascadePosition(int existingCards) {
   return Offset(80 + step, 60 + step);
 }
 
+String slotConfigActionId(String slotId) => 'slot.config.$slotId';
+
 /// Card menu layout: action ids in order, `null` for a divider. Entries
 /// whose action is missing or disabled are skipped.
 List<String?> cardMenuIds(
@@ -47,6 +49,9 @@ List<String?> cardMenuIds(
   'card.reset_size',
   'card.delete',
   'card.cycle_slot_color',
+  null,
+  'card.config',
+  'card.clear_config',
   null,
   for (final s in slots) 'slot.bind.${s.id}',
   'card.pin',
@@ -315,6 +320,62 @@ List<AppAction> buildCanvasActions(Ref ref) {
         }
       },
     ),
+
+    // Expression config: per-card override (the opt-in exception).
+    AppAction(
+      id: 'card.config',
+      title: 'Expression Config…',
+      category: ActionCategory.card,
+      requiresCard: true,
+      icon: Icons.tune,
+      isEnabled: (ctx) => bound(ctx) && ctx.editConfig != null,
+      execute: (ctx) {
+        final card = cardOf(ctx);
+        if (card == null) return;
+        final base = switch (card.binding) {
+          SlotBinding(:final slotId) =>
+            ref.read(slotsProvider).slotOrDefault(slotId).config,
+          PinnedBinding(:final config) => config,
+          null => const <String, Object>{},
+        };
+        ctx.editConfig?.call(
+          ConfigEditRequest(
+            title: 'Card config override — ${card.label}',
+            initial: card.configOverride ?? base,
+            onChanged: (config) =>
+                workspace().setCardConfigOverride(card.id, config),
+          ),
+        );
+      },
+    ),
+    AppAction(
+      id: 'card.clear_config',
+      title: 'Clear Config Override',
+      category: ActionCategory.card,
+      requiresCard: true,
+      isEnabled: (ctx) => cardOf(ctx)?.configOverride != null,
+      execute: (ctx) {
+        if (ctx.cardId case final id?) {
+          workspace().setCardConfigOverride(id, null);
+        }
+      },
+    ),
+    for (final slot in slots)
+      AppAction(
+        id: slotConfigActionId(slot.id),
+        title: 'Configure ${slotMenuLabel(slot)}…',
+        category: ActionCategory.slots,
+        icon: Icons.tune,
+        isEnabled: (ctx) => ctx.editConfig != null,
+        execute: (ctx) => ctx.editConfig?.call(
+          ConfigEditRequest(
+            title: 'Slot ${slot.id} config',
+            initial: ref.read(slotsProvider).slotOrDefault(slot.id).config,
+            onChanged: (config) =>
+                ref.read(slotsProvider.notifier).setConfig(slot.id, config),
+          ),
+        ),
+      ),
 
     // Card slot binding.
     for (final slot in slots)
