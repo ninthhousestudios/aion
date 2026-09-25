@@ -238,10 +238,10 @@ one.
 
 Acceptance criteria:
 
-- [ ] Ctrl+K and a rail button open the palette overlay
-- [ ] Fuzzy matching over titles + aliases with sensible ranking
-- [ ] Empty query shows clickable category browsing
-- [ ] Enter/click executes the action (add view to active slot, workspace ops, toggles)
+- [x] Ctrl+K and a rail button open the palette overlay
+- [x] Fuzzy matching over titles + aliases with sensible ranking
+- [x] Empty query shows clickable category browsing
+- [x] Enter/click executes the action (add view to active slot, workspace ops, toggles)
 
 ### aion/68 — Slots panel flyout: load chart, label/color, active slot, config entry
 
@@ -446,3 +446,4 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/53 — Editor is `ConfigEditor` (embeddable) + `showConfigDialog` in `lib/config/config_editor.dart`; pure helpers in `lib/config/config_values.dart`. Configs store only non-default values (untouched = `{}`), multi-selects as sorted JSON lists. Cost mapping: `ConfigCost.expensive` → 'SweConfig' badge, `cheap` → 'CalcConfig', mixed sections → 'Swe + Calc' (the tracker didn't define the mapping; expensive dimensions are the ephemeris-level ones). Changes apply live on every edit (no OK/Cancel).
 - aion/53 — Surfaces open the dialog through `ActionContext.editConfig` (a callback the UI supplies), so registry actions stay free of `BuildContext`. Card menu gained 'Expression Config…' and 'Clear Config Override'; slot config is `slot.config.<id>`. **Unverified assumption:** dimension keys (`signAyanamsa`, `houseSystem`, …) are passed to drishti's `calculate_chart` as-is — needs checking against the drishti tool schema. **Needs visual check:** dialog anchoring near the card, section collapse/expand, dropdown/switch/chip controls.
 - aion/67 — Rail + flyouts live in `lib/shell/` (`rail.dart`, `rail_state.dart`, `catalog_flyout.dart`). The rail is a 44px strip under the title bar inside `CanvasWorkspace`'s stack; the canvas viewport now starts offset by the rail width so cards don't begin under it. Flyouts: one at a time (`railProvider`), dismissed by click-away (transparent barrier), Esc, or re-clicking the rail button. The rail's active-slot button carries a dot in the active slot's color. Time button is a disabled placeholder (out of scope). Catalog tiles run the registry's add-view action, which adds a card bound to the active slot. **Needs visual check:** rail look, flyout placement, click-away/Esc dismissal, catalog tile grid.
+- aion/25 — Palette is `lib/shell/command_palette.dart` (overlay via `showGeneralDialog`) with pure listing logic in `lib/shell/palette_entries.dart`, reusing `rankActions` from aion/65 — no second matcher. Empty query lists categories (with counts); clicking one scopes the list; Backspace on an empty query leaves the category. Actions run with the *selected* card as target, so card actions appear only when a card is selected. Opened by Ctrl+K (canvas keyboard handler) and the rail's search button. **Needs visual check:** Ctrl+K focus handling, arrow/Enter navigation, hover highlight, category chip.

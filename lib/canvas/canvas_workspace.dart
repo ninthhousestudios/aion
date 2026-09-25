@@ -12,6 +12,7 @@ import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import '../theme/preset_store.dart';
 import '../shell/catalog_flyout.dart';
+import '../shell/command_palette.dart';
 import '../shell/rail.dart';
 import '../shell/rail_state.dart';
 import '../widgets/title_bar.dart';
@@ -89,6 +90,15 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     editConfig: _editConfig,
   );
 
+  void _openPalette() {
+    ref.read(railProvider.notifier).close();
+    showCommandPalette(
+      context,
+      registry: ref.read(actionRegistryProvider),
+      ctx: _globalActionContext(),
+    );
+  }
+
   Future<void> _runAction(String id) =>
       ref.read(actionRegistryProvider).execute(id, _globalActionContext());
 
@@ -151,6 +161,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     if (event.logicalKey == LogicalKeyboardKey.escape &&
         ref.read(railProvider) != null) {
       ref.read(railProvider.notifier).close();
+      return;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.keyK &&
+        HardwareKeyboard.instance.isControlPressed) {
+      _openPalette();
       return;
     }
     if (event.logicalKey == LogicalKeyboardKey.keyT) {
@@ -323,11 +338,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                 child: _flyoutFor(openSection),
               ),
             ],
-            const Positioned(
+            Positioned(
               left: 0,
               top: TitleBar.height,
               bottom: 0,
-              child: Rail(),
+              child: Rail(onPalette: _openPalette),
             ),
             const Positioned(top: 0, left: 0, right: 0, child: TitleBar()),
             Positioned(
