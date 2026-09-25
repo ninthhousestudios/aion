@@ -10,6 +10,25 @@ import 'card_model.dart';
 import 'snap_physics.dart';
 import 'workspace_state.dart';
 
+/// Settings card placement: ~80% of the visible canvas, centered. Never
+/// smaller than 480×360 (or the canvas, if that is smaller).
+Rect settingsCardRect(Size viewport) {
+  final w = (viewport.width * 0.8).clamp(
+    480.0 < viewport.width ? 480.0 : viewport.width,
+    viewport.width,
+  );
+  final h = (viewport.height * 0.8).clamp(
+    360.0 < viewport.height ? 360.0 : viewport.height,
+    viewport.height,
+  );
+  return Rect.fromLTWH(
+    (viewport.width - w) / 2,
+    (viewport.height - h) / 2,
+    w,
+    h,
+  );
+}
+
 final workspaceProvider = NotifierProvider<WorkspaceNotifier, WorkspaceState>(
   WorkspaceNotifier.new,
 );
@@ -39,6 +58,25 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       rendererType: rendererType,
       preferredAspectRatio: preferredAspectRatio,
     );
+  }
+
+  /// Opens the settings card, or brings the existing one forward. [rect]
+  /// is where a new one goes (see [settingsCardRect]).
+  void openSettingsCard(Rect rect) {
+    for (final card in state.cards) {
+      if (card.kind == CardKind.settings) {
+        selectCard(card.id);
+        return;
+      }
+    }
+    state = _addCardToState(
+      state,
+      rect.topLeft,
+      rect.size,
+      'Settings',
+      kind: CardKind.settings,
+    );
+    selectCard(state.cards.last.id);
   }
 
   void duplicateCard(String id) {
@@ -289,8 +327,10 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     double? preferredAspectRatio,
     Map<String, dynamic> displayConfig = const {},
     CardDisplayOverrides displayOverrides = CardDisplayOverrides.empty,
+    CardKind kind = CardKind.chart,
   }) {
     final card = CardModel(
+      kind: kind,
       id: 'card_${current.cardCounter}',
       label: label,
       position: position,

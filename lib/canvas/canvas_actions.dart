@@ -132,6 +132,7 @@ List<AppAction> buildCanvasActions(Ref ref) {
     title: title,
     category: ActionCategory.display,
     requiresCard: true,
+    isEnabled: (ctx) => cardOf(ctx)?.kind == CardKind.chart,
     isChecked: (ctx) {
       final card = cardOf(ctx);
       if (card == null) return false;
@@ -184,6 +185,17 @@ List<AppAction> buildCanvasActions(Ref ref) {
       aliases: const ['snap', 'magnet'],
       isChecked: (_) => ref.read(workspaceProvider).snapEnabled,
       execute: (_) => workspace().toggleSnap(),
+    ),
+
+    AppAction(
+      id: 'settings.open',
+      title: 'Settings',
+      category: ActionCategory.settings,
+      aliases: const ['preferences', 'theme', 'options'],
+      icon: Icons.settings_outlined,
+      execute: (ctx) => workspace().openSettingsCard(
+        settingsCardRect(ctx.viewportSize ?? const Size(1280, 800)),
+      ),
     ),
 
     // Slots.
@@ -299,6 +311,7 @@ List<AppAction> buildCanvasActions(Ref ref) {
       title: 'Duplicate',
       category: ActionCategory.card,
       requiresCard: true,
+      isEnabled: (ctx) => cardOf(ctx)?.kind != CardKind.settings,
       execute: (ctx) {
         if (ctx.cardId case final id?) workspace().duplicateCard(id);
       },

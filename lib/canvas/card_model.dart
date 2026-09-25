@@ -4,6 +4,10 @@ import '../slots/card_binding.dart';
 import '../slots/chart_slot.dart';
 import '../theme/card_display_overrides.dart';
 
+/// What a card hosts. Chart cards render an Expression; the settings card
+/// hosts app settings and is never chart-bound.
+enum CardKind { chart, settings }
+
 class CardModel {
   const CardModel({
     required this.id,
@@ -19,6 +23,7 @@ class CardModel {
     this.preferredAspectRatio,
     this.opacityOverride,
     this.displayOverrides = CardDisplayOverrides.empty,
+    this.kind = CardKind.chart,
   });
 
   final String id;
@@ -39,6 +44,7 @@ class CardModel {
   final double? preferredAspectRatio;
   final double? opacityOverride;
   final CardDisplayOverrides displayOverrides;
+  final CardKind kind;
 
   Rect get rect => position & size;
 
@@ -58,6 +64,7 @@ class CardModel {
     Object? preferredAspectRatio = _unset,
     Object? opacityOverride = _unset,
     CardDisplayOverrides? displayOverrides,
+    CardKind? kind,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -83,6 +90,7 @@ class CardModel {
           ? this.opacityOverride
           : opacityOverride as double?,
       displayOverrides: displayOverrides ?? this.displayOverrides,
+      kind: kind ?? this.kind,
     );
   }
 }

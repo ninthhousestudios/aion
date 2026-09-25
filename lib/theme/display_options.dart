@@ -22,6 +22,20 @@ class DisplayOptions {
   final bool usePlanetGlyphs;
   final bool showOuterPlanets;
 
+  DisplayOptions copyWith({
+    bool? useSignGlyphs,
+    bool? usePlanetGlyphs,
+    bool? showOuterPlanets,
+  }) => DisplayOptions(
+    signNames: signNames,
+    signPresetSource: signPresetSource,
+    planetNames: planetNames,
+    planetPresetSource: planetPresetSource,
+    useSignGlyphs: useSignGlyphs ?? this.useSignGlyphs,
+    usePlanetGlyphs: usePlanetGlyphs ?? this.usePlanetGlyphs,
+    showOuterPlanets: showOuterPlanets ?? this.showOuterPlanets,
+  );
+
   static const defaultOptions = DisplayOptions(
     signNames: _tropicalWesternSigns,
     signPresetSource: 'tropical-western',

@@ -344,7 +344,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
               left: 0,
               top: TitleBar.height,
               bottom: 0,
-              child: Rail(onPalette: _openPalette),
+              child: Rail(
+                onPalette: _openPalette,
+                onSettings: () => _runAction('settings.open'),
+              ),
             ),
             const Positioned(top: 0, left: 0, right: 0, child: TitleBar()),
             Positioned(

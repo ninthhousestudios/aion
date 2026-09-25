@@ -5,6 +5,7 @@ import '../mcp/chart_store.dart';
 import '../mcp/expression_state.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../renderer/renderer_host.dart';
+import '../shell/settings_panel.dart';
 import '../slots/expression_resolution.dart';
 import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
@@ -209,7 +210,12 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
                   right: 6,
                   child: Icon(Icons.push_pin, size: 12, color: t.cardDimColor),
                 ),
-              if (m.rendererType != null)
+              if (m.kind == CardKind.settings)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: const SettingsPanel(),
+                )
+              else if (m.rendererType != null)
                 Padding(
                   padding: const EdgeInsets.all(4),
                   child: _buildRenderer(m, t, resolved.displayOptions),
