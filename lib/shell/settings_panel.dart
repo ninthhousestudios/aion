@@ -138,6 +138,12 @@ class _GeneralTab extends ConsumerWidget {
       children: [
         SwitchListTile(
           dense: true,
+          title: Text('Edit layout (unlock cards)', style: label),
+          value: workspace.editMode,
+          onChanged: notifier.setEditMode,
+        ),
+        SwitchListTile(
+          dense: true,
           title: Text('Snap cards to edges', style: label),
           value: workspace.snapEnabled,
           onChanged: (_) => notifier.toggleSnap(),

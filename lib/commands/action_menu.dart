@@ -36,8 +36,11 @@ List<PopupMenuEntry<String>> popupEntries(
       CheckedPopupMenuItem(
         value: action.id,
         checked: checked(ctx),
-        child: Text(action.title),
+        child: Text(action.menuTitle ?? action.title),
       )
     else
-      PopupMenuItem(value: action.id, child: Text(action.title)),
+      PopupMenuItem(
+        value: action.id,
+        child: Text(action.menuTitle ?? action.title),
+      ),
 ];

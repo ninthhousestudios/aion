@@ -21,6 +21,7 @@ class CanvasCard extends ConsumerStatefulWidget {
     required this.model,
     required this.chartStore,
     required this.selected,
+    this.editable = false,
     required this.onSelect,
     required this.onResizeUpdate,
     required this.onResizeEnd,
@@ -30,6 +31,9 @@ class CanvasCard extends ConsumerStatefulWidget {
   final CardModel model;
   final ChartStore chartStore;
   final bool selected;
+
+  /// Edit mode: corner grips and the move cursor are only active here.
+  final bool editable;
   final VoidCallback onSelect;
   final void Function(Offset delta, ResizeCorner corner) onResizeUpdate;
   final VoidCallback onResizeEnd;
@@ -165,7 +169,9 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
       child: MouseRegion(
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
-        cursor: SystemMouseCursors.move,
+        cursor: widget.editable
+            ? SystemMouseCursors.move
+            : SystemMouseCursors.basic,
         child: Container(
           width: m.size.width,
           height: m.size.height,
@@ -242,7 +248,8 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
                     ],
                   ),
                 ),
-              for (final corner in ResizeCorner.values) _cornerGrip(corner),
+              if (widget.editable)
+                for (final corner in ResizeCorner.values) _cornerGrip(corner),
             ],
           ),
         ),

@@ -18,6 +18,7 @@ List<AppAction> viewActionsFromRenderers(
     AppAction(
       id: addViewActionId(meta.id),
       title: meta.displayName,
+      menuTitle: 'Add ${meta.displayName}',
       category: meta.category,
       aliases: meta.aliases,
       icon: _iconFor(meta.category),

@@ -145,6 +145,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     Size canvasSize, {
     bool applySnap = true,
   }) {
+    if (!state.editMode) return;
     final card = state.cardById(id);
     if (card == null) return;
 
@@ -161,6 +162,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
   }
 
   void resizeCard(String id, Offset delta, ResizeCorner corner) {
+    if (!state.editMode) return;
     final card = state.cardById(id);
     if (card == null) return;
 
@@ -280,6 +282,13 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(cards: _replaceCard(card.copyWith(size: size)));
   }
 
+  void setEditMode(bool on) {
+    if (on == state.editMode) return;
+    state = state.copyWith(editMode: on, guides: const []);
+  }
+
+  void toggleEditMode() => setEditMode(!state.editMode);
+
   void toggleSnap() {
     state = state.copyWith(snapEnabled: !state.snapEnabled, guides: const []);
   }
@@ -287,6 +296,10 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
   void handleKey(LogicalKeyboardKey key) {
     if (key == LogicalKeyboardKey.keyS) {
       toggleSnap();
+      return;
+    }
+    if (key == LogicalKeyboardKey.keyE) {
+      toggleEditMode();
       return;
     }
 
@@ -324,8 +337,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
           Size.zero,
           applySnap: false,
         );
-      case LogicalKeyboardKey.delete:
-      case LogicalKeyboardKey.backspace:
+      case LogicalKeyboardKey.delete || LogicalKeyboardKey.backspace
+          when state.editMode:
         deleteCard(selectedId);
       case LogicalKeyboardKey.tab:
         _selectNextCard();

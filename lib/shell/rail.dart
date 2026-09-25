@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../canvas/workspace_notifier.dart';
 import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import 'rail_state.dart';
@@ -11,7 +12,7 @@ import 'rail_state.dart';
 /// buttons whose feature isn't wired pass a null callback and render
 /// disabled.
 class Rail extends ConsumerWidget {
-  const Rail({super.key, this.onPalette, this.onSettings});
+  const Rail({super.key, this.onPalette, this.onSettings, this.onEditMode});
 
   static const double width = 44;
 
@@ -20,12 +21,16 @@ class Rail extends ConsumerWidget {
   /// Settings opens a card rather than a flyout.
   final VoidCallback? onSettings;
 
+  /// Toggles view/edit mode; the button shows which mode is active.
+  final VoidCallback? onEditMode;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = Theme.of(context).extension<AionTheme>()!;
     final open = ref.watch(railProvider);
     final rail = ref.read(railProvider.notifier);
     final activeSlot = ref.watch(slotsProvider.select((s) => s.activeSlot));
+    final editMode = ref.watch(workspaceProvider.select((s) => s.editMode));
 
     Widget button(
       IconData icon,
@@ -33,8 +38,9 @@ class Rail extends ConsumerWidget {
       RailSection? section,
       VoidCallback? onTap,
       Widget? badge,
+      bool active = false,
     }) {
-      final selected = section != null && open == section;
+      final selected = active || (section != null && open == section);
       final enabled = onTap != null || section != null;
       return Tooltip(
         message: tooltip,
@@ -107,6 +113,14 @@ class Rail extends ConsumerWidget {
           // Time cursor is out of scope for this run (aion/78, aion/79).
           button(Icons.schedule, 'Time (coming later)'),
           const Spacer(),
+          button(
+            editMode ? Icons.lock_open : Icons.lock_outline,
+            editMode
+                ? 'Editing layout — click to lock'
+                : 'Layout locked — click to edit',
+            onTap: onEditMode,
+            active: editMode,
+          ),
           button(Icons.settings_outlined, 'Settings', onTap: onSettings),
         ],
       ),

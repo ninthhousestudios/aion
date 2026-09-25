@@ -60,10 +60,21 @@ List<String?> cardMenuIds(
   'card.unpin',
 ];
 
-/// Canvas (background) menu layout.
-List<String?> canvasMenuIds(Iterable<RendererMeta> renderers) => [
-  'canvas.add_card',
-  for (final r in renderers) 'view.open_chart.${r.id}',
+/// Canvas (background) menu layout: add-view, edit-mode toggle and
+/// workspace operations only (PRD story 28). Everything else lives on the
+/// rail and in the palette.
+List<String?> canvasMenuIds(
+  Iterable<RendererMeta> renderers, {
+  Iterable<String> workspaceNames = const [],
+}) => [
+  for (final r in renderers) addViewActionId(r.id),
+  null,
+  'workspace.toggle_edit',
+  null,
+  'workspace.save',
+  'workspace.save_as',
+  null,
+  for (final name in workspaceNames) 'workspace.load.$name',
 ];
 
 /// Every canvas-, card-, slot- and display-level action, as registry
@@ -178,6 +189,15 @@ List<AppAction> buildCanvasActions(Ref ref) {
           if (await loadChartIntoSlot(null, ctx)) addView(meta, ctx);
         },
       ),
+    AppAction(
+      id: 'workspace.toggle_edit',
+      title: 'Edit Layout',
+      category: ActionCategory.workspace,
+      aliases: const ['edit', 'unlock', 'lock', 'arrange', 'layout'],
+      icon: Icons.edit_outlined,
+      isChecked: (_) => ref.read(workspaceProvider).editMode,
+      execute: (_) => workspace().toggleEditMode(),
+    ),
     AppAction(
       id: 'workspace.toggle_snap',
       title: 'Snap to Edges',

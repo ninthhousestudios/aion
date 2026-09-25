@@ -66,10 +66,15 @@ class AppAction {
     this.isEnabled = _always,
     this.isChecked,
     this.requiresCard = false,
+    this.menuTitle,
   });
 
   final String id;
   final String title;
+
+  /// Label in context menus when it should read differently from [title]
+  /// (e.g. "Add Data Table" vs the catalog's "Data Table").
+  final String? menuTitle;
 
   /// One of the `ActionCategory` constants.
   final String category;

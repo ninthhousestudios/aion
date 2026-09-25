@@ -316,10 +316,10 @@ palette, canvas menu).
 
 Acceptance criteria:
 
-- [ ] View mode: drag/resize/grips disabled; content interaction (hover/click/scroll) unaffected
-- [ ] Edit mode: existing drag/resize/snap behavior intact
-- [ ] Mode toggle via ActionRegistry with a clear visual affordance of which mode is active
-- [ ] Canvas context menu reduced to add-view, edit-mode toggle, workspace operations (PRD story 28)
+- [x] View mode: drag/resize/grips disabled; content interaction (hover/click/scroll) unaffected
+- [x] Edit mode: existing drag/resize/snap behavior intact
+- [x] Mode toggle via ActionRegistry with a clear visual affordance of which mode is active
+- [x] Canvas context menu reduced to add-view, edit-mode toggle, workspace operations (PRD story 28)
 
 ### aion/72 — Arrangement commands: tile selection as grid, align, distribute
 
@@ -451,3 +451,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/57 — Settings card = `CardModel(kind: CardKind.settings)` (new `CardKind` enum, default `chart`), unbound so it gets no strip; interior is `lib/shell/settings_panel.dart` (Theme: preset list via `presetStoreProvider`; Display: global glyph/outer-planet toggles via `displayOptionsProvider`, using a new `DisplayOptions.copyWith`; General: snap toggle — edit mode added in aion/71). Opened by `settings.open` (rail settings button, palette); a second open re-selects the existing card instead of adding another. Size = 80% of the visible canvas (min 480×360), placed in workspace coordinates assuming the viewport hasn't been panned. Duplicate and per-card display toggles are disabled on it. **Needs visual check:** tab switching, theme switching live, card stays usable while working.
 - aion/70 — Workspace model and persistence live in `lib/workspaces/` (`workspace.dart` model + TOML codec, `workspace_store.dart` file store + `workspaceLibraryProvider`, `workspace_actions.dart` registry actions). Files go to `<app support>/workspaces/<slug>.toml` like theme presets. Serialization uses `TomlDocument.fromMap` (not a hand-written writer like presets) — simpler and escapes correctly. Pinned cards store their chart *id* (a file path reference) and config — a reference, not chart data; slot-bound cards store only the slot id.
 - aion/70 — Save/load UI at this point: 'Save Workspace As…', 'Save Workspace', 'Switch to <name>' registry actions (palette), with a new `ActionContext.promptText` callback + `lib/shell/text_prompt.dart` for the name. Loading replaces all cards (`WorkspaceNotifier.replaceCards`, fresh ids); slots are untouched. Unknown TOML keys are ignored; cards without geometry are skipped; an unknown `kind` falls back to chart.
+- aion/71 — `WorkspaceState.editMode` (default false) is enforced in the notifier: `moveCard`, `resizeCard`, arrow nudges and keyboard Delete are no-ops in view mode, so the lock is logic-level, not just UI. Three existing tests in `test/canvas/workspace_notifier_test.dart` (move, keyboard, snap guides) now switch edit mode on first — the behavior they test is now edit-mode-only. Card-menu Delete still works in view mode (PRD story 27 keeps it as a scoped shortcut). In view mode clicking a card only selects it (selection targets palette card actions).
+- aion/71 — Toggle surfaces: `workspace.toggle_edit` (palette, canvas menu), a lock/unlock rail button, the E key, and a switch in Settings → General. Affordance: corner grips and the move cursor appear only in edit mode; the bottom-left badge reads 'VIEW · layout locked' or 'EDIT LAYOUT' (accent border). Canvas menu is now add-view (one 'Add <renderer>' per renderer), Edit Layout, Save/Save As, Switch to <workspace>. 'Add Card' (blank placeholder) and 'Open <renderer>…' left the canvas menu but remain palette actions. Added `AppAction.menuTitle` for the 'Add …' wording. **Needs visual check:** grips hidden in view mode, drag blocked, badge, rail lock button.

@@ -9,6 +9,7 @@ class WorkspaceState {
     required this.snapEnabled,
     required this.nextZ,
     required this.cardCounter,
+    this.editMode = false,
   }) : cards = List.unmodifiable(cards),
        guides = List.unmodifiable(guides);
 
@@ -18,7 +19,8 @@ class WorkspaceState {
       guides = const [],
       snapEnabled = false,
       nextZ = 0,
-      cardCounter = 0;
+      cardCounter = 0,
+      editMode = false;
 
   final List<CardModel> cards;
   final String? selectedId;
@@ -26,6 +28,10 @@ class WorkspaceState {
   final bool snapEnabled;
   final int nextZ;
   final int cardCounter;
+
+  /// Layouts are locked in view mode (the default): no drag, resize or
+  /// keyboard nudging. Edit mode is the explicit layout editor.
+  final bool editMode;
 
   List<CardModel> get sortedCards {
     return List<CardModel>.from(cards)
@@ -48,6 +54,7 @@ class WorkspaceState {
     bool? snapEnabled,
     int? nextZ,
     int? cardCounter,
+    bool? editMode,
   }) {
     return WorkspaceState(
       cards: cards ?? this.cards,
@@ -58,6 +65,7 @@ class WorkspaceState {
       snapEnabled: snapEnabled ?? this.snapEnabled,
       nextZ: nextZ ?? this.nextZ,
       cardCounter: cardCounter ?? this.cardCounter,
+      editMode: editMode ?? this.editMode,
     );
   }
 }

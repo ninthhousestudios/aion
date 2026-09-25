@@ -44,6 +44,8 @@ void main() {
   test('moves a card without mutating the original model instance', () {
     final container = createContainer();
     seedCards(container);
+    // Layout edits require edit mode (aion/71).
+    container.read(workspaceProvider.notifier).setEditMode(true);
     final notifier = container.read(workspaceProvider.notifier);
     final original = container.read(workspaceProvider).cardById('card_0')!;
 
@@ -86,6 +88,8 @@ void main() {
   test('keyboard actions move, cycle, delete, and toggle snap', () {
     final container = createContainer();
     seedCards(container);
+    // Layout edits require edit mode (aion/71).
+    container.read(workspaceProvider.notifier).setEditMode(true);
     final notifier = container.read(workspaceProvider.notifier);
     final originalPos = container
         .read(workspaceProvider)
@@ -212,6 +216,8 @@ void main() {
   test('snap toggle clears active guides', () {
     final container = createContainer();
     seedCards(container);
+    // Layout edits require edit mode (aion/71).
+    container.read(workspaceProvider.notifier).setEditMode(true);
     final notifier = container.read(workspaceProvider.notifier);
 
     if (!container.read(workspaceProvider).snapEnabled) {

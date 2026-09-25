@@ -18,6 +18,8 @@ import '../shell/rail_state.dart';
 import '../shell/slots_flyout.dart';
 import '../shell/text_prompt.dart';
 import '../widgets/title_bar.dart';
+import '../workspaces/workspace.dart';
+import '../workspaces/workspace_store.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
 import 'canvas_actions.dart';
@@ -65,7 +67,15 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     );
     final layout = card != null
         ? cardMenuIds(renderers, ref.read(slotsProvider).slots)
-        : canvasMenuIds(renderers);
+        : canvasMenuIds(
+            renderers,
+            workspaceNames: [
+              for (final w
+                  in ref.read(workspaceLibraryProvider).valueOrNull?.all ??
+                      const <Workspace>[])
+                w.name,
+            ],
+          );
 
     final result = await showMenu<String>(
       context: context,
@@ -234,9 +244,14 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
   }
 
   void _handleCardPointerDown(PointerDownEvent event, CardModel card) {
+    _workspacePanPointer = null;
+    // View mode: select only — the layout is locked.
+    if (!ref.read(workspaceProvider).editMode) {
+      ref.read(workspaceProvider.notifier).selectCard(card.id);
+      return;
+    }
     if (_isResizeGripHit(event.localPosition, card.size)) return;
 
-    _workspacePanPointer = null;
     _cardDragPointer = event.pointer;
     _cardDragId = card.id;
     ref.read(workspaceProvider.notifier).selectCard(card.id);
@@ -313,6 +328,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                                 model: card,
                                 chartStore: ref.read(chartStoreProvider),
                                 selected: card.id == workspaceState.selectedId,
+                                editable: workspaceState.editMode,
                                 onSelect: () => workspace.selectCard(card.id),
                                 onResizeUpdate: (delta, corner) =>
                                     workspace.resizeCard(
@@ -354,6 +370,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
               bottom: 0,
               child: Rail(
                 onPalette: _openPalette,
+                onEditMode: () => _runAction('workspace.toggle_edit'),
                 onSettings: () => _runAction('settings.open'),
               ),
             ),
@@ -373,15 +390,25 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                     decoration: BoxDecoration(
                       color: t.surfaceOverlay,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: t.surfaceBorder),
+                      border: Border.all(
+                        color: workspaceState.editMode
+                            ? t.snapAccent
+                            : t.surfaceBorder,
+                      ),
                     ),
                     child: Text(
-                      'Snap: ${workspaceState.snapEnabled ? "ON" : "OFF"}  [S]',
+                      workspaceState.editMode
+                          ? 'EDIT LAYOUT  [E]   ·   Snap: '
+                                '${workspaceState.snapEnabled ? "ON" : "OFF"}  [S]'
+                          : 'VIEW  ·  layout locked  [E to edit]',
                       style: TextStyle(
-                        color: workspaceState.snapEnabled
+                        color: workspaceState.editMode
                             ? t.snapAccent
                             : t.snapInactiveColor,
                         fontSize: 11,
+                        fontWeight: workspaceState.editMode
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ),
