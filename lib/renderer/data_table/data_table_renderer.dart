@@ -16,7 +16,17 @@ class DataTableRenderer extends ChartRenderer {
     systems: [],
     category: 'Tables',
     aliases: ['table', 'planets', 'positions', 'longitudes', 'dt'],
+    detailLevels: detailLevels,
   );
+
+  /// Core columns (planet, longitude, house) → all columns.
+  static const detailLevels = [
+    DetailLevel(id: 'core', label: 'Core columns', minShortestSide: 0),
+    DetailLevel(id: 'full', label: 'All columns', minShortestSide: 300),
+  ];
+
+  /// Without a host-selected level, show every column (classic view).
+  static const defaultDetailLevel = 1;
 
   @override
   List<DisplayOption> get displayOptions => const [
@@ -36,13 +46,30 @@ class DataTableRenderer extends ChartRenderer {
     required RendererColors colors,
     required DisplayOptions displayOpts,
     Set<HighlightEntity> highlights = const {},
+    int? detailLevel,
   }) => DataTablePainter(
     expressions: expressions,
     displayConfig: displayConfig,
     colors: colors,
     displayOpts: displayOpts,
     highlights: highlights,
+    detailLevel: detailLevel ?? defaultDetailLevel,
   );
+}
+
+/// Column width fractions (Planet, Longitude, Hse, Nakshatra, Dignity) at
+/// [detailLevel]: level 0 shows the core three columns, widened to fill;
+/// hidden columns get 0.
+List<double> dataTableColumnFractions(int detailLevel) {
+  const full = [0.18, 0.22, 0.08, 0.28, 0.16];
+  if (detailLevel >= 1) return full;
+  const core = 3;
+  final visible = full.take(core).fold(0.0, (a, b) => a + b);
+  final total = full.fold(0.0, (a, b) => a + b);
+  return [
+    for (var i = 0; i < full.length; i++)
+      i < core ? full[i] * total / visible : 0.0,
+  ];
 }
 
 /// Whether [planet]'s row is emphasized: the planet itself, or the sign or
@@ -63,6 +90,7 @@ class DataTablePainter extends ChartPainter {
     required this.colors,
     required this.displayOpts,
     this.highlights = const {},
+    this.detailLevel = DataTableRenderer.defaultDetailLevel,
   });
 
   final List<ChartExpression> expressions;
@@ -70,6 +98,9 @@ class DataTablePainter extends ChartPainter {
   final RendererColors colors;
   final DisplayOptions displayOpts;
   final Set<HighlightEntity> highlights;
+
+  /// Semantic-zoom level (index into the renderer's detail levels).
+  final int detailLevel;
 
   final _glyphPlacements = <GlyphPlacement>[];
 
@@ -83,7 +114,6 @@ class DataTablePainter extends ChartPainter {
     'Nakshatra',
     'Dignity',
   ];
-  static const _colFractions = [0.18, 0.22, 0.08, 0.28, 0.16];
 
   final _rowHits = <(ui.Rect, Planet)>[];
 
@@ -106,9 +136,10 @@ class DataTablePainter extends ChartPainter {
     final rowH = fontSize * 1.6;
     final pad = size.width * 0.03;
 
+    final fractions = dataTableColumnFractions(detailLevel);
     final colX = <double>[];
     var cx = pad;
-    for (final f in _colFractions) {
+    for (final f in fractions) {
       colX.add(cx);
       cx += size.width * f;
     }
@@ -124,12 +155,13 @@ class DataTablePainter extends ChartPainter {
 
     // Header row
     for (var i = 0; i < _headers.length; i++) {
+      if (fractions[i] == 0) continue;
       _drawCell(
         canvas,
         _headers[i],
         colX[i],
         y,
-        size.width * _colFractions[i],
+        size.width * fractions[i],
         fontSize,
         headerColor,
       );
@@ -170,7 +202,7 @@ class DataTablePainter extends ChartPainter {
             '(R)',
             colX[0] + glyphSize + 2,
             y,
-            size.width * _colFractions[0] - glyphSize - 2,
+            size.width * fractions[0] - glyphSize - 2,
             fontSize,
             dimColor,
           );
@@ -183,7 +215,7 @@ class DataTablePainter extends ChartPainter {
           name,
           colX[0],
           y,
-          size.width * _colFractions[0],
+          size.width * fractions[0],
           fontSize,
           textColor,
         );
@@ -197,7 +229,7 @@ class DataTablePainter extends ChartPainter {
           '$degreeText ',
           colX[1],
           y,
-          size.width * _colFractions[1],
+          size.width * fractions[1],
           fontSize,
           textColor,
         );
@@ -220,7 +252,7 @@ class DataTablePainter extends ChartPainter {
           '$degreeText $sign',
           colX[1],
           y,
-          size.width * _colFractions[1],
+          size.width * fractions[1],
           fontSize,
           textColor,
         );
@@ -231,30 +263,32 @@ class DataTablePainter extends ChartPainter {
         '${planet.house}',
         colX[2],
         y,
-        size.width * _colFractions[2],
+        size.width * fractions[2],
         fontSize,
         dimColor,
       );
 
-      _drawCell(
-        canvas,
-        '${planet.nakshatra} ${planet.nakshatraPada}',
-        colX[3],
-        y,
-        size.width * _colFractions[3],
-        fontSize,
-        textColor,
-      );
+      if (fractions[3] > 0) {
+        _drawCell(
+          canvas,
+          '${planet.nakshatra} ${planet.nakshatraPada}',
+          colX[3],
+          y,
+          size.width * fractions[3],
+          fontSize,
+          textColor,
+        );
 
-      _drawCell(
-        canvas,
-        planet.dignity ?? '—',
-        colX[4],
-        y,
-        size.width * _colFractions[4],
-        fontSize,
-        dimColor,
-      );
+        _drawCell(
+          canvas,
+          planet.dignity ?? '—',
+          colX[4],
+          y,
+          size.width * fractions[4],
+          fontSize,
+          dimColor,
+        );
+      }
 
       y += rowH;
     }
@@ -393,5 +427,6 @@ class DataTablePainter extends ChartPainter {
       !identical(displayConfig, oldDelegate.displayConfig) ||
       !identical(colors, oldDelegate.colors) ||
       displayOpts != oldDelegate.displayOpts ||
-      !setEquals(highlights, oldDelegate.highlights);
+      !setEquals(highlights, oldDelegate.highlights) ||
+      detailLevel != oldDelegate.detailLevel;
 }

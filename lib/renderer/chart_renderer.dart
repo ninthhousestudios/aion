@@ -4,6 +4,32 @@ import 'package:flutter/rendering.dart';
 import '../theme/display_options.dart';
 import 'highlight.dart';
 
+/// One semantic-zoom level: used when the card's rendered area has a
+/// shortest side of at least [minShortestSide] logical pixels.
+class DetailLevel {
+  const DetailLevel({
+    required this.id,
+    required this.label,
+    required this.minShortestSide,
+  });
+
+  final String id;
+  final String label;
+  final double minShortestSide;
+}
+
+/// Index of the most detailed level in [levels] (ordered least → most
+/// detailed, thresholds ascending) whose threshold [size] meets. 0 when
+/// nothing matches or no levels are declared.
+int selectDetailLevel(List<DetailLevel> levels, Size size) {
+  final shortest = size.shortestSide;
+  var chosen = 0;
+  for (var i = 0; i < levels.length; i++) {
+    if (shortest >= levels[i].minShortestSide) chosen = i;
+  }
+  return chosen;
+}
+
 class RendererMeta {
   final String id;
   final String displayName;
@@ -16,6 +42,10 @@ class RendererMeta {
   /// Search aliases for the palette — see `renderer_aliases.dart`.
   final List<String> aliases;
 
+  /// Semantic zoom: ordered detail levels (least → most detailed). Empty
+  /// means a single level. The host picks one from the card's size.
+  final List<DetailLevel> detailLevels;
+
   const RendererMeta({
     required this.id,
     required this.displayName,
@@ -23,6 +53,7 @@ class RendererMeta {
     this.preferredAspectRatio,
     this.category = 'Charts',
     this.aliases = const [],
+    this.detailLevels = const [],
   });
 }
 
@@ -127,11 +158,15 @@ abstract class ChartRenderer {
 
   /// [highlights]: entities to emphasize (linked highlighting). Painters
   /// that don't support highlighting may ignore it.
+  ///
+  /// [detailLevel]: index into [RendererMeta.detailLevels] chosen by the
+  /// host from the card size; null means the renderer's own default.
   ChartPainter createPainter({
     required List<ChartExpression> expressions,
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
     required DisplayOptions displayOpts,
     Set<HighlightEntity> highlights = const {},
+    int? detailLevel,
   });
 }

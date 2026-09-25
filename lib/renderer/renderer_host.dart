@@ -22,6 +22,15 @@ bool expressionListsEqual(List<ChartExpression> a, List<ChartExpression> b) {
   return true;
 }
 
+/// The size a chart actually paints at inside [box]: the whole box, or
+/// the largest [aspect]-ratio rect that fits (as `AspectRatio` lays out).
+Size renderedChartSize(Size box, double? aspect) {
+  if (aspect == null || aspect <= 0 || !box.isFinite) return box;
+  final byWidth = Size(box.width, box.width / aspect);
+  if (byWidth.height <= box.height) return byWidth;
+  return Size(box.height * aspect, box.height);
+}
+
 class RendererHost extends StatefulWidget {
   const RendererHost({
     super.key,
@@ -71,6 +80,7 @@ class _RendererHostState extends State<RendererHost> {
   ChartRenderer? _lastRenderer;
   DisplayOptions? _lastDisplayOpts;
   Set<HighlightEntity> _lastHighlights = const {};
+  int? _lastDetailLevel;
   HighlightEntity? _hoveredEntity;
 
   void _rebuildPainter(RendererColors colors) {
@@ -86,6 +96,7 @@ class _RendererHostState extends State<RendererHost> {
       colors: colors,
       displayOpts: widget.displayOpts,
       highlights: widget.highlights,
+      detailLevel: _lastDetailLevel,
     );
   }
 
@@ -138,14 +149,26 @@ class _RendererHostState extends State<RendererHost> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => _build(context, constraints.biggest),
+  );
+
+  Widget _build(BuildContext context, Size box) {
     final t = Theme.of(context).extension<AionTheme>()!;
     final colors = _colorsFromTheme(t);
+    final meta = widget.renderer.meta;
+    final aspect = meta.preferredAspectRatio;
+    // Semantic zoom: the rendered chart size picks the detail level.
+    final level = meta.detailLevels.isEmpty
+        ? null
+        : selectDetailLevel(meta.detailLevels, renderedChartSize(box, aspect));
     // Single change check, run on every build: covers theme changes and
     // widget updates alike, so no update can be missed between
     // didUpdateWidget and build.
-    if (_inputsChanged(colors)) _rebuildPainter(colors);
-    final aspect = widget.renderer.meta.preferredAspectRatio;
+    if (_inputsChanged(colors) || level != _lastDetailLevel) {
+      _lastDetailLevel = level;
+      _rebuildPainter(colors);
+    }
 
     Widget chart = MouseRegion(
       onHover: _onHover,

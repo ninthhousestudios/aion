@@ -419,10 +419,10 @@ columns). New renderers get the behavior by contract.
 
 Acceptance criteria:
 
-- [ ] `RendererMeta` declares ordered detail levels with size thresholds
-- [ ] `RendererHost` selects level from rendered size; painter receives it
-- [ ] South indian: 3 levels; data table: 2 levels
-- [ ] Threshold boundary tests
+- [x] `RendererMeta` declares ordered detail levels with size thresholds
+- [x] `RendererHost` selects level from rendered size; painter receives it
+- [x] South indian: 3 levels; data table: 2 levels
+- [x] Threshold boundary tests
 
 ---
 
@@ -461,3 +461,4 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/76 — Highlight entities (`PlanetEntity`, `HouseEntity`, `SignEntity`) are part of the renderer contract in `lib/renderer/highlight.dart`; state is `lib/highlight/highlight_state.dart` (`HighlightState` entity + scope + locked, pure `HighlightTransitions`, `highlightProvider`). Scope = `slot:<id>` for slot-bound cards, `chart:<id>` for pinned cards (pinned cards of one chart link to each other, not to slots); cross-slot brushing would map entity across scopes, which the entity+scope shape allows.
 - aion/76 — Contract change: `ChartRenderer.createPainter` gained optional `highlights`; `ChartPainter.entityForHit` maps hits to entities (south indian overrides it because its `HouseHit` is really a sign cell: `houseNumber` = sign number, so it maps to `SignEntity`). The fake renderer in `test/renderer/chart_renderer_test.dart` gained the new parameter (required for it to keep overriding the abstract method). `RendererHost` passes highlights to the painter (rebuilds when the set changes) and reports `onEntityHover`/`onEntityTap`; painters' `shouldRepaint` includes highlights.
 - aion/77 — Emphasis color is a new `AionTheme.highlightColor` token (from the preset's `accentLink`), passed as `RendererColors.highlight` (optional, falls back to accent). South indian: highlighted planet gets a filled + outlined rounded box; highlighted signs (and houses, via the sign of their cusp) get a cell tint; a hovered grid cell highlights the *sign* everywhere, which in the data table lights all planets in that sign. Data table: rows tinted for the planet itself or its sign/house. Hover → transient, click → lock (click again or on empty chart space → unlock), Esc → clear (after closing an open flyout). Card-content clicks select via the canvas pointer-down path, so the inner tap handler doesn't block selection. **Needs visual check:** emphasis legibility on both renderers and all presets; hover across two cards on the same slot; lock/Esc.
+- aion/80 — `RendererMeta.detailLevels` (ordered `DetailLevel`s with a `minShortestSide` threshold, inclusive) + pure `selectDetailLevel`; `RendererHost` wraps its content in a `LayoutBuilder`, measures the size the chart actually paints at (`renderedChartSize`, honoring the aspect ratio) and passes `detailLevel` to `createPainter` (another optional contract param; the test fake renderer gained it too). Thresholds chosen without visual tuning: south indian occupancy <360 ≤ degrees <560 ≤ full (full adds 4-letter nakshatra + 3-letter dignity to each planet label); data table core (planet/longitude/house, widened) <300 ≤ all columns. Called without a level (tests, direct use) each painter keeps its pre-zoom look (south indian occupancy, data table all columns). **Needs visual check:** threshold values feel right when resizing; long level-2 labels in small cells wrap/clip.

@@ -17,7 +17,18 @@ class SouthIndianRenderer extends ChartRenderer {
     systems: const ['vedic'],
     preferredAspectRatio: 1.0,
     aliases: [...vargaAliases('d1'), 'si', 'south', 'grid'],
+    detailLevels: detailLevels,
   );
+
+  /// Occupancy → + degrees → + nakshatra / dignity.
+  static const detailLevels = [
+    DetailLevel(id: 'occupancy', label: 'Occupancy', minShortestSide: 0),
+    DetailLevel(id: 'degrees', label: 'Degrees', minShortestSide: 360),
+    DetailLevel(id: 'full', label: 'Full', minShortestSide: 560),
+  ];
+
+  /// Without a host-selected level, keep the classic occupancy view.
+  static const defaultDetailLevel = 0;
 
   @override
   List<DisplayOption> get displayOptions => const [];
@@ -29,13 +40,33 @@ class SouthIndianRenderer extends ChartRenderer {
     required RendererColors colors,
     required DisplayOptions displayOpts,
     Set<HighlightEntity> highlights = const {},
+    int? detailLevel,
   }) => SouthIndianPainter(
     expressions: expressions,
     displayConfig: displayConfig,
     colors: colors,
     displayOpts: displayOpts,
     highlights: highlights,
+    detailLevel: detailLevel ?? defaultDetailLevel,
   );
+}
+
+/// A planet's text in a grid cell at [detailLevel]: name (+R), then
+/// degrees, then nakshatra and dignity.
+String planetCellLabel(Planet planet, String name, int detailLevel) {
+  final parts = [planet.retrograde ? '$name(R)' : name];
+  if (detailLevel >= 1) parts.add('${planet.degreeInSign.floor()}°');
+  if (detailLevel >= 2) {
+    parts.add(
+      planet.nakshatra.length > 4
+          ? planet.nakshatra.substring(0, 4)
+          : planet.nakshatra,
+    );
+    if (planet.dignity case final d? when d.isNotEmpty) {
+      parts.add(d.length > 3 ? d.substring(0, 3) : d);
+    }
+  }
+  return parts.join(' ');
 }
 
 /// Sign indices to tint for [highlights]: signs directly, houses via the
@@ -74,6 +105,7 @@ class SouthIndianPainter extends ChartPainter {
     required this.colors,
     required this.displayOpts,
     this.highlights = const {},
+    this.detailLevel = SouthIndianRenderer.defaultDetailLevel,
   });
 
   final List<ChartExpression> expressions;
@@ -81,6 +113,9 @@ class SouthIndianPainter extends ChartPainter {
   final RendererColors colors;
   final DisplayOptions displayOpts;
   final Set<HighlightEntity> highlights;
+
+  /// Semantic-zoom level (index into the renderer's detail levels).
+  final int detailLevel;
 
   // Sign index (0=Aries) → grid column, row in a 4×4 grid.
   // The 12 outer cells map to zodiac signs; center 2×2 is unused.
@@ -294,8 +329,11 @@ class SouthIndianPainter extends ChartPainter {
             ),
           );
         } else {
-          final display = displayOpts.planetDisplay(planet.id);
-          final label = planet.retrograde ? '$display(R)' : display;
+          final label = planetCellLabel(
+            planet,
+            displayOpts.planetDisplay(planet.id),
+            detailLevel,
+          );
           placedBounds = _drawText(
             canvas,
             label,
@@ -432,5 +470,6 @@ class SouthIndianPainter extends ChartPainter {
       !identical(displayConfig, oldDelegate.displayConfig) ||
       !identical(colors, oldDelegate.colors) ||
       displayOpts != oldDelegate.displayOpts ||
-      !setEquals(highlights, oldDelegate.highlights);
+      !setEquals(highlights, oldDelegate.highlights) ||
+      detailLevel != oldDelegate.detailLevel;
 }

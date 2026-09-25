@@ -167,5 +167,6 @@ class _UniversalRenderer extends ChartRenderer {
     required RendererColors colors,
     required DisplayOptions displayOpts,
     Set<HighlightEntity> highlights = const {},
+    int? detailLevel,
   }) => throw UnimplementedError();
 }
