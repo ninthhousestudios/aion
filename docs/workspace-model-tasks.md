@@ -332,10 +332,10 @@ Geometry is pure functions over rects, tested without widgets.
 
 Acceptance criteria:
 
-- [ ] Card multi-select (shift-click and/or marquee) in edit mode
-- [ ] Tile selection into a grid (sensible rows×cols for N cards)
-- [ ] Align edges + distribute spacing commands, registered in ActionRegistry
-- [ ] Pure-logic tests for tiling/align/distribute geometry
+- [x] Card multi-select (shift-click and/or marquee) in edit mode
+- [x] Tile selection into a grid (sensible rows×cols for N cards)
+- [x] Align edges + distribute spacing commands, registered in ActionRegistry
+- [x] Pure-logic tests for tiling/align/distribute geometry
 
 ### aion/73 — Workspace switcher in rail + animated transitions
 
@@ -453,3 +453,4 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/70 — Save/load UI at this point: 'Save Workspace As…', 'Save Workspace', 'Switch to <name>' registry actions (palette), with a new `ActionContext.promptText` callback + `lib/shell/text_prompt.dart` for the name. Loading replaces all cards (`WorkspaceNotifier.replaceCards`, fresh ids); slots are untouched. Unknown TOML keys are ignored; cards without geometry are skipped; an unknown `kind` falls back to chart.
 - aion/71 — `WorkspaceState.editMode` (default false) is enforced in the notifier: `moveCard`, `resizeCard`, arrow nudges and keyboard Delete are no-ops in view mode, so the lock is logic-level, not just UI. Three existing tests in `test/canvas/workspace_notifier_test.dart` (move, keyboard, snap guides) now switch edit mode on first — the behavior they test is now edit-mode-only. Card-menu Delete still works in view mode (PRD story 27 keeps it as a scoped shortcut). In view mode clicking a card only selects it (selection targets palette card actions).
 - aion/71 — Toggle surfaces: `workspace.toggle_edit` (palette, canvas menu), a lock/unlock rail button, the E key, and a switch in Settings → General. Affordance: corner grips and the move cursor appear only in edit mode; the bottom-left badge reads 'VIEW · layout locked' or 'EDIT LAYOUT' (accent border). Canvas menu is now add-view (one 'Add <renderer>' per renderer), Edit Layout, Save/Save As, Switch to <workspace>. 'Add Card' (blank placeholder) and 'Open <renderer>…' left the canvas menu but remain palette actions. Added `AppAction.menuTitle` for the 'Add …' wording. **Needs visual check:** grips hidden in view mode, drag blocked, badge, rail lock button.
+- aion/72 — Multi-select is shift-click only (`WorkspaceState.multiSelectedIds` + `selection` getter; edit mode only). Marquee selection was not built — the criterion allows either, and shift-click is the smaller surface. Dragging moves only the grabbed card, not the whole selection. Pure geometry in `lib/canvas/arrangement.dart`: `gridShape` (cols=⌈√n⌉, rows=⌈n/cols⌉), `tileGrid` (fills the selection's bounding box in reading order, 12px gaps), `alignRects` (6 edges/centers of the bounding box), `distributeRects` (outermost fixed, equal gaps; needs 3+). Reading order is strict top-then-left (no row tolerance). Commands are `arrange.*` registry actions, visible in the card and canvas menus and palette only in edit mode with 2+ (distribute: 3+) cards selected. **Needs visual check:** shift-click highlighting, tile/align/distribute results on screen.

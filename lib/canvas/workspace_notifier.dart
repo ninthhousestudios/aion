@@ -89,6 +89,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
           cards[i].copyWith(id: 'card_${base + i}', zOrder: i),
       ],
       selectedId: null,
+      multiSelectedIds: const {},
       guides: const [],
       nextZ: cards.length,
       cardCounter: base + cards.length,
@@ -118,13 +119,14 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(
       cards: state.cards.where((card) => card.id != id).toList(),
       selectedId: selectedId,
+      multiSelectedIds: state.multiSelectedIds.difference({id}),
       guides: const [],
     );
   }
 
   void selectCard(String? id) {
     if (id == null) {
-      state = state.copyWith(selectedId: null);
+      state = state.copyWith(selectedId: null, multiSelectedIds: const {});
       return;
     }
 
@@ -135,7 +137,54 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(
       cards: _replaceCard(card.copyWith(zOrder: zOrder)),
       selectedId: id,
+      multiSelectedIds: const {},
       nextZ: zOrder + 1,
+    );
+  }
+
+  /// Shift-click: adds [id] to / removes it from the selection (edit mode
+  /// only). The primary selection is kept.
+  void toggleCardSelection(String id) {
+    if (!state.editMode || state.cardById(id) == null) return;
+    if (state.selectedId == null) {
+      selectCard(id);
+      return;
+    }
+    if (id == state.selectedId) {
+      final rest = state.multiSelectedIds;
+      state = state.copyWith(
+        selectedId: rest.isEmpty ? null : rest.first,
+        multiSelectedIds: rest.skip(1).toSet(),
+      );
+      return;
+    }
+    final multi = {...state.multiSelectedIds};
+    if (!multi.remove(id)) multi.add(id);
+    state = state.copyWith(multiSelectedIds: multi);
+  }
+
+  /// Applies an arrangement to the current selection (edit mode only).
+  /// [arrange] maps the selected cards' rects to new rects, same order.
+  void arrangeSelection(List<Rect> Function(List<Rect> rects) arrange) {
+    if (!state.editMode) return;
+    final selected = [
+      for (final c in state.cards)
+        if (state.selection.contains(c.id)) c,
+    ];
+    if (selected.length < 2) return;
+    final rects = arrange([for (final c in selected) c.rect]);
+    final byId = {
+      for (var i = 0; i < selected.length; i++) selected[i].id: rects[i],
+    };
+    state = state.copyWith(
+      cards: [
+        for (final c in state.cards)
+          if (byId[c.id] case final r?)
+            c.copyWith(position: r.topLeft, size: r.size)
+          else
+            c,
+      ],
+      guides: const [],
     );
   }
 
@@ -284,7 +333,11 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
   void setEditMode(bool on) {
     if (on == state.editMode) return;
-    state = state.copyWith(editMode: on, guides: const []);
+    state = state.copyWith(
+      editMode: on,
+      guides: const [],
+      multiSelectedIds: on ? state.multiSelectedIds : const {},
+    );
   }
 
   void toggleEditMode() => setEditMode(!state.editMode);

@@ -250,11 +250,19 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
       ref.read(workspaceProvider.notifier).selectCard(card.id);
       return;
     }
+    // Shift-click extends the selection instead of dragging.
+    if (HardwareKeyboard.instance.isShiftPressed) {
+      ref.read(workspaceProvider.notifier).toggleCardSelection(card.id);
+      return;
+    }
     if (_isResizeGripHit(event.localPosition, card.size)) return;
 
     _cardDragPointer = event.pointer;
     _cardDragId = card.id;
-    ref.read(workspaceProvider.notifier).selectCard(card.id);
+    // Keep a multi-selection when grabbing one of its cards.
+    if (!ref.read(workspaceProvider).selection.contains(card.id)) {
+      ref.read(workspaceProvider.notifier).selectCard(card.id);
+    }
   }
 
   void _handleCardPointerMove(PointerMoveEvent event) {
@@ -327,9 +335,18 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                               child: CanvasCard(
                                 model: card,
                                 chartStore: ref.read(chartStoreProvider),
-                                selected: card.id == workspaceState.selectedId,
+                                selected: workspaceState.selection.contains(
+                                  card.id,
+                                ),
                                 editable: workspaceState.editMode,
-                                onSelect: () => workspace.selectCard(card.id),
+                                onSelect: () {
+                                  // Shift-click was handled on pointer-down.
+                                  if (!HardwareKeyboard
+                                      .instance
+                                      .isShiftPressed) {
+                                    workspace.selectCard(card.id);
+                                  }
+                                },
                                 onResizeUpdate: (delta, corner) =>
                                     workspace.resizeCard(
                                       card.id,

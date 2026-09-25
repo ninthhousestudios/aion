@@ -14,6 +14,7 @@ import '../slots/expression_resolution.dart';
 import '../slots/slot_state.dart';
 import '../theme/display_options.dart';
 import '../theme/theme_resolver.dart';
+import 'arrangement.dart';
 import 'card_model.dart';
 import 'workspace_notifier.dart';
 
@@ -28,6 +29,15 @@ Offset cascadePosition(int existingCards) {
   final step = (existingCards % 10) * 30.0;
   return Offset(80 + step, 60 + step);
 }
+
+String _alignLabel(AlignEdge edge) => switch (edge) {
+  AlignEdge.left => 'Left Edges',
+  AlignEdge.right => 'Right Edges',
+  AlignEdge.top => 'Top Edges',
+  AlignEdge.bottom => 'Bottom Edges',
+  AlignEdge.centerHorizontal => 'Horizontal Centers',
+  AlignEdge.centerVertical => 'Vertical Centers',
+};
 
 String slotConfigActionId(String slotId) => 'slot.config.$slotId';
 String slotLoadActionId(String slotId) => 'slot.load.$slotId';
@@ -58,6 +68,21 @@ List<String?> cardMenuIds(
   for (final s in slots) 'slot.bind.${s.id}',
   'card.pin',
   'card.unpin',
+  null,
+  ...arrangeActionIds,
+];
+
+/// Edit-mode arrangement commands, shown when 2+ cards are selected.
+const arrangeActionIds = [
+  'arrange.tile',
+  'arrange.align.left',
+  'arrange.align.right',
+  'arrange.align.top',
+  'arrange.align.bottom',
+  'arrange.align.centerHorizontal',
+  'arrange.align.centerVertical',
+  'arrange.distribute.horizontal',
+  'arrange.distribute.vertical',
 ];
 
 /// Canvas (background) menu layout: add-view, edit-mode toggle and
@@ -70,6 +95,8 @@ List<String?> canvasMenuIds(
   for (final r in renderers) addViewActionId(r.id),
   null,
   'workspace.toggle_edit',
+  null,
+  ...arrangeActionIds,
   null,
   'workspace.save',
   'workspace.save_as',
@@ -92,6 +119,11 @@ List<AppAction> buildCanvasActions(Ref ref) {
   }
 
   bool bound(ActionContext ctx) => cardOf(ctx)?.binding != null;
+
+  bool canArrange(int min) {
+    final s = ref.read(workspaceProvider);
+    return s.editMode && s.selection.length >= min;
+  }
 
   void addView(RendererMeta meta, ActionContext ctx) {
     final slot = ref.read(slotsProvider).activeSlot;
@@ -217,6 +249,38 @@ List<AppAction> buildCanvasActions(Ref ref) {
         settingsCardRect(ctx.viewportSize ?? const Size(1280, 800)),
       ),
     ),
+
+    // Arrangement (edit mode, multi-selection).
+    AppAction(
+      id: 'arrange.tile',
+      title: 'Tile Selection as Grid',
+      category: ActionCategory.workspace,
+      aliases: const ['tile', 'grid', 'arrange'],
+      icon: Icons.grid_view,
+      isEnabled: (_) => canArrange(2),
+      execute: (_) => workspace().arrangeSelection(tileGrid),
+    ),
+    for (final edge in AlignEdge.values)
+      AppAction(
+        id: 'arrange.align.${edge.name}',
+        title: 'Align ${_alignLabel(edge)}',
+        category: ActionCategory.workspace,
+        aliases: const ['align'],
+        isEnabled: (_) => canArrange(2),
+        execute: (_) =>
+            workspace().arrangeSelection((r) => alignRects(r, edge)),
+      ),
+    for (final axis in DistributeAxis.values)
+      AppAction(
+        id: 'arrange.distribute.${axis.name}',
+        title:
+            'Distribute ${axis == DistributeAxis.horizontal ? 'Horizontally' : 'Vertically'}',
+        category: ActionCategory.workspace,
+        aliases: const ['distribute', 'space'],
+        isEnabled: (_) => canArrange(3),
+        execute: (_) =>
+            workspace().arrangeSelection((r) => distributeRects(r, axis)),
+      ),
 
     // Slots.
     AppAction(

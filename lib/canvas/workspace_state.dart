@@ -10,8 +10,10 @@ class WorkspaceState {
     required this.nextZ,
     required this.cardCounter,
     this.editMode = false,
+    Set<String> multiSelectedIds = const {},
   }) : cards = List.unmodifiable(cards),
-       guides = List.unmodifiable(guides);
+       guides = List.unmodifiable(guides),
+       multiSelectedIds = Set.unmodifiable(multiSelectedIds);
 
   WorkspaceState.initial()
     : cards = const [],
@@ -20,7 +22,8 @@ class WorkspaceState {
       snapEnabled = false,
       nextZ = 0,
       cardCounter = 0,
-      editMode = false;
+      editMode = false,
+      multiSelectedIds = const {};
 
   final List<CardModel> cards;
   final String? selectedId;
@@ -32,6 +35,12 @@ class WorkspaceState {
   /// Layouts are locked in view mode (the default): no drag, resize or
   /// keyboard nudging. Edit mode is the explicit layout editor.
   final bool editMode;
+
+  /// Extra cards added to the selection with shift-click (edit mode).
+  final Set<String> multiSelectedIds;
+
+  /// Every selected card: the primary selection plus shift-clicked ones.
+  Set<String> get selection => {...multiSelectedIds, ?selectedId};
 
   List<CardModel> get sortedCards {
     return List<CardModel>.from(cards)
@@ -55,6 +64,7 @@ class WorkspaceState {
     int? nextZ,
     int? cardCounter,
     bool? editMode,
+    Set<String>? multiSelectedIds,
   }) {
     return WorkspaceState(
       cards: cards ?? this.cards,
@@ -66,6 +76,7 @@ class WorkspaceState {
       nextZ: nextZ ?? this.nextZ,
       cardCounter: cardCounter ?? this.cardCounter,
       editMode: editMode ?? this.editMode,
+      multiSelectedIds: multiSelectedIds ?? this.multiSelectedIds,
     );
   }
 }
