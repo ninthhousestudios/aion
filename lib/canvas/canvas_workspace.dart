@@ -11,6 +11,9 @@ import '../providers/renderer_registry_provider.dart';
 import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import '../theme/preset_store.dart';
+import '../shell/catalog_flyout.dart';
+import '../shell/rail.dart';
+import '../shell/rail_state.dart';
 import '../widgets/title_bar.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
@@ -29,7 +32,8 @@ class CanvasWorkspace extends ConsumerStatefulWidget {
 class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
   final _canvasKey = GlobalKey();
   final FocusNode _focusNode = FocusNode();
-  Offset _viewportOffset = Offset.zero;
+  // Start right of the rail so no card begins underneath it.
+  Offset _viewportOffset = const Offset(Rail.width, 0);
   int? _workspacePanPointer;
   int? _cardDragPointer;
   String? _cardDragId;
@@ -74,6 +78,35 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     await ref.read(actionRegistryProvider).execute(result, actionCtx);
   }
 
+  /// Context for actions invoked from global surfaces (rail, palette,
+  /// keyboard): targets the selected card, if any.
+  ActionContext _globalActionContext() => ActionContext(
+    cardId: ref.read(workspaceProvider).selectedId,
+    viewportSize: _canvasSize(),
+    onError: (message) {
+      if (mounted) _showError(context, message);
+    },
+    editConfig: _editConfig,
+  );
+
+  Future<void> _runAction(String id) =>
+      ref.read(actionRegistryProvider).execute(id, _globalActionContext());
+
+  Widget _flyoutFor(RailSection section) {
+    final registry = ref.watch(actionRegistryProvider);
+    final rail = ref.read(railProvider.notifier);
+    return switch (section) {
+      RailSection.catalog => CatalogFlyout(
+        registry: registry,
+        onSelect: (action) {
+          rail.close();
+          _runAction(action.id);
+        },
+      ),
+      _ => const SizedBox.shrink(),
+    };
+  }
+
   void _editConfig(ConfigEditRequest request, {Offset? anchor}) {
     if (!mounted) return;
     showConfigDialog(
@@ -115,6 +148,11 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   void _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return;
+    if (event.logicalKey == LogicalKeyboardKey.escape &&
+        ref.read(railProvider) != null) {
+      ref.read(railProvider.notifier).close();
+      return;
+    }
     if (event.logicalKey == LogicalKeyboardKey.keyT) {
       _cyclePreset();
       return;
@@ -204,6 +242,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     final workspaceState = ref.watch(workspaceProvider);
     final workspace = ref.read(workspaceProvider.notifier);
     final sorted = workspaceState.sortedCards;
+    final openSection = ref.watch(railProvider);
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -268,9 +307,31 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                 ),
               ),
             ),
+            if (openSection != null) ...[
+              // Click-away dismiss for the open flyout.
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: ref.read(railProvider.notifier).close,
+                  onSecondaryTap: ref.read(railProvider.notifier).close,
+                ),
+              ),
+              Positioned(
+                left: Rail.width,
+                top: TitleBar.height,
+                bottom: 0,
+                child: _flyoutFor(openSection),
+              ),
+            ],
+            const Positioned(
+              left: 0,
+              top: TitleBar.height,
+              bottom: 0,
+              child: Rail(),
+            ),
             const Positioned(top: 0, left: 0, right: 0, child: TitleBar()),
             Positioned(
-              left: 12,
+              left: Rail.width + 12,
               bottom: 12,
               child: IgnorePointer(
                 child: AnimatedOpacity(
