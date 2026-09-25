@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 
-import '../mcp/expression_ref.dart';
+import '../slots/card_binding.dart';
+import '../slots/chart_slot.dart';
 import '../theme/card_display_overrides.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,7 +35,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     Offset position,
     Size size,
     String label, {
-    List<ExpressionRef> expressions = const [],
+    CardBinding? binding,
+    ExpressionConfig? configOverride,
     String? rendererType,
     double? preferredAspectRatio,
   }) {
@@ -43,7 +45,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       position,
       size,
       label,
-      expressions: expressions,
+      binding: binding,
+      configOverride: configOverride,
       rendererType: rendererType,
       preferredAspectRatio: preferredAspectRatio,
     );
@@ -58,7 +61,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       card.position + const Offset(30, 30),
       card.size,
       '${card.label} (copy)',
-      expressions: card.expressions,
+      binding: card.binding,
+      configOverride: card.configOverride,
       rendererType: card.rendererType,
       preferredAspectRatio: card.preferredAspectRatio,
       displayConfig: card.displayConfig,
@@ -211,6 +215,22 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     );
   }
 
+  void setCardBinding(String id, CardBinding? binding) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(
+      cards: _replaceCard(card.copyWith(binding: binding)),
+    );
+  }
+
+  void setCardConfigOverride(String id, ExpressionConfig? config) {
+    final card = state.cardById(id);
+    if (card == null) return;
+    state = state.copyWith(
+      cards: _replaceCard(card.copyWith(configOverride: config)),
+    );
+  }
+
   void resetCardSize(String id, Size size) {
     final card = state.cardById(id);
     if (card == null) return;
@@ -274,7 +294,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     Offset position,
     Size size,
     String label, {
-    List<ExpressionRef> expressions = const [],
+    CardBinding? binding,
+    ExpressionConfig? configOverride,
     String? rendererType,
     double? preferredAspectRatio,
     Map<String, dynamic> displayConfig = const {},
@@ -285,7 +306,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       label: label,
       position: position,
       size: size,
-      expressions: expressions,
+      binding: binding,
+      configOverride: configOverride,
       rendererType: rendererType,
       preferredAspectRatio: preferredAspectRatio,
       displayConfig: displayConfig,
@@ -295,7 +317,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
     var chartAccents = current.chartAccents;
     var accentCounter = current.accentCounter;
-    final chartId = expressions.firstOrNull?.chartId;
+    final chartId = WorkspaceState.accentKey(card);
     if (chartId != null && !chartAccents.containsKey(chartId)) {
       chartAccents = {
         ...chartAccents,

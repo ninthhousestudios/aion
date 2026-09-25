@@ -6,6 +6,9 @@ import '../actions/bind_chart_action.dart';
 import '../actions/load_chart_action.dart';
 import '../providers/chart_store_provider.dart';
 import '../providers/renderer_registry_provider.dart';
+import '../slots/card_binding.dart';
+import '../slots/chart_slot.dart';
+import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import '../theme/preset_store.dart';
 import '../theme/theme_resolver.dart';
@@ -15,6 +18,7 @@ import 'card_model.dart';
 import 'canvas_card.dart';
 import 'snap_physics.dart';
 import 'workspace_notifier.dart';
+import 'workspace_state.dart';
 
 class CanvasWorkspace extends ConsumerStatefulWidget {
   const CanvasWorkspace({super.key});
@@ -41,7 +45,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     final t = Theme.of(context).extension<AionTheme>()!;
     final registry = ref.read(rendererRegistryProvider);
     final renderers = registry.all;
-    final hasExpressions = card != null && card.expressions.isNotEmpty;
+    final hasExpressions = card != null && card.binding != null;
     final hasAccent =
         card != null && ref.read(workspaceProvider).accentForCard(card) != null;
 
@@ -168,7 +172,9 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         case 'delete':
           workspace.deleteCard(card!.id);
         case 'cycle_color':
-          workspace.cycleChartAccent(card!.expressions.first.chartId);
+          if (WorkspaceState.accentKey(card!) case final key?) {
+            workspace.cycleChartAccent(key);
+          }
         case 'reset_size':
           final renderer = card!.rendererType != null
               ? registry.get(card.rendererType!)
@@ -197,7 +203,8 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           source.position + const Offset(30, 30),
           size,
           source.label,
-          expressions: source.expressions,
+          binding: source.binding,
+          configOverride: source.configOverride,
           rendererType: rendererId,
           preferredAspectRatio: ar,
         );
@@ -207,14 +214,22 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     final loadResult = await loadChartFromFile(ref.read(chartStoreProvider));
     if (!mounted) return;
     if (loadResult is ChartLoadCancelled) return;
+    final slots = ref.read(slotsProvider);
+    final slot = slots.activeSlot;
     final result = await bindChartToCard(
       ref.read(chartStoreProvider),
       loadResult,
+      config: canonicalConfig(slot.config),
       rendererType: rendererType,
     );
     if (!mounted) return;
     switch (result) {
       case ChartBound(:final chartName, :final expressionRef):
+        // Opening a chart with no slot targeted loads it into the active
+        // slot: every card bound to that slot follows.
+        ref
+            .read(slotsProvider.notifier)
+            .setChart(slot.id, expressionRef.chartId, chartName: chartName);
         final renderer = ref.read(rendererRegistryProvider).get(rendererType);
         final ar = renderer?.meta.preferredAspectRatio;
         final size = ar != null ? const Size(500, 500) : const Size(500, 400);
@@ -226,7 +241,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
               local,
               size,
               chartName,
-              expressions: [expressionRef],
+              binding: SlotBinding(slot.id),
               rendererType: rendererType,
               preferredAspectRatio: ar,
             );

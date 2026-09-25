@@ -5,6 +5,8 @@ import '../mcp/chart_store.dart';
 import '../mcp/expression_state.dart';
 import '../providers/renderer_registry_provider.dart';
 import '../renderer/renderer_host.dart';
+import '../slots/expression_resolution.dart';
+import '../slots/slot_state.dart';
 import '../theme/aion_theme.dart';
 import '../theme/display_options.dart';
 import '../theme/theme_resolver.dart';
@@ -100,7 +102,12 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         ),
       );
     }
-    if (m.expressions.isEmpty) {
+    final resolved = resolveCardExpression(
+      m.binding,
+      ref.watch(slotsProvider),
+      configOverride: m.configOverride,
+    );
+    if (resolved == null) {
       return RendererHost(
         renderer: renderer,
         expressionData: const [],
@@ -108,7 +115,8 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         displayOpts: displayOpts,
       );
     }
-    final exprRef = m.expressions.first;
+    ensureExpression(widget.chartStore, resolved);
+    final exprRef = resolved.ref;
     return StreamBuilder<ExpressionState>(
       stream: widget.chartStore.watchExpression(exprRef),
       initialData: widget.chartStore.expressionState(exprRef),

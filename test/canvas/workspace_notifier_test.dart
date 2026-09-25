@@ -1,5 +1,5 @@
 import 'package:aion/canvas/workspace_notifier.dart';
-import 'package:aion/mcp/expression_ref.dart';
+import 'package:aion/slots/card_binding.dart';
 import 'package:aion/theme/card_display_overrides.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -115,12 +115,12 @@ void main() {
     test('changes renderer and clears displayConfig', () {
       final container = createContainer();
       final notifier = container.read(workspaceProvider.notifier);
-      final ref = const ExpressionRef(chartId: 'chart1', configHash: 'h1');
+      const ref = SlotBinding('A');
       notifier.addCard(
         const Offset(0, 0),
         const Size(500, 500),
         'Test',
-        expressions: [ref],
+        binding: ref,
         rendererType: 'south_indian',
         preferredAspectRatio: 1.0,
       );
@@ -135,7 +135,7 @@ void main() {
       expect(card.rendererType, 'data_table');
       expect(card.displayConfig, isEmpty);
       expect(card.preferredAspectRatio, isNull);
-      expect(card.expressions, [ref]);
+      expect(card.binding, ref);
     });
   });
 

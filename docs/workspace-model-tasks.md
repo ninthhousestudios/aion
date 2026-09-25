@@ -129,12 +129,12 @@ slot, and a per-card override is the opt-in exception.
 
 Acceptance criteria:
 
-- [ ] `ChartSlot` model + slot state provider; default slot A guaranteed to exist
-- [ ] `CardModel` binding is sealed `SlotBinding | PinnedBinding`; existing expression field migrated
-- [ ] Resolution composes card override ?? slot config correctly into `ExpressionRef`
-- [ ] Slot chart/config change recomputes exactly its bound cards; pinned cards unaffected
-- [ ] Pure-logic tests: resolution composition, propagation scoping, pin behavior
-- [ ] Slot model directory respects the layering constraint; path recorded in the log
+- [x] `ChartSlot` model + slot state provider; default slot A guaranteed to exist
+- [x] `CardModel` binding is sealed `SlotBinding | PinnedBinding`; existing expression field migrated
+- [x] Resolution composes card override ?? slot config correctly into `ExpressionRef`
+- [x] Slot chart/config change recomputes exactly its bound cards; pinned cards unaffected
+- [x] Pure-logic tests: resolution composition, propagation scoping, pin behavior
+- [x] Slot model directory respects the layering constraint; path recorded in the log
 
 ### aion/64 — Slot UI: status strip color, pin indicator, card menu slot actions
 
@@ -432,5 +432,9 @@ Append entries as you go: `aion/N — <what> — <why>`. Include every ambiguity
 you resolved yourself, every PRD deviation, chosen directory paths for the
 layering constraints, and anything that needs a human to verify visually.
 
-- 
 - aion/61 — RendererHost now keeps a single change check in `build()` (colors, expression list by content via `expressionListsEqual`, displayConfig, renderer, displayOpts) and dropped `didUpdateWidget`; CanvasCard caches the `[data]` list — one check path means no ordering gap between didUpdateWidget and build. **Needs visual check:** glyph-toggle stability across right-clicks, no renderer-switch lag.
+- aion/63 — Slot model lives in `lib/slots/` (`chart_slot.dart`, `card_binding.dart`, `slot_state.dart`, `expression_resolution.dart`); imports only `lib/mcp/`, riverpod and chart_db_core — no `lib/canvas/` or `lib/renderer/`. Bind the layering rule to `lib/slots/**`.
+- aion/63 — `ChartSlot.color` is stored as `colorIndex` into a theme palette (AionTheme slot palette, added in aion/64) rather than a raw `Color`, so slot colors follow the theme and the model stays presentation-free.
+- aion/63 — `CardModel.expressions: List<ExpressionRef>` replaced by `binding: CardBinding?` + `configOverride`. A card now has exactly one binding (PRD's sealed type); the old multi-expression 'synastry card' shape is dropped until a synastry renderer exists. Tests in `test/canvas/card_model_test.dart`, `workspace_state_test.dart`, `workspace_notifier_test.dart`, `workspace_accent_test.dart` were migrated from `expressions` to `binding` (behavior they test changed shape, not intent).
+- aion/63 — Configs are canonicalized (keys sorted, sets→sorted lists) before hashing so equal configs share one `ExpressionRef`; `ChartStore` is unchanged. Cards resolve their binding in `CanvasCard` on every build (watching `slotsProvider`) and `ensureExpression` triggers compute via a microtask only when the resolved ref is idle — so a slot change recomputes exactly its bound cards and pinned cards are untouched. Opening a chart from the canvas menu loads it into the active slot and adds a slot-bound card.
+- aion/63 — Default slot config is `{}` (drishti's defaults), matching the previous `bindChartToCard` default.

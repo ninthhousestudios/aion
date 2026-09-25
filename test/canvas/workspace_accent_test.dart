@@ -1,12 +1,12 @@
 import 'dart:ui';
 
 import 'package:aion/canvas/workspace_notifier.dart';
-import 'package:aion/mcp/expression_ref.dart';
+import 'package:aion/slots/card_binding.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _refA = ExpressionRef(chartId: 'chart-a', configHash: 'h1');
-const _refB = ExpressionRef(chartId: 'chart-b', configHash: 'h2');
+const _refA = PinnedBinding(chartId: 'chart-a');
+const _refB = PinnedBinding(chartId: 'chart-b');
 
 void main() {
   ProviderContainer createContainer() {
@@ -23,7 +23,7 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Chart A',
-      expressions: [_refA],
+      binding: _refA,
     );
     final state = container.read(workspaceProvider);
 
@@ -50,13 +50,13 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Card 1',
-      expressions: [_refA],
+      binding: _refA,
     );
     notifier.addCard(
       const Offset(300, 0),
       const Size(200, 150),
       'Card 2',
-      expressions: [_refA],
+      binding: _refA,
     );
     final state = container.read(workspaceProvider);
 
@@ -75,13 +75,13 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Chart A',
-      expressions: [_refA],
+      binding: _refA,
     );
     notifier.addCard(
       const Offset(300, 0),
       const Size(200, 150),
       'Chart B',
-      expressions: [_refB],
+      binding: _refB,
     );
     final state = container.read(workspaceProvider);
 
@@ -99,7 +99,7 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Chart A',
-      expressions: [_refA],
+      binding: _refA,
     );
     final before = container.read(workspaceProvider).chartAccents['chart-a']!;
 
@@ -117,7 +117,7 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Chart A',
-      expressions: [_refA],
+      binding: _refA,
     );
     final first = container.read(workspaceProvider).chartAccents['chart-a']!;
 
@@ -138,7 +138,7 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Chart A',
-      expressions: [_refA],
+      binding: _refA,
     );
     final before = container.read(workspaceProvider);
 
@@ -156,7 +156,7 @@ void main() {
       Offset.zero,
       const Size(200, 150),
       'Multi',
-      expressions: [_refA, _refB],
+      binding: _refA,
     );
     final state = container.read(workspaceProvider);
 

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
-import '../mcp/expression_ref.dart';
+import '../slots/card_binding.dart';
+import '../slots/chart_slot.dart';
 import '../theme/card_display_overrides.dart';
 
 class CardModel {
@@ -9,7 +10,8 @@ class CardModel {
     required this.label,
     required this.position,
     required this.size,
-    this.expressions = const [],
+    this.binding,
+    this.configOverride,
     this.minSize = const Size(120, 80),
     this.zOrder = 0,
     this.rendererType,
@@ -23,7 +25,13 @@ class CardModel {
   final String label;
   final Offset position;
   final Size size;
-  final List<ExpressionRef> expressions;
+
+  /// Where the card's chart comes from; null for cards not bound to a chart.
+  final CardBinding? binding;
+
+  /// Per-card expression config override; null means "use the slot's (or
+  /// pinned) config". The opt-in exception, not the rule.
+  final ExpressionConfig? configOverride;
   final Size minSize;
   final int zOrder;
   final String? rendererType;
@@ -41,7 +49,8 @@ class CardModel {
     String? label,
     Offset? position,
     Size? size,
-    List<ExpressionRef>? expressions,
+    Object? binding = _unset,
+    Object? configOverride = _unset,
     Size? minSize,
     int? zOrder,
     Object? rendererType = _unset,
@@ -55,7 +64,12 @@ class CardModel {
       label: label ?? this.label,
       position: position ?? this.position,
       size: size ?? this.size,
-      expressions: expressions ?? this.expressions,
+      binding: identical(binding, _unset)
+          ? this.binding
+          : binding as CardBinding?,
+      configOverride: identical(configOverride, _unset)
+          ? this.configOverride
+          : configOverride as ExpressionConfig?,
       minSize: minSize ?? this.minSize,
       zOrder: zOrder ?? this.zOrder,
       rendererType: identical(rendererType, _unset)

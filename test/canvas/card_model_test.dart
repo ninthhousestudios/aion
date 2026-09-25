@@ -1,66 +1,74 @@
 import 'dart:ui';
 
 import 'package:aion/canvas/card_model.dart';
-import 'package:aion/mcp/expression_ref.dart';
+import 'package:aion/slots/card_binding.dart';
 import 'package:test/test.dart';
 
-const _ref1 = ExpressionRef(chartId: 'chart-1', configHash: 'lahiri');
-const _ref2 = ExpressionRef(chartId: 'chart-2', configHash: 'kp');
+const _slotA = SlotBinding('A');
+const _pinned = PinnedBinding(chartId: 'chart-2', config: {'ayanamsa': 'kp'});
 
-CardModel _card({List<ExpressionRef> expressions = const []}) {
+CardModel _card({CardBinding? binding}) {
   return CardModel(
     id: 'c1',
     label: 'Test',
 
     position: Offset.zero,
     size: const Size(200, 150),
-    expressions: expressions,
+    binding: binding,
   );
 }
 
 void main() {
-  test('default expressions is empty list', () {
+  test('default binding is null (unbound card)', () {
     final card = _card();
-    expect(card.expressions, isEmpty);
+    expect(card.binding, isNull);
+    expect(card.configOverride, isNull);
   });
 
-  test('single expression ref', () {
-    final card = _card(expressions: [_ref1]);
-    expect(card.expressions, hasLength(1));
-    expect(card.expressions.first, equals(_ref1));
+  test('slot binding', () {
+    final card = _card(binding: _slotA);
+    expect(card.binding, equals(const SlotBinding('A')));
   });
 
-  test('multiple expression refs for synastry', () {
-    final card = _card(expressions: [_ref1, _ref2]);
-    expect(card.expressions, hasLength(2));
-    expect(card.expressions, containsAll([_ref1, _ref2]));
+  test('pinned binding', () {
+    final card = _card(binding: _pinned);
+    expect(card.binding, isA<PinnedBinding>());
+    expect(
+      card.binding,
+      equals(
+        const PinnedBinding(chartId: 'chart-2', config: {'ayanamsa': 'kp'}),
+      ),
+    );
   });
 
-  test('copyWith preserves expressions when not overridden', () {
-    final card = _card(expressions: [_ref1]);
+  test('copyWith preserves binding when not overridden', () {
+    final card = _card(binding: _slotA);
     final moved = card.copyWith(position: const Offset(10, 20));
 
-    expect(moved.expressions, equals([_ref1]));
+    expect(moved.binding, equals(_slotA));
     expect(moved.position, const Offset(10, 20));
   });
 
-  test('copyWith replaces expressions list', () {
-    final card = _card(expressions: [_ref1]);
-    final updated = card.copyWith(expressions: [_ref1, _ref2]);
+  test('copyWith replaces binding', () {
+    final card = _card(binding: _slotA);
+    final updated = card.copyWith(binding: _pinned);
 
-    expect(updated.expressions, equals([_ref1, _ref2]));
-    expect(card.expressions, equals([_ref1]));
+    expect(updated.binding, equals(_pinned));
+    expect(card.binding, equals(_slotA));
   });
 
-  test('copyWith to empty expressions', () {
-    final card = _card(expressions: [_ref1, _ref2]);
-    final cleared = card.copyWith(expressions: const []);
+  test('copyWith can clear binding and override', () {
+    final card = _card(
+      binding: _slotA,
+    ).copyWith(configOverride: {'ayanamsa': 'raman'});
+    final cleared = card.copyWith(binding: null, configOverride: null);
 
-    expect(cleared.expressions, isEmpty);
+    expect(cleared.binding, isNull);
+    expect(cleared.configOverride, isNull);
   });
 
   test('copyWith does not mutate original', () {
-    final card = _card(expressions: [_ref1]);
+    final card = _card(binding: _slotA);
     final copy = card.copyWith(label: 'Changed');
 
     expect(card.label, 'Test');

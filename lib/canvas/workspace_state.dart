@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import '../slots/card_binding.dart';
 import 'card_model.dart';
 import 'snap_physics.dart';
 
@@ -37,10 +38,17 @@ class WorkspaceState {
   final int accentCounter;
 
   Color? accentForCard(CardModel card) {
-    final chartId = card.expressions.firstOrNull?.chartId;
-    if (chartId == null) return null;
-    return chartAccents[chartId];
+    final key = accentKey(card);
+    if (key == null) return null;
+    return chartAccents[key];
   }
+
+  /// Accent grouping key: the pinned chart, or the bound slot.
+  static String? accentKey(CardModel card) => switch (card.binding) {
+    PinnedBinding(:final chartId) => chartId,
+    SlotBinding(:final slotId) => 'slot:$slotId',
+    null => null,
+  };
 
   List<CardModel> get sortedCards {
     return List<CardModel>.from(cards)
