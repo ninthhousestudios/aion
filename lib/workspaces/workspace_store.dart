@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import '../canvas/workspace_notifier.dart';
 import '../slots/slot_state.dart';
 import '../theme/theme_preset.dart';
+import 'starter_workspaces.dart';
 import 'workspace.dart';
 
 /// Persists user workspaces as TOML files in the config directory
@@ -47,6 +48,21 @@ class WorkspaceStore {
     ).writeAsString(workspace.toToml());
   }
 
+  /// Remembers the last active workspace (plain text, not `.toml`, so
+  /// [loadAll] ignores it).
+  Future<void> saveActiveName(String name) async {
+    final dir = Directory(await _dirPath());
+    if (!await dir.exists()) await dir.create(recursive: true);
+    await File('${dir.path}/active.txt').writeAsString(name);
+  }
+
+  Future<String?> loadActiveName() async {
+    final file = File('${await _dirPath()}/active.txt');
+    if (!await file.exists()) return null;
+    final name = (await file.readAsString()).trim();
+    return name.isEmpty ? null : name;
+  }
+
   Future<void> delete(String name) async {
     final file = File('${await _dirPath()}/${_fileName(name)}');
     if (await file.exists()) await file.delete();
@@ -86,6 +102,15 @@ class WorkspaceLibrary {
   );
 }
 
+/// Workspace to open at startup: the remembered one if it still exists,
+/// else the first starter (else the first user workspace).
+String? initialWorkspaceName(WorkspaceLibrary library, String? remembered) {
+  if (remembered != null && library.byName(remembered) != null) {
+    return remembered;
+  }
+  return library.all.firstOrNull?.name;
+}
+
 /// Why a save/rename was refused.
 enum WorkspaceNameError { empty, starter, exists }
 
@@ -101,13 +126,26 @@ WorkspaceNameError? validateWorkspaceName(
 class WorkspaceLibraryNotifier extends AsyncNotifier<WorkspaceLibrary> {
   WorkspaceStore get _store => ref.read(workspaceStoreProvider);
 
+  String? _rememberedActive;
+
   @override
   Future<WorkspaceLibrary> build() async {
     final user = await _store.loadAll();
+    _rememberedActive = await _store.loadActiveName();
     return WorkspaceLibrary(
       starters: ref.read(starterWorkspacesProvider),
       user: user,
     );
+  }
+
+  /// Startup: if the canvas is empty, open the last active workspace, or
+  /// the first starter on first launch — so aion opens as a working
+  /// instrument, not an empty canvas.
+  Future<void> openInitial() async {
+    final lib = await future;
+    if (ref.read(workspaceProvider).cards.isNotEmpty) return;
+    final name = initialWorkspaceName(lib, _rememberedActive);
+    if (name != null) load(name);
   }
 
   WorkspaceLibrary get _lib =>
@@ -180,6 +218,7 @@ class WorkspaceLibraryNotifier extends AsyncNotifier<WorkspaceLibrary> {
     if (ws == null) return;
     applyWorkspace(ref, ws);
     state = AsyncData(_lib.copyWith(activeName: name));
+    _store.saveActiveName(name).ignore();
   }
 }
 
@@ -196,8 +235,10 @@ final workspaceStoreProvider = Provider<WorkspaceStore>(
   (ref) => WorkspaceStore(),
 );
 
-/// Read-only starter workspaces (populated by aion/74).
-final starterWorkspacesProvider = Provider<List<Workspace>>((ref) => const []);
+/// Read-only starter workspaces.
+final starterWorkspacesProvider = Provider<List<Workspace>>(
+  (ref) => kStarterWorkspaces,
+);
 
 final workspaceLibraryProvider =
     AsyncNotifierProvider<WorkspaceLibraryNotifier, WorkspaceLibrary>(

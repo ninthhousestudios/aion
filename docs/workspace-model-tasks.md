@@ -362,9 +362,9 @@ into a user workspace.
 
 Acceptance criteria:
 
-- [ ] At least two starter workspaces built from currently available renderers
-- [ ] Starters are read-only; save-as forks to a user workspace
-- [ ] First launch opens into a starter workspace
+- [x] At least two starter workspaces built from currently available renderers
+- [x] Starters are read-only; save-as forks to a user workspace
+- [x] First launch opens into a starter workspace
 
 ---
 
@@ -456,3 +456,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/72 — Multi-select is shift-click only (`WorkspaceState.multiSelectedIds` + `selection` getter; edit mode only). Marquee selection was not built — the criterion allows either, and shift-click is the smaller surface. Dragging moves only the grabbed card, not the whole selection. Pure geometry in `lib/canvas/arrangement.dart`: `gridShape` (cols=⌈√n⌉, rows=⌈n/cols⌉), `tileGrid` (fills the selection's bounding box in reading order, 12px gaps), `alignRects` (6 edges/centers of the bounding box), `distributeRects` (outermost fixed, equal gaps; needs 3+). Reading order is strict top-then-left (no row tolerance). Commands are `arrange.*` registry actions, visible in the card and canvas menus and palette only in edit mode with 2+ (distribute: 3+) cards selected. **Needs visual check:** shift-click highlighting, tile/align/distribute results on screen.
 - aion/73 — Switcher is `lib/shell/workspaces_flyout.dart` (starters with a lock icon, then user workspaces; click switches; Save as… / Save; rename/delete per user workspace via prompt-backed registry actions `workspace.rename.<name>` / `workspace.delete.<name>`). Rename refuses starter names and existing names (new `WorkspaceNameError.exists`); deleting the active workspace leaves the canvas as is and clears the active name.
 - aion/73 — Animation: `replaceCards` reuses the outgoing cards' ids by z-order position (`reuseCardIds`) and bumps `WorkspaceState.layoutEpoch`; for 300ms after an epoch change the canvas uses `AnimatedPositioned` + `AnimatedContainer` (easeInOutCubic), otherwise duration zero so drag/resize stay instant. Cards beyond the outgoing count appear without animation; surplus old cards vanish. Reusing ids means a card slot can change renderer mid-animation. **Needs visual check:** the transition itself — this is the least-verifiable piece of the run.
+- aion/74 — Starters (`lib/workspaces/starter_workspaces.dart`): 'Natal Reading' (grid + positions table) and 'Chart Focus' (large grid + positions table + house-cusp table). The PRD's 'Varga Overview' example isn't possible yet (no varga renderers); starters use only the south indian and data table renderers, and every card follows slot A so one chart load fills the layout. Starters are code-defined, never written to disk; saving under a starter name is refused, save-as forks.
+- aion/74 — Startup: `AionApp` calls `workspaceLibraryProvider.notifier.openInitial()`, which (on an empty canvas) opens the last active workspace, remembered in `<app support>/workspaces/active.txt`, else the first starter. Remembering the last workspace goes slightly beyond the criterion; it's the conservative reading of 'opens into a working instrument' for returning users. **Needs visual check:** first launch shows the Natal Reading layout.

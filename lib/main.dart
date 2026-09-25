@@ -10,6 +10,7 @@ import 'providers/plugin_host_provider.dart';
 import 'theme/aion_theme.dart';
 import 'theme/preset_store.dart';
 import 'theme/theme_preset.dart';
+import 'workspaces/workspace_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,7 @@ class _AionAppState extends ConsumerState<AionApp> {
     super.initState();
     Future.microtask(() {
       ref.read(pluginHostProvider).startAll(BundledManifests.all);
+      ref.read(workspaceLibraryProvider.notifier).openInitial();
     });
   }
 
