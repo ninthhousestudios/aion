@@ -299,10 +299,10 @@ On load, dangling slot ids resolve to the default slot.
 
 Acceptance criteria:
 
-- [ ] Workspace model captures renderer type, geometry, slot binding, per-card overrides — no chart data
-- [ ] TOML round-trip tests; unknown keys tolerated
-- [ ] Save current layout as named workspace; load restores it
-- [ ] Dangling slot ids resolve to the default slot instead of erroring
+- [x] Workspace model captures renderer type, geometry, slot binding, per-card overrides — no chart data
+- [x] TOML round-trip tests; unknown keys tolerated
+- [x] Save current layout as named workspace; load restores it
+- [x] Dangling slot ids resolve to the default slot instead of erroring
 
 ### aion/71 — View/edit mode: layouts locked by default, explicit edit mode
 
@@ -449,3 +449,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/25 — Palette is `lib/shell/command_palette.dart` (overlay via `showGeneralDialog`) with pure listing logic in `lib/shell/palette_entries.dart`, reusing `rankActions` from aion/65 — no second matcher. Empty query lists categories (with counts); clicking one scopes the list; Backspace on an empty query leaves the category. Actions run with the *selected* card as target, so card actions appear only when a card is selected. Opened by Ctrl+K (canvas keyboard handler) and the rail's search button. **Needs visual check:** Ctrl+K focus handling, arrow/Enter navigation, hover highlight, category chip.
 - aion/68 — Slots flyout is `lib/shell/slots_flyout.dart`. Per-row: active radio, color swatch (click cycles through the theme slot palette — no free color picker, conservative choice given colors are palette indexes), inline label edit (renames live), chart name, load (file picker), config (aion/53 dialog), remove (not for A). Load/config/remove go through registry actions (`slot.load.<id>`, `slot.config.<id>`, `slot.remove.<id>`) so they're also reachable from the palette. Removing a slot leaves its cards' `SlotBinding` dangling; they resolve (and color) as slot A. **Needs visual check:** row layout, label editing, and that loading a chart into a slot updates every bound card (PRD story 1).
 - aion/57 — Settings card = `CardModel(kind: CardKind.settings)` (new `CardKind` enum, default `chart`), unbound so it gets no strip; interior is `lib/shell/settings_panel.dart` (Theme: preset list via `presetStoreProvider`; Display: global glyph/outer-planet toggles via `displayOptionsProvider`, using a new `DisplayOptions.copyWith`; General: snap toggle — edit mode added in aion/71). Opened by `settings.open` (rail settings button, palette); a second open re-selects the existing card instead of adding another. Size = 80% of the visible canvas (min 480×360), placed in workspace coordinates assuming the viewport hasn't been panned. Duplicate and per-card display toggles are disabled on it. **Needs visual check:** tab switching, theme switching live, card stays usable while working.
+- aion/70 — Workspace model and persistence live in `lib/workspaces/` (`workspace.dart` model + TOML codec, `workspace_store.dart` file store + `workspaceLibraryProvider`, `workspace_actions.dart` registry actions). Files go to `<app support>/workspaces/<slug>.toml` like theme presets. Serialization uses `TomlDocument.fromMap` (not a hand-written writer like presets) — simpler and escapes correctly. Pinned cards store their chart *id* (a file path reference) and config — a reference, not chart data; slot-bound cards store only the slot id.
+- aion/70 — Save/load UI at this point: 'Save Workspace As…', 'Save Workspace', 'Switch to <name>' registry actions (palette), with a new `ActionContext.promptText` callback + `lib/shell/text_prompt.dart` for the name. Loading replaces all cards (`WorkspaceNotifier.replaceCards`, fresh ids); slots are untouched. Unknown TOML keys are ignored; cards without geometry are skipped; an unknown `kind` falls back to chart.

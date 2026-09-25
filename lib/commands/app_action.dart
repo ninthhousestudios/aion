@@ -14,6 +14,7 @@ class ActionContext {
     this.viewportSize,
     this.onError,
     this.editConfig,
+    this.promptText,
   });
 
   /// Target card for card-scoped actions.
@@ -31,6 +32,10 @@ class ActionContext {
   /// Opens the expression config editor. Supplied by UI surfaces; actions
   /// that edit config are no-ops without it.
   final void Function(ConfigEditRequest request)? editConfig;
+
+  /// Asks the user for a line of text (e.g. a workspace name); completes
+  /// with null on cancel. Supplied by UI surfaces.
+  final Future<String?> Function(String title, {String initial})? promptText;
 }
 
 /// A request to edit an expression config interactively.

@@ -16,6 +16,7 @@ import '../shell/command_palette.dart';
 import '../shell/rail.dart';
 import '../shell/rail_state.dart';
 import '../shell/slots_flyout.dart';
+import '../shell/text_prompt.dart';
 import '../widgets/title_bar.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
@@ -60,6 +61,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         if (mounted) _showError(context, message);
       },
       editConfig: (request) => _editConfig(request, anchor: globalPos),
+      promptText: _promptText,
     );
     final layout = card != null
         ? cardMenuIds(renderers, ref.read(slotsProvider).slots)
@@ -89,7 +91,13 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
       if (mounted) _showError(context, message);
     },
     editConfig: _editConfig,
+    promptText: _promptText,
   );
+
+  Future<String?> _promptText(String title, {String initial = ''}) async {
+    if (!mounted) return null;
+    return showTextPrompt(context, title, initial: initial);
+  }
 
   void _openPalette() {
     ref.read(railProvider.notifier).close();

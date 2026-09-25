@@ -79,6 +79,22 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     selectCard(state.cards.last.id);
   }
 
+  /// Replaces every card (a workspace switch). Cards get fresh ids and
+  /// z-order following list order; selection and guides are cleared.
+  void replaceCards(List<CardModel> cards) {
+    final base = state.cardCounter;
+    state = state.copyWith(
+      cards: [
+        for (var i = 0; i < cards.length; i++)
+          cards[i].copyWith(id: 'card_${base + i}', zOrder: i),
+      ],
+      selectedId: null,
+      guides: const [],
+      nextZ: cards.length,
+      cardCounter: base + cards.length,
+    );
+  }
+
   void duplicateCard(String id) {
     final card = state.cardById(id);
     if (card == null) return;

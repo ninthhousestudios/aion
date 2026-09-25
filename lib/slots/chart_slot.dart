@@ -51,6 +51,16 @@ class ChartSlot {
 
   static const Object _unset = Object();
 
+  /// This slot under another id (e.g. to seed a new slot from a template).
+  ChartSlot withId(String id) => ChartSlot(
+    id: id,
+    label: label,
+    colorIndex: colorIndex,
+    chartId: chartId,
+    chartName: chartName,
+    config: config,
+  );
+
   ChartSlot copyWith({
     String? label,
     int? colorIndex,
