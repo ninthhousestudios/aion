@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +19,7 @@ import '../shell/rail.dart';
 import '../shell/rail_state.dart';
 import '../shell/slots_flyout.dart';
 import '../shell/text_prompt.dart';
+import '../shell/workspaces_flyout.dart';
 import '../widgets/title_bar.dart';
 import '../workspaces/workspace.dart';
 import '../workspaces/workspace_store.dart';
@@ -43,8 +46,29 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
   int? _cardDragPointer;
   String? _cardDragId;
 
+  static const _layoutAnimation = Duration(milliseconds: 300);
+  int _seenLayoutEpoch = 0;
+  bool _animatingLayout = false;
+  Timer? _layoutAnimationTimer;
+
+  /// Starts the card transition window when a workspace switch replaced
+  /// the layout. Outside that window cards move instantly (drag, resize).
+  void _trackLayoutEpoch(int epoch) {
+    if (epoch == _seenLayoutEpoch) return;
+    _seenLayoutEpoch = epoch;
+    _animatingLayout = true;
+    _layoutAnimationTimer?.cancel();
+    _layoutAnimationTimer = Timer(
+      _layoutAnimation + const Duration(milliseconds: 50),
+      () {
+        if (mounted) setState(() => _animatingLayout = false);
+      },
+    );
+  }
+
   @override
   void dispose() {
+    _layoutAnimationTimer?.cancel();
     _focusNode.dispose();
     super.dispose();
   }
@@ -133,6 +157,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
         },
       ),
       RailSection.slots => SlotsFlyout(onAction: _runAction),
+      RailSection.workspaces => WorkspacesFlyout(onAction: _runAction),
       _ => const SizedBox.shrink(),
     };
   }
@@ -291,6 +316,8 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     final workspace = ref.read(workspaceProvider.notifier);
     final sorted = workspaceState.sortedCards;
     final openSection = ref.watch(railProvider);
+    _trackLayoutEpoch(workspaceState.layoutEpoch);
+    final cardAnimation = _animatingLayout ? _layoutAnimation : Duration.zero;
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -320,7 +347,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                     clipBehavior: Clip.none,
                     children: [
                       for (final card in sorted)
-                        Positioned(
+                        AnimatedPositioned(
+                          key: ValueKey('pos_${card.id}'),
+                          duration: cardAnimation,
+                          curve: Curves.easeInOutCubic,
                           left: card.position.dx + _viewportOffset.dx,
                           top: card.position.dy + _viewportOffset.dy,
                           child: RepaintBoundary(
@@ -339,6 +369,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
                                   card.id,
                                 ),
                                 editable: workspaceState.editMode,
+                                animationDuration: cardAnimation,
                                 onSelect: () {
                                   // Shift-click was handled on pointer-down.
                                   if (!HardwareKeyboard

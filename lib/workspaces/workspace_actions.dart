@@ -2,9 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../commands/app_action.dart';
+import 'workspace.dart';
 import 'workspace_store.dart';
 
 String workspaceLoadActionId(String name) => 'workspace.load.$name';
+String workspaceRenameActionId(String name) => 'workspace.rename.$name';
+String workspaceDeleteActionId(String name) => 'workspace.delete.$name';
+
+String? workspaceNameErrorMessage(WorkspaceNameError? error, String name) =>
+    switch (error) {
+      WorkspaceNameError.empty => 'Workspace name cannot be empty',
+      WorkspaceNameError.starter =>
+        '"${name.trim()}" is a starter workspace — choose another name',
+      WorkspaceNameError.exists => 'A workspace named "${name.trim()}" exists',
+      null => null,
+    };
 
 /// Workspace operations as registry actions: save, save-as, switch.
 List<AppAction> buildWorkspaceActions(Ref ref) {
@@ -21,15 +33,8 @@ List<AppAction> buildWorkspaceActions(Ref ref) {
     );
     if (name == null) return;
     final error = await notifier().saveCurrentAs(name);
-    switch (error) {
-      case WorkspaceNameError.empty:
-        ctx.onError?.call('Workspace name cannot be empty');
-      case WorkspaceNameError.starter:
-        ctx.onError?.call(
-          '"${name.trim()}" is a starter workspace — choose another name',
-        );
-      case null:
-        break;
+    if (workspaceNameErrorMessage(error, name) case final message?) {
+      ctx.onError?.call(message);
     }
   }
 
@@ -75,5 +80,30 @@ List<AppAction> buildWorkspaceActions(Ref ref) {
         isChecked: (_) => active() == ws.name,
         execute: (_) => notifier().load(ws.name),
       ),
+    for (final ws in library?.user ?? const <Workspace>[]) ...[
+      AppAction(
+        id: workspaceRenameActionId(ws.name),
+        title: 'Rename Workspace ${ws.name}…',
+        category: ActionCategory.workspace,
+        isEnabled: (ctx) => ctx.promptText != null,
+        execute: (ctx) async {
+          final to = await ctx.promptText?.call(
+            'Rename workspace',
+            initial: ws.name,
+          );
+          if (to == null) return;
+          final error = await notifier().rename(ws.name, to);
+          if (workspaceNameErrorMessage(error, to) case final message?) {
+            ctx.onError?.call(message);
+          }
+        },
+      ),
+      AppAction(
+        id: workspaceDeleteActionId(ws.name),
+        title: 'Delete Workspace ${ws.name}',
+        category: ActionCategory.workspace,
+        execute: (_) => notifier().delete(ws.name),
+      ),
+    ],
   ];
 }

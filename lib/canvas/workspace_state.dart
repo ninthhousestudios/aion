@@ -11,6 +11,7 @@ class WorkspaceState {
     required this.cardCounter,
     this.editMode = false,
     Set<String> multiSelectedIds = const {},
+    this.layoutEpoch = 0,
   }) : cards = List.unmodifiable(cards),
        guides = List.unmodifiable(guides),
        multiSelectedIds = Set.unmodifiable(multiSelectedIds);
@@ -23,7 +24,8 @@ class WorkspaceState {
       nextZ = 0,
       cardCounter = 0,
       editMode = false,
-      multiSelectedIds = const {};
+      multiSelectedIds = const {},
+      layoutEpoch = 0;
 
   final List<CardModel> cards;
   final String? selectedId;
@@ -38,6 +40,10 @@ class WorkspaceState {
 
   /// Extra cards added to the selection with shift-click (edit mode).
   final Set<String> multiSelectedIds;
+
+  /// Bumped on every whole-layout replacement (workspace switch), so the
+  /// canvas knows to animate cards to their new places.
+  final int layoutEpoch;
 
   /// Every selected card: the primary selection plus shift-clicked ones.
   Set<String> get selection => {...multiSelectedIds, ?selectedId};
@@ -65,6 +71,7 @@ class WorkspaceState {
     int? cardCounter,
     bool? editMode,
     Set<String>? multiSelectedIds,
+    int? layoutEpoch,
   }) {
     return WorkspaceState(
       cards: cards ?? this.cards,
@@ -77,6 +84,7 @@ class WorkspaceState {
       cardCounter: cardCounter ?? this.cardCounter,
       editMode: editMode ?? this.editMode,
       multiSelectedIds: multiSelectedIds ?? this.multiSelectedIds,
+      layoutEpoch: layoutEpoch ?? this.layoutEpoch,
     );
   }
 }

@@ -208,17 +208,25 @@ label = "no geometry"
       expect(await notifier.saveCurrentAs('  '), WorkspaceNameError.empty);
     });
 
-    test('replaceCards assigns fresh ids and z-order', () {
-      final n = c.read(workspaceProvider.notifier)
-        ..addCard(Offset.zero, const Size(1, 1), 'old');
-      n.replaceCards([
-        for (final w in _full.cards)
-          w.toCard(id: 'x', zOrder: 9, slots: SlotState.initial()),
-      ]);
-      final cards = c.read(workspaceProvider).cards;
-      expect({for (final card in cards) card.id}, hasLength(3));
-      expect([for (final card in cards) card.zOrder], [0, 1, 2]);
-      expect(cards.first.id, 'card_1');
-    });
+    test(
+      'replaceCards reuses ids by position, then mints, and sets z-order',
+      () {
+        final n = c.read(workspaceProvider.notifier)
+          ..addCard(Offset.zero, const Size(1, 1), 'old');
+        n.replaceCards([
+          for (final w in _full.cards)
+            w.toCard(id: 'x', zOrder: 9, slots: SlotState.initial()),
+        ]);
+        final cards = c.read(workspaceProvider).cards;
+        expect({for (final card in cards) card.id}, hasLength(3));
+        expect([for (final card in cards) card.zOrder], [0, 1, 2]);
+        expect(
+          [for (final card in cards) card.id],
+          ['card_0', 'card_1', 'card_2'],
+        );
+        expect(c.read(workspaceProvider).cardCounter, 3);
+        expect(c.read(workspaceProvider).layoutEpoch, 1);
+      },
+    );
   });
 }

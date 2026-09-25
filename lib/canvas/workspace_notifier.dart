@@ -10,6 +10,17 @@ import 'card_model.dart';
 import 'snap_physics.dart';
 import 'workspace_state.dart';
 
+/// Ids for [count] incoming cards: reuse [oldIds] in order, then mint
+/// fresh `card_N` ids from [counter]. Returns the ids and the new counter.
+(List<String>, int) reuseCardIds(List<String> oldIds, int count, int counter) {
+  var next = counter;
+  final ids = [
+    for (var i = 0; i < count; i++)
+      i < oldIds.length ? oldIds[i] : 'card_${next++}',
+  ];
+  return (ids, next);
+}
+
 /// Settings card placement: ~80% of the visible canvas, centered. Never
 /// smaller than 480×360 (or the canvas, if that is smaller).
 Rect settingsCardRect(Size viewport) {
@@ -79,20 +90,27 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     selectCard(state.cards.last.id);
   }
 
-  /// Replaces every card (a workspace switch). Cards get fresh ids and
-  /// z-order following list order; selection and guides are cleared.
+  /// Replaces every card (a workspace switch). Card ids are reused by
+  /// z-order position where possible (see [reuseCardIds]) so the canvas can
+  /// animate old cards into their new places; z-order follows list order;
+  /// selection and guides are cleared; [WorkspaceState.layoutEpoch] bumps.
   void replaceCards(List<CardModel> cards) {
-    final base = state.cardCounter;
+    final (ids, counter) = reuseCardIds(
+      [for (final c in state.sortedCards) c.id],
+      cards.length,
+      state.cardCounter,
+    );
     state = state.copyWith(
       cards: [
         for (var i = 0; i < cards.length; i++)
-          cards[i].copyWith(id: 'card_${base + i}', zOrder: i),
+          cards[i].copyWith(id: ids[i], zOrder: i),
       ],
       selectedId: null,
       multiSelectedIds: const {},
       guides: const [],
       nextZ: cards.length,
-      cardCounter: base + cards.length,
+      cardCounter: counter,
+      layoutEpoch: state.layoutEpoch + 1,
     );
   }
 

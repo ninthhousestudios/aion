@@ -72,16 +72,22 @@ class WorkspaceLibrary {
 
   bool isStarter(String name) => starters.any((w) => w.name == name);
 
-  WorkspaceLibrary copyWith({List<Workspace>? user, String? activeName}) =>
-      WorkspaceLibrary(
-        starters: starters,
-        user: user ?? this.user,
-        activeName: activeName ?? this.activeName,
-      );
+  static const Object _unset = Object();
+
+  WorkspaceLibrary copyWith({
+    List<Workspace>? user,
+    Object? activeName = _unset,
+  }) => WorkspaceLibrary(
+    starters: starters,
+    user: user ?? this.user,
+    activeName: identical(activeName, _unset)
+        ? this.activeName
+        : activeName as String?,
+  );
 }
 
 /// Why a save/rename was refused.
-enum WorkspaceNameError { empty, starter }
+enum WorkspaceNameError { empty, starter, exists }
 
 WorkspaceNameError? validateWorkspaceName(
   WorkspaceLibrary library,
@@ -125,6 +131,46 @@ class WorkspaceLibraryNotifier extends AsyncNotifier<WorkspaceLibrary> {
       ),
     );
     return null;
+  }
+
+  /// Renames user workspace [from] to [to]. Starters can't be renamed, and
+  /// [to] must not clash with another workspace.
+  Future<WorkspaceNameError?> rename(String from, String to) async {
+    final lib = _lib;
+    final ws = lib.user.where((w) => w.name == from).firstOrNull;
+    if (ws == null) return WorkspaceNameError.starter;
+    final error = validateWorkspaceName(lib, to);
+    if (error != null) return error;
+    final name = to.trim();
+    if (name == from) return null;
+    if (lib.byName(name) != null) return WorkspaceNameError.exists;
+    final renamed = ws.copyWith(name: name);
+    await _store.save(renamed);
+    await _store.delete(from);
+    state = AsyncData(
+      lib.copyWith(
+        user: [
+          for (final w in lib.user)
+            if (w.name == from) renamed else w,
+        ]..sort((a, b) => a.name.compareTo(b.name)),
+        activeName: lib.activeName == from ? name : lib.activeName,
+      ),
+    );
+    return null;
+  }
+
+  /// Deletes user workspace [name] (starters are read-only). The canvas is
+  /// left as is.
+  Future<void> delete(String name) async {
+    final lib = _lib;
+    if (!lib.user.any((w) => w.name == name)) return;
+    await _store.delete(name);
+    state = AsyncData(
+      lib.copyWith(
+        user: lib.user.where((w) => w.name != name).toList(),
+        activeName: lib.activeName == name ? null : lib.activeName,
+      ),
+    );
   }
 
   /// Replaces the canvas with workspace [name]. Slots are untouched, so

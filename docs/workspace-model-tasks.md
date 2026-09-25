@@ -347,9 +347,9 @@ so the loaded client flows into the new layout.
 
 Acceptance criteria:
 
-- [ ] Workspace switcher flyout in the rail (save-as, rename, delete)
-- [ ] Switching preserves slot assignments; cards resolve against live slots
-- [ ] Animated card transitions on switch
+- [x] Workspace switcher flyout in the rail (save-as, rename, delete)
+- [x] Switching preserves slot assignments; cards resolve against live slots
+- [x] Animated card transitions on switch
 
 ### aion/74 — Starter workspaces
 
@@ -454,3 +454,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/71 — `WorkspaceState.editMode` (default false) is enforced in the notifier: `moveCard`, `resizeCard`, arrow nudges and keyboard Delete are no-ops in view mode, so the lock is logic-level, not just UI. Three existing tests in `test/canvas/workspace_notifier_test.dart` (move, keyboard, snap guides) now switch edit mode on first — the behavior they test is now edit-mode-only. Card-menu Delete still works in view mode (PRD story 27 keeps it as a scoped shortcut). In view mode clicking a card only selects it (selection targets palette card actions).
 - aion/71 — Toggle surfaces: `workspace.toggle_edit` (palette, canvas menu), a lock/unlock rail button, the E key, and a switch in Settings → General. Affordance: corner grips and the move cursor appear only in edit mode; the bottom-left badge reads 'VIEW · layout locked' or 'EDIT LAYOUT' (accent border). Canvas menu is now add-view (one 'Add <renderer>' per renderer), Edit Layout, Save/Save As, Switch to <workspace>. 'Add Card' (blank placeholder) and 'Open <renderer>…' left the canvas menu but remain palette actions. Added `AppAction.menuTitle` for the 'Add …' wording. **Needs visual check:** grips hidden in view mode, drag blocked, badge, rail lock button.
 - aion/72 — Multi-select is shift-click only (`WorkspaceState.multiSelectedIds` + `selection` getter; edit mode only). Marquee selection was not built — the criterion allows either, and shift-click is the smaller surface. Dragging moves only the grabbed card, not the whole selection. Pure geometry in `lib/canvas/arrangement.dart`: `gridShape` (cols=⌈√n⌉, rows=⌈n/cols⌉), `tileGrid` (fills the selection's bounding box in reading order, 12px gaps), `alignRects` (6 edges/centers of the bounding box), `distributeRects` (outermost fixed, equal gaps; needs 3+). Reading order is strict top-then-left (no row tolerance). Commands are `arrange.*` registry actions, visible in the card and canvas menus and palette only in edit mode with 2+ (distribute: 3+) cards selected. **Needs visual check:** shift-click highlighting, tile/align/distribute results on screen.
+- aion/73 — Switcher is `lib/shell/workspaces_flyout.dart` (starters with a lock icon, then user workspaces; click switches; Save as… / Save; rename/delete per user workspace via prompt-backed registry actions `workspace.rename.<name>` / `workspace.delete.<name>`). Rename refuses starter names and existing names (new `WorkspaceNameError.exists`); deleting the active workspace leaves the canvas as is and clears the active name.
+- aion/73 — Animation: `replaceCards` reuses the outgoing cards' ids by z-order position (`reuseCardIds`) and bumps `WorkspaceState.layoutEpoch`; for 300ms after an epoch change the canvas uses `AnimatedPositioned` + `AnimatedContainer` (easeInOutCubic), otherwise duration zero so drag/resize stay instant. Cards beyond the outgoing count appear without animation; surplus old cards vanish. Reusing ids means a card slot can change renderer mid-animation. **Needs visual check:** the transition itself — this is the least-verifiable piece of the run.
