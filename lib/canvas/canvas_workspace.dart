@@ -204,6 +204,14 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
 
   void _handleKeyEvent(KeyEvent event) {
     if (event is! KeyDownEvent) return;
+    // Key events bubble up from focused descendants (e.g. the slot label
+    // field in the slots flyout): don't treat typing as shortcuts.
+    final focused = FocusManager.instance.primaryFocus;
+    if (focused != _focusNode &&
+        focused?.context?.findAncestorWidgetOfExactType<EditableText>() !=
+            null) {
+      return;
+    }
     if (event.logicalKey == LogicalKeyboardKey.escape &&
         ref.read(railProvider) != null) {
       ref.read(railProvider.notifier).close();
@@ -236,6 +244,9 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
   }
 
   void _handleWorkspacePointerDown(PointerDownEvent event) {
+    // Clicking the canvas returns keyboard shortcuts to it (e.g. after
+    // editing a slot label).
+    _focusNode.requestFocus();
     final viewportPoint = _globalToViewport(event.position);
     final workspacePoint = _viewportToWorkspace(viewportPoint);
     final hitCard = ref
@@ -274,6 +285,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
   }
 
   void _handleCardPointerDown(PointerDownEvent event, CardModel card) {
+    _focusNode.requestFocus();
     _workspacePanPointer = null;
     // View mode: select only — the layout is locked.
     if (!ref.read(workspaceProvider).editMode) {
