@@ -1,10 +1,12 @@
 import 'dart:ui' as ui;
 
 import 'package:chart_model/chart_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../theme/display_options.dart';
 import '../chart_renderer.dart';
+import '../highlight.dart';
 
 class DataTableRenderer extends ChartRenderer {
   @override
@@ -33,11 +35,13 @@ class DataTableRenderer extends ChartRenderer {
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
     required DisplayOptions displayOpts,
+    Set<HighlightEntity> highlights = const {},
   }) => DataTablePainter(
     expressions: expressions,
     displayConfig: displayConfig,
     colors: colors,
     displayOpts: displayOpts,
+    highlights: highlights,
   );
 }
 
@@ -47,12 +51,14 @@ class DataTablePainter extends ChartPainter {
     required this.displayConfig,
     required this.colors,
     required this.displayOpts,
+    this.highlights = const {},
   });
 
   final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
   final RendererColors colors;
   final DisplayOptions displayOpts;
+  final Set<HighlightEntity> highlights;
 
   final _glyphPlacements = <GlyphPlacement>[];
 
@@ -369,5 +375,6 @@ class DataTablePainter extends ChartPainter {
       !identical(expressions, oldDelegate.expressions) ||
       !identical(displayConfig, oldDelegate.displayConfig) ||
       !identical(colors, oldDelegate.colors) ||
-      displayOpts != oldDelegate.displayOpts;
+      displayOpts != oldDelegate.displayOpts ||
+      !setEquals(highlights, oldDelegate.highlights);
 }

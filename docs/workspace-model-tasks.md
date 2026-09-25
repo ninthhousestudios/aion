@@ -384,9 +384,9 @@ outbound channel.
 
 Acceptance criteria:
 
-- [ ] `HighlightState` provider: entity, slot scope, transient vs locked
-- [ ] Renderer contract extension: painters receive the highlight set via `RendererHost`
-- [ ] Tests: same-slot scoping, hover → locked → clear transitions
+- [x] `HighlightState` provider: entity, slot scope, transient vs locked
+- [x] Renderer contract extension: painters receive the highlight set via `RendererHost`
+- [x] Tests: same-slot scoping, hover → locked → clear transitions
 
 ### aion/77 — Highlight rendering + hover/click/Esc interactions in renderers
 
@@ -458,3 +458,5 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/73 — Animation: `replaceCards` reuses the outgoing cards' ids by z-order position (`reuseCardIds`) and bumps `WorkspaceState.layoutEpoch`; for 300ms after an epoch change the canvas uses `AnimatedPositioned` + `AnimatedContainer` (easeInOutCubic), otherwise duration zero so drag/resize stay instant. Cards beyond the outgoing count appear without animation; surplus old cards vanish. Reusing ids means a card slot can change renderer mid-animation. **Needs visual check:** the transition itself — this is the least-verifiable piece of the run.
 - aion/74 — Starters (`lib/workspaces/starter_workspaces.dart`): 'Natal Reading' (grid + positions table) and 'Chart Focus' (large grid + positions table + house-cusp table). The PRD's 'Varga Overview' example isn't possible yet (no varga renderers); starters use only the south indian and data table renderers, and every card follows slot A so one chart load fills the layout. Starters are code-defined, never written to disk; saving under a starter name is refused, save-as forks.
 - aion/74 — Startup: `AionApp` calls `workspaceLibraryProvider.notifier.openInitial()`, which (on an empty canvas) opens the last active workspace, remembered in `<app support>/workspaces/active.txt`, else the first starter. Remembering the last workspace goes slightly beyond the criterion; it's the conservative reading of 'opens into a working instrument' for returning users. **Needs visual check:** first launch shows the Natal Reading layout.
+- aion/76 — Highlight entities (`PlanetEntity`, `HouseEntity`, `SignEntity`) are part of the renderer contract in `lib/renderer/highlight.dart`; state is `lib/highlight/highlight_state.dart` (`HighlightState` entity + scope + locked, pure `HighlightTransitions`, `highlightProvider`). Scope = `slot:<id>` for slot-bound cards, `chart:<id>` for pinned cards (pinned cards of one chart link to each other, not to slots); cross-slot brushing would map entity across scopes, which the entity+scope shape allows.
+- aion/76 — Contract change: `ChartRenderer.createPainter` gained optional `highlights`; `ChartPainter.entityForHit` maps hits to entities (south indian overrides it because its `HouseHit` is really a sign cell: `houseNumber` = sign number, so it maps to `SignEntity`). The fake renderer in `test/renderer/chart_renderer_test.dart` gained the new parameter (required for it to keep overriding the abstract method). `RendererHost` passes highlights to the painter (rebuilds when the set changes) and reports `onEntityHover`/`onEntityTap`; painters' `shouldRepaint` includes highlights.

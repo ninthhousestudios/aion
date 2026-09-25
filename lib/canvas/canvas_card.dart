@@ -1,6 +1,7 @@
 import 'package:chart_model/chart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../highlight/highlight_state.dart';
 import '../mcp/chart_store.dart';
 import '../mcp/expression_state.dart';
 import '../providers/renderer_registry_provider.dart';
@@ -109,6 +110,10 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         ),
       );
     }
+    final scope = highlightScopeFor(m.binding);
+    final highlights = ref.watch(
+      highlightProvider.select((h) => h.highlightsFor(scope)),
+    );
     final resolved = resolveCardExpression(
       m.binding,
       ref.watch(slotsProvider),
@@ -120,6 +125,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         expressionData: const [],
         displayConfig: m.displayConfig,
         displayOpts: displayOpts,
+        highlights: highlights,
       );
     }
     ensureExpression(widget.chartStore, resolved);
@@ -147,6 +153,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
             expressionData: _wrap(data),
             displayConfig: m.displayConfig,
             displayOpts: displayOpts,
+            highlights: highlights,
           ),
           _ => const SizedBox.shrink(),
         };

@@ -1,10 +1,12 @@
 import 'dart:ui' as ui;
 
 import 'package:chart_model/chart_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../theme/display_options.dart';
 import '../chart_renderer.dart';
+import '../highlight.dart';
 import '../renderer_aliases.dart';
 
 class SouthIndianRenderer extends ChartRenderer {
@@ -26,11 +28,13 @@ class SouthIndianRenderer extends ChartRenderer {
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
     required DisplayOptions displayOpts,
+    Set<HighlightEntity> highlights = const {},
   }) => SouthIndianPainter(
     expressions: expressions,
     displayConfig: displayConfig,
     colors: colors,
     displayOpts: displayOpts,
+    highlights: highlights,
   );
 }
 
@@ -52,12 +56,14 @@ class SouthIndianPainter extends ChartPainter {
     required this.displayConfig,
     required this.colors,
     required this.displayOpts,
+    this.highlights = const {},
   });
 
   final List<ChartExpression> expressions;
   final Map<String, dynamic> displayConfig;
   final RendererColors colors;
   final DisplayOptions displayOpts;
+  final Set<HighlightEntity> highlights;
 
   // Sign index (0=Aries) → grid column, row in a 4×4 grid.
   // The 12 outer cells map to zodiac signs; center 2×2 is unused.
@@ -325,6 +331,14 @@ class SouthIndianPainter extends ChartPainter {
     );
   }
 
+  /// Grid cells are signs: the cell hit's `houseNumber` is the 1-based
+  /// sign number, so it links as a [SignEntity].
+  @override
+  HighlightEntity? entityForHit(ChartHitResult? hit) => switch (hit) {
+    HouseHit(:final houseNumber) => SignEntity(houseNumber - 1),
+    _ => super.entityForHit(hit),
+  };
+
   @override
   ChartHitResult? hitTestChart(ui.Offset localPosition) {
     for (final g in _placedGlyphs) {
@@ -364,5 +378,6 @@ class SouthIndianPainter extends ChartPainter {
       !identical(expressions, oldDelegate.expressions) ||
       !identical(displayConfig, oldDelegate.displayConfig) ||
       !identical(colors, oldDelegate.colors) ||
-      displayOpts != oldDelegate.displayOpts;
+      displayOpts != oldDelegate.displayOpts ||
+      !setEquals(highlights, oldDelegate.highlights);
 }

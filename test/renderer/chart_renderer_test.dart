@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:aion/renderer/chart_renderer.dart';
+import 'package:aion/renderer/highlight.dart';
 import 'package:aion/theme/display_options.dart';
 import 'package:aion/renderer/renderer_registry.dart';
 import 'package:aion/renderer/south_indian/south_indian_renderer.dart';
@@ -165,5 +166,6 @@ class _UniversalRenderer extends ChartRenderer {
     required Map<String, dynamic> displayConfig,
     required RendererColors colors,
     required DisplayOptions displayOpts,
+    Set<HighlightEntity> highlights = const {},
   }) => throw UnimplementedError();
 }

@@ -1,4 +1,5 @@
 import 'package:chart_model/chart_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/aion_theme.dart';
 import '../theme/display_options.dart';
 import 'chart_renderer.dart';
+import 'highlight.dart';
 
 /// Content equality for expression lists: same length and identical elements.
 ///
@@ -27,12 +29,25 @@ class RendererHost extends StatefulWidget {
     required this.expressionData,
     this.displayConfig = const {},
     required this.displayOpts,
+    this.highlights = const {},
+    this.onEntityHover,
+    this.onEntityTap,
   });
 
   final ChartRenderer renderer;
   final List<ChartExpression> expressionData;
   final Map<String, dynamic> displayConfig;
   final DisplayOptions displayOpts;
+
+  /// Linked-highlighting input: entities the painter should emphasize.
+  final Set<HighlightEntity> highlights;
+
+  /// Linked-highlighting output: the entity under the pointer changed
+  /// (null when leaving all entities).
+  final ValueChanged<HighlightEntity?>? onEntityHover;
+
+  /// An entity (or empty space, null) was clicked.
+  final ValueChanged<HighlightEntity?>? onEntityTap;
 
   @override
   State<RendererHost> createState() => _RendererHostState();
@@ -55,6 +70,8 @@ class _RendererHostState extends State<RendererHost> {
   Map<String, dynamic>? _lastDisplayConfig;
   ChartRenderer? _lastRenderer;
   DisplayOptions? _lastDisplayOpts;
+  Set<HighlightEntity> _lastHighlights = const {};
+  HighlightEntity? _hoveredEntity;
 
   void _rebuildPainter(RendererColors colors) {
     _lastColors = colors;
@@ -62,11 +79,13 @@ class _RendererHostState extends State<RendererHost> {
     _lastDisplayConfig = widget.displayConfig;
     _lastRenderer = widget.renderer;
     _lastDisplayOpts = widget.displayOpts;
+    _lastHighlights = widget.highlights;
     _painter = widget.renderer.createPainter(
       expressions: widget.expressionData,
       displayConfig: _resolveConfig(),
       colors: colors,
       displayOpts: widget.displayOpts,
+      highlights: widget.highlights,
     );
   }
 
@@ -88,7 +107,8 @@ class _RendererHostState extends State<RendererHost> {
         !expressionListsEqual(widget.expressionData, lastData) ||
         widget.displayConfig != _lastDisplayConfig ||
         widget.renderer != _lastRenderer ||
-        widget.displayOpts != _lastDisplayOpts;
+        widget.displayOpts != _lastDisplayOpts ||
+        !setEquals(widget.highlights, _lastHighlights);
   }
 
   void _onHover(PointerHoverEvent event) {
@@ -97,6 +117,22 @@ class _RendererHostState extends State<RendererHost> {
     final local = box.globalToLocal(event.position);
     final hit = _painter.hitTestChart(local);
     if (hit != _hitResult) setState(() => _hitResult = hit);
+    _setHoveredEntity(_painter.entityForHit(hit));
+  }
+
+  void _setHoveredEntity(HighlightEntity? entity) {
+    if (entity == _hoveredEntity) return;
+    _hoveredEntity = entity;
+    widget.onEntityHover?.call(entity);
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final hit = _painter.hitTestChart(
+      box.globalToLocal(details.globalPosition),
+    );
+    widget.onEntityTap?.call(_painter.entityForHit(hit));
   }
 
   @override
@@ -111,8 +147,14 @@ class _RendererHostState extends State<RendererHost> {
 
     Widget chart = MouseRegion(
       onHover: _onHover,
-      onExit: (_) => setState(() => _hitResult = null),
-      child: CustomPaint(painter: _painter, child: const SizedBox.expand()),
+      onExit: (_) {
+        setState(() => _hitResult = null);
+        _setHoveredEntity(null);
+      },
+      child: GestureDetector(
+        onTapUp: widget.onEntityTap == null ? null : _onTapUp,
+        child: CustomPaint(painter: _painter, child: const SizedBox.expand()),
+      ),
     );
 
     if (aspect != null) {
