@@ -154,6 +154,10 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
             displayConfig: m.displayConfig,
             displayOpts: displayOpts,
             highlights: highlights,
+            onEntityHover: (e) =>
+                ref.read(highlightProvider.notifier).hover(e, scope),
+            onEntityTap: (e) =>
+                ref.read(highlightProvider.notifier).click(e, scope),
           ),
           _ => const SizedBox.shrink(),
         };

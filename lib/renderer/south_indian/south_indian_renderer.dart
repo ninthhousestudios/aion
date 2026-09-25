@@ -38,6 +38,23 @@ class SouthIndianRenderer extends ChartRenderer {
   );
 }
 
+/// Sign indices to tint for [highlights]: signs directly, houses via the
+/// sign their cusp falls in.
+Set<int> highlightedSigns(
+  ChartExpression expr,
+  Set<HighlightEntity> highlights,
+) => {
+  for (final h in highlights)
+    ...switch (h) {
+      SignEntity(:final signIndex) => [signIndex],
+      HouseEntity(:final houseNumber) => [
+        for (final house in expr.houses)
+          if (house.number == houseNumber) house.signIndex,
+      ],
+      PlanetEntity() => const <int>[],
+    },
+};
+
 class _PlacedGlyph {
   final String planetId;
   final ui.Rect bounds;
@@ -187,6 +204,19 @@ class SouthIndianPainter extends ChartPainter {
     final expr = expressions.firstOrNull;
     if (expr == null) return;
 
+    // Linked highlighting: tint highlighted sign cells (a highlighted house
+    // tints the sign it falls in).
+    final highlightPaint = Paint()
+      ..color = colors.highlightOrAccent.withValues(alpha: 0.18);
+    for (final sign in highlightedSigns(expr, highlights)) {
+      if (_signToCell[sign] case (final col, final row)) {
+        canvas.drawRect(
+          ui.Rect.fromLTWH(col * _cellW, row * _cellH, _cellW, _cellH),
+          highlightPaint,
+        );
+      }
+    }
+
     // Mark ascendant cell
     final ascSignIndex = expr.ascendant.signIndex;
     if (_signToCell.containsKey(ascSignIndex)) {
@@ -275,6 +305,10 @@ class SouthIndianPainter extends ChartPainter {
           );
         }
 
+        if (highlights.contains(PlanetEntity(planet.id))) {
+          _drawPlanetEmphasis(canvas, placedBounds);
+        }
+
         _placedGlyphs.add(
           _PlacedGlyph(
             planetId: planet.id,
@@ -284,6 +318,25 @@ class SouthIndianPainter extends ChartPainter {
         );
       }
     }
+  }
+
+  void _drawPlanetEmphasis(Canvas canvas, ui.Rect bounds) {
+    final box = ui.RRect.fromRectAndRadius(
+      bounds.inflate(2),
+      const ui.Radius.circular(3),
+    );
+    canvas
+      ..drawRRect(
+        box,
+        Paint()..color = colors.highlightOrAccent.withValues(alpha: 0.25),
+      )
+      ..drawRRect(
+        box,
+        Paint()
+          ..color = colors.highlightOrAccent
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
   }
 
   void _drawSignLabel(

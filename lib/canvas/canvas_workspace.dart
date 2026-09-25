@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../commands/action_menu.dart';
 import '../config/config_editor.dart';
+import '../highlight/highlight_state.dart';
 import '../commands/app_action.dart';
 import '../providers/action_registry_provider.dart';
 import '../providers/chart_store_provider.dart';
@@ -206,6 +207,10 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
     if (event.logicalKey == LogicalKeyboardKey.escape &&
         ref.read(railProvider) != null) {
       ref.read(railProvider.notifier).close();
+      return;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      ref.read(highlightProvider.notifier).clear();
       return;
     }
     if (event.logicalKey == LogicalKeyboardKey.keyK &&

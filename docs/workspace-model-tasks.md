@@ -399,9 +399,9 @@ highlight; Esc clears it. Emphasis styling comes from `AionTheme` tokens.
 
 Acceptance criteria:
 
-- [ ] South indian renderer paints entity emphasis from the highlight set
-- [ ] Data table renderer emphasizes matching rows
-- [ ] Hover → transient, click → locked, Esc → clear, across same-slot cards
+- [x] South indian renderer paints entity emphasis from the highlight set
+- [x] Data table renderer emphasizes matching rows
+- [x] Hover → transient, click → locked, Esc → clear, across same-slot cards
 
 ---
 
@@ -460,3 +460,4 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/74 — Startup: `AionApp` calls `workspaceLibraryProvider.notifier.openInitial()`, which (on an empty canvas) opens the last active workspace, remembered in `<app support>/workspaces/active.txt`, else the first starter. Remembering the last workspace goes slightly beyond the criterion; it's the conservative reading of 'opens into a working instrument' for returning users. **Needs visual check:** first launch shows the Natal Reading layout.
 - aion/76 — Highlight entities (`PlanetEntity`, `HouseEntity`, `SignEntity`) are part of the renderer contract in `lib/renderer/highlight.dart`; state is `lib/highlight/highlight_state.dart` (`HighlightState` entity + scope + locked, pure `HighlightTransitions`, `highlightProvider`). Scope = `slot:<id>` for slot-bound cards, `chart:<id>` for pinned cards (pinned cards of one chart link to each other, not to slots); cross-slot brushing would map entity across scopes, which the entity+scope shape allows.
 - aion/76 — Contract change: `ChartRenderer.createPainter` gained optional `highlights`; `ChartPainter.entityForHit` maps hits to entities (south indian overrides it because its `HouseHit` is really a sign cell: `houseNumber` = sign number, so it maps to `SignEntity`). The fake renderer in `test/renderer/chart_renderer_test.dart` gained the new parameter (required for it to keep overriding the abstract method). `RendererHost` passes highlights to the painter (rebuilds when the set changes) and reports `onEntityHover`/`onEntityTap`; painters' `shouldRepaint` includes highlights.
+- aion/77 — Emphasis color is a new `AionTheme.highlightColor` token (from the preset's `accentLink`), passed as `RendererColors.highlight` (optional, falls back to accent). South indian: highlighted planet gets a filled + outlined rounded box; highlighted signs (and houses, via the sign of their cusp) get a cell tint; a hovered grid cell highlights the *sign* everywhere, which in the data table lights all planets in that sign. Data table: rows tinted for the planet itself or its sign/house. Hover → transient, click → lock (click again or on empty chart space → unlock), Esc → clear (after closing an open flyout). Card-content clicks select via the canvas pointer-down path, so the inner tap handler doesn't block selection. **Needs visual check:** emphasis legibility on both renderers and all presets; hover across two cards on the same slot; lock/Esc.

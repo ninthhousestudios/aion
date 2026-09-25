@@ -45,6 +45,17 @@ class DataTableRenderer extends ChartRenderer {
   );
 }
 
+/// Whether [planet]'s row is emphasized: the planet itself, or the sign or
+/// house it occupies.
+bool isRowHighlighted(Planet planet, Set<HighlightEntity> highlights) =>
+    highlights.any(
+      (h) => switch (h) {
+        PlanetEntity(:final planetId) => planetId == planet.id,
+        SignEntity(:final signIndex) => signIndex == planet.signIndex,
+        HouseEntity(:final houseNumber) => houseNumber == planet.house,
+      },
+    );
+
 class DataTablePainter extends ChartPainter {
   DataTablePainter({
     required this.expressions,
@@ -137,6 +148,12 @@ class DataTablePainter extends ChartPainter {
 
       final rowRect = ui.Rect.fromLTWH(0, y, size.width, rowH);
       _rowHits.add((rowRect, planet));
+      if (isRowHighlighted(planet, highlights)) {
+        canvas.drawRect(
+          rowRect,
+          Paint()..color = colors.highlightOrAccent.withValues(alpha: 0.22),
+        );
+      }
 
       final planetGlyph = displayOpts.planetGlyphPath(planet.id);
       if (planetGlyph != null) {

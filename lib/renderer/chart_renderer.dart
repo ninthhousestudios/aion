@@ -107,11 +107,17 @@ class RendererColors {
   final Color accent;
   final Color line;
 
+  /// Linked-highlighting emphasis; falls back to [accent].
+  final Color? highlight;
+
+  Color get highlightOrAccent => highlight ?? accent;
+
   const RendererColors({
     required this.text,
     required this.dim,
     required this.accent,
     required this.line,
+    this.highlight,
   });
 }
 

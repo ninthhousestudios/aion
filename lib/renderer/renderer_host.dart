@@ -94,6 +94,7 @@ class _RendererHostState extends State<RendererHost> {
     dim: t.cardDimColor,
     accent: t.snapAccent,
     line: t.cardDimColor,
+    highlight: t.highlightColor,
   );
 
   bool _inputsChanged(RendererColors colors) {
@@ -104,6 +105,7 @@ class _RendererHostState extends State<RendererHost> {
         colors.dim != last.dim ||
         colors.accent != last.accent ||
         colors.line != last.line ||
+        colors.highlight != last.highlight ||
         !expressionListsEqual(widget.expressionData, lastData) ||
         widget.displayConfig != _lastDisplayConfig ||
         widget.renderer != _lastRenderer ||

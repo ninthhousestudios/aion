@@ -28,6 +28,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
     required this.statusError,
     required this.statusStopped,
     this.slotPalette = defaultSlotPalette,
+    required this.highlightColor,
   });
 
   final Color canvasBackground;
@@ -60,6 +61,9 @@ class AionTheme extends ThemeExtension<AionTheme> {
   /// Chart slot colors, indexed by `ChartSlot.colorIndex` (wrapping). The
   /// card status strip shows the color of the card's slot.
   final List<Color> slotPalette;
+
+  /// Linked-highlighting emphasis (renderers tint/outline with it).
+  final Color highlightColor;
 
   static const defaultSlotPalette = [
     Color(0xFF6366F1),
@@ -101,6 +105,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       statusStarting: const Color(0xFFFFC107),
       statusError: const Color(0xFFF44336),
       statusStopped: const Color(0xFF9E9E9E),
+      highlightColor: preset.accentLink,
     );
   }
 
@@ -134,6 +139,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
     Color? statusError,
     Color? statusStopped,
     List<Color>? slotPalette,
+    Color? highlightColor,
   }) {
     return AionTheme(
       canvasBackground: canvasBackground ?? this.canvasBackground,
@@ -158,6 +164,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       statusError: statusError ?? this.statusError,
       statusStopped: statusStopped ?? this.statusStopped,
       slotPalette: slotPalette ?? this.slotPalette,
+      highlightColor: highlightColor ?? this.highlightColor,
     );
   }
 
@@ -215,6 +222,7 @@ class AionTheme extends ThemeExtension<AionTheme> {
       statusError: Color.lerp(statusError, other.statusError, t)!,
       statusStopped: Color.lerp(statusStopped, other.statusStopped, t)!,
       slotPalette: t < 0.5 ? slotPalette : other.slotPalette,
+      highlightColor: Color.lerp(highlightColor, other.highlightColor, t)!,
     );
   }
 }
