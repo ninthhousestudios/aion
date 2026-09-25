@@ -254,10 +254,10 @@ entry point to the slot's expression config (the aion/53 dialog).
 
 Acceptance criteria:
 
-- [ ] Slots panel lists slots with color + editable label
-- [ ] Load chart into a slot from the panel; bound cards update
-- [ ] Active slot selection; add/remove slots (slot A cannot be removed)
-- [ ] Opens the slot expression config dialog
+- [x] Slots panel lists slots with color + editable label
+- [x] Load chart into a slot from the panel; bound cards update
+- [x] Active slot selection; add/remove slots (slot A cannot be removed)
+- [x] Opens the slot expression config dialog
 
 ### aion/57 — Settings card
 
@@ -447,3 +447,4 @@ layering constraints, and anything that needs a human to verify visually.
 - aion/53 — Surfaces open the dialog through `ActionContext.editConfig` (a callback the UI supplies), so registry actions stay free of `BuildContext`. Card menu gained 'Expression Config…' and 'Clear Config Override'; slot config is `slot.config.<id>`. **Unverified assumption:** dimension keys (`signAyanamsa`, `houseSystem`, …) are passed to drishti's `calculate_chart` as-is — needs checking against the drishti tool schema. **Needs visual check:** dialog anchoring near the card, section collapse/expand, dropdown/switch/chip controls.
 - aion/67 — Rail + flyouts live in `lib/shell/` (`rail.dart`, `rail_state.dart`, `catalog_flyout.dart`). The rail is a 44px strip under the title bar inside `CanvasWorkspace`'s stack; the canvas viewport now starts offset by the rail width so cards don't begin under it. Flyouts: one at a time (`railProvider`), dismissed by click-away (transparent barrier), Esc, or re-clicking the rail button. The rail's active-slot button carries a dot in the active slot's color. Time button is a disabled placeholder (out of scope). Catalog tiles run the registry's add-view action, which adds a card bound to the active slot. **Needs visual check:** rail look, flyout placement, click-away/Esc dismissal, catalog tile grid.
 - aion/25 — Palette is `lib/shell/command_palette.dart` (overlay via `showGeneralDialog`) with pure listing logic in `lib/shell/palette_entries.dart`, reusing `rankActions` from aion/65 — no second matcher. Empty query lists categories (with counts); clicking one scopes the list; Backspace on an empty query leaves the category. Actions run with the *selected* card as target, so card actions appear only when a card is selected. Opened by Ctrl+K (canvas keyboard handler) and the rail's search button. **Needs visual check:** Ctrl+K focus handling, arrow/Enter navigation, hover highlight, category chip.
+- aion/68 — Slots flyout is `lib/shell/slots_flyout.dart`. Per-row: active radio, color swatch (click cycles through the theme slot palette — no free color picker, conservative choice given colors are palette indexes), inline label edit (renames live), chart name, load (file picker), config (aion/53 dialog), remove (not for A). Load/config/remove go through registry actions (`slot.load.<id>`, `slot.config.<id>`, `slot.remove.<id>`) so they're also reachable from the palette. Removing a slot leaves its cards' `SlotBinding` dangling; they resolve (and color) as slot A. **Needs visual check:** row layout, label editing, and that loading a chart into a slot updates every bound card (PRD story 1).

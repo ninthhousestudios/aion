@@ -15,6 +15,7 @@ import '../shell/catalog_flyout.dart';
 import '../shell/command_palette.dart';
 import '../shell/rail.dart';
 import '../shell/rail_state.dart';
+import '../shell/slots_flyout.dart';
 import '../widgets/title_bar.dart';
 import 'background_layer.dart';
 import 'card_model.dart';
@@ -113,6 +114,7 @@ class _CanvasWorkspaceState extends ConsumerState<CanvasWorkspace> {
           _runAction(action.id);
         },
       ),
+      RailSection.slots => SlotsFlyout(onAction: _runAction),
       _ => const SizedBox.shrink(),
     };
   }

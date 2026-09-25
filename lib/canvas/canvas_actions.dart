@@ -30,6 +30,8 @@ Offset cascadePosition(int existingCards) {
 }
 
 String slotConfigActionId(String slotId) => 'slot.config.$slotId';
+String slotLoadActionId(String slotId) => 'slot.load.$slotId';
+String slotRemoveActionId(String slotId) => 'slot.remove.$slotId';
 
 /// Card menu layout: action ids in order, `null` for a divider. Entries
 /// whose action is missing or disabled are skipped.
@@ -92,13 +94,17 @@ List<AppAction> buildCanvasActions(Ref ref) {
     );
   }
 
-  /// Picks a chart file and loads it into the active slot, so every card
-  /// bound to that slot follows. Returns whether a chart was loaded.
-  Future<bool> loadChartIntoActiveSlot(ActionContext ctx) async {
+  /// Picks a chart file and loads it into [slotId] (the active slot when
+  /// null), so every card bound to that slot follows. Returns whether a
+  /// chart was loaded.
+  Future<bool> loadChartIntoSlot(String? slotId, ActionContext ctx) async {
     final store = ref.read(chartStoreProvider);
     final loadResult = await loadChartFromFile(store);
     if (loadResult is ChartLoadCancelled) return false;
-    final slot = ref.read(slotsProvider).activeSlot;
+    final slots = ref.read(slotsProvider);
+    final slot = slotId == null
+        ? slots.activeSlot
+        : slots.slotOrDefault(slotId);
     final result = await bindChartToCard(
       store,
       loadResult,
@@ -168,7 +174,7 @@ List<AppAction> buildCanvasActions(Ref ref) {
         title: 'Open ${meta.displayName}…',
         category: ActionCategory.slots,
         execute: (ctx) async {
-          if (await loadChartIntoActiveSlot(ctx)) addView(meta, ctx);
+          if (await loadChartIntoSlot(null, ctx)) addView(meta, ctx);
         },
       ),
     AppAction(
@@ -187,7 +193,7 @@ List<AppAction> buildCanvasActions(Ref ref) {
       category: ActionCategory.slots,
       aliases: const ['open', 'load', 'chart', 'client'],
       icon: Icons.folder_open,
-      execute: loadChartIntoActiveSlot,
+      execute: (ctx) => loadChartIntoSlot(null, ctx),
     ),
     AppAction(
       id: 'slot.add',
@@ -195,6 +201,22 @@ List<AppAction> buildCanvasActions(Ref ref) {
       category: ActionCategory.slots,
       execute: (_) => ref.read(slotsProvider.notifier).addSlot(),
     ),
+    for (final slot in slots) ...[
+      AppAction(
+        id: slotLoadActionId(slot.id),
+        title: 'Load Chart into ${slotMenuLabel(slot)}…',
+        category: ActionCategory.slots,
+        icon: Icons.folder_open,
+        execute: (ctx) => loadChartIntoSlot(slot.id, ctx),
+      ),
+      if (slot.id != SlotState.kDefaultSlotId)
+        AppAction(
+          id: slotRemoveActionId(slot.id),
+          title: 'Remove ${slotMenuLabel(slot)}',
+          category: ActionCategory.slots,
+          execute: (_) => ref.read(slotsProvider.notifier).removeSlot(slot.id),
+        ),
+    ],
     for (final slot in slots)
       AppAction(
         id: 'slot.activate.${slot.id}',
